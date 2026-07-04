@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background-color: #0a0a0f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes so-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes so-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes so-wave-clear {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes so-reveal-title {
+  from {
+    opacity: 0;
+    letter-spacing: 0.45em;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.3em;
+    transform: translateY(0);
+  }
+}
+
+@keyframes so-pulse-breach {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(255, 77, 0, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(255, 77, 0, 0.55);
+  }
+}
+
+@keyframes so-pulse-label {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes so-card-confirm {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 120, 0, 0);
+  }
+  40% {
+    box-shadow: 0 0 28px rgba(255, 120, 0, 0.45);
+    border-color: #ff7700;
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 120, 0, 0);
+  }
+}
+
+@keyframes so-purchase-flash {
+  0% {
+    box-shadow: 0 0 0 rgba(197, 160, 89, 0);
+    border-color: rgba(197, 160, 89, 0.35);
+  }
+  45% {
+    box-shadow: 0 0 14px rgba(197, 160, 89, 0.4);
+    border-color: rgba(197, 160, 89, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(197, 160, 89, 0);
+    border-color: rgba(197, 160, 89, 0.35);
+  }
+}
+
+.so-animate-fade-in {
+  animation: so-fade-in 250ms ease-out forwards;
+}
+
+.so-animate-fade-in-slow {
+  animation: so-fade-in 400ms ease-out forwards;
+}
+
+.so-animate-slide-up {
+  animation: so-slide-up 300ms ease-out forwards;
+  opacity: 0;
+}
+
+.so-animate-slide-up-delay-1 {
+  animation-delay: 50ms;
+}
+
+.so-animate-slide-up-delay-2 {
+  animation-delay: 100ms;
+}
+
+.so-animate-slide-up-delay-3 {
+  animation-delay: 150ms;
+}
+
+.so-animate-wave-clear {
+  animation: so-wave-clear 1.2s ease-out forwards;
+}
+
+.so-animate-reveal-title {
+  animation: so-reveal-title 450ms ease-out forwards;
+  opacity: 0;
+}
+
+.so-animate-reveal-step-1 {
+  animation: so-fade-in 350ms ease-out 450ms forwards;
+  opacity: 0;
+}
+
+.so-animate-reveal-step-2 {
+  animation: so-fade-in 400ms ease-out 650ms forwards;
+  opacity: 0;
+}
+
+.so-animate-reveal-step-3 {
+  animation: so-slide-up 350ms ease-out 900ms forwards;
+  opacity: 0;
+}
+
+.so-animate-heat-urgent {
+  animation: so-pulse-breach 2s ease-in-out infinite;
+}
+
+.so-animate-heat-label {
+  animation: so-pulse-label 2s ease-in-out infinite;
+}
+
+.so-animate-card-confirm {
+  animation: so-card-confirm 250ms ease-out forwards;
+}
+
+.so-animate-purchase-flash {
+  animation: so-purchase-flash 350ms ease-out forwards;
+}

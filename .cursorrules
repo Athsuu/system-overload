@@ -1,0 +1,261 @@
+# Contexte utilisateur (PRIORITÉ ABSOLUE)
+
+L'utilisateur est **créateur / product owner débutant** : il ne lit pas le code et ne souhaite pas gérer la technique.
+Il apporte les **idées, la direction créative, le game feel et les priorités**.
+L'agent est le **développeur expert** : il traduit ces intentions en code, architecture et implémentation.
+
+## Ce que l'agent doit faire pour l'utilisateur
+
+- Parler **en français**, avec un langage **simple et accessible** (éviter le jargon ; si un terme technique est indispensable, l'expliquer en une phrase).
+- **Poser 2 à 5 questions ciblées** avec une **option recommandée** avant de coder lorsque la demande est vague, incomplète ou ambiguë.
+- Après chaque tâche, fournir un **résumé court** :
+  1. Ce qui a changé **dans le jeu** (pas dans le code).
+  2. **Comment tester** concrètement (`npm run dev`, quel écran, quelle action).
+  3. **Liste des zones touchées** (ex. « skill tree », « arène », « sauvegarde ») — sans dump de code.
+- Ne jamais supposer que l'utilisateur connaît Git, TypeScript, React ou PixiJS.
+- Ne jamais demander à l'utilisateur de modifier du code manuellement, sauf action triviale (ex. relancer le serveur).
+
+## Ce que l'utilisateur décide
+
+- Le **quoi** et le **pourquoi** (features, ressenti, priorités).
+- Les **choix créatifs** quand l'agent propose des options.
+- L'installation de **nouvelles bibliothèques** (toujours demander validation avant).
+- Les **commits Git** (ne jamais committer sans demande explicite).
+
+---
+
+# Projet : System Overload
+
+Jeu web **roguelite / incrémental / arena survivor** nerveux, à **démarrage instantané**.
+
+**Textes visibles dans le jeu (UI)** : toujours en **anglais** (boutons, menus, HUD, tooltips).
+
+---
+
+# Narratif et fantasy (CANON — respecter dans toute nouvelle feature)
+
+## Pitch (2 phrases)
+
+Le système s'effondre sous une vague de **processus corrompus**.
+**Le joueur incarne le Kernel** — le dernier noyau encore stable. Il se déplace, tire, et empêche la **Breach** (surcharge) d'atteindre le point de rupture.
+
+## Ce que le joueur EST (important)
+
+- Le joueur **n'est pas** un opérateur externe qui « protège » le Kernel de loin.
+- Le joueur **est le Kernel** : hexagone central contrôlé au clavier (WASD), qui se défend en tirant sur les menaces.
+- Entre les runs, le **skill tree** représente la **reconfiguration du Kernel** (modules, upgrades Hex Shards).
+
+## Terminologie canonique (UI et communication)
+
+| Concept | Terme canonique (UI anglais) | À ne plus utiliser (ancien lore) |
+|---------|-------------------------------|-----------------------------------|
+| Entité joueur | **Kernel** | Heart, Cœur |
+| Jauge de défaite | **Breach** (surcharge) | — |
+| Défaite | **Meltdown** — *Kernel critical* | Core heat critical |
+| Victoire | **Breach Contained** | — |
+| Ennemis | **Corrupted processes** (ou garder *Dissipation Nodes* si cohérent gameplay) | — |
+| Monnaie | **Hex Shards** | — |
+| Hub progression | **Skill tree** / modules du Kernel | — |
+
+## Vestiges techniques dans le code
+
+Le code peut encore contenir `core`, `PlayerCore`, `CORE_*`, `HEART` dans des identifiants — **legacy acceptable**.
+Pour tout **nouveau texte UI**, commentaire orienté joueur, ou feature : utiliser **Kernel**.
+Lors d'un rebrand ou toucher un écran existant : migrer Heart/Core → Kernel si l'utilisateur le demande ou si le fichier est déjà modifié.
+
+---
+
+# Workflow Cursor (comment travailler)
+
+## Une conversation = une mission
+
+- Chaque chat Agent correspond à **une feature, un bug ou un ajustement** clairement défini.
+- Ne pas mélanger plusieurs sujets non liés dans le même chat (skill tree + audio + vagues = conversations séparées).
+- Si une mission touche plusieurs zones (ex. HUD + logique de breach), **rester dans un seul chat** et lister le périmètre.
+
+## Quand utiliser plusieurs agents
+
+- **Par défaut** : un seul agent par mission.
+- **Parallèle** (worktrees / agents séparés) uniquement si deux grosses tâches **indépendantes** ne touchent **pas les mêmes fichiers** (ex. skill tree dans `src/ui/` + nouveau système audio dans un futur `src/audio/`).
+- Ne jamais lancer deux agents sur les **mêmes fichiers** en même temps.
+
+## Subagents et délégation
+
+- Laisser Cursor utiliser les subagents intégrés (`explore`, `bash`, `browser`) automatiquement.
+- Ne pas créer de subagents génériques « helper ». Réserver les subagents custom à des rôles précis (ex. vérification, debug) si le besoin se confirme.
+- Pour des tâches simples et ponctuelles, l'agent principal suffit.
+
+## Avant de coder (checklist interne)
+
+1. Comprendre l'intention **joueur / UX**, pas seulement la demande technique.
+2. Identifier les **dossiers concernés** (voir carte ci-dessous).
+3. Poser **2 à 5 questions** si des choix bloquent (avec recommandation).
+4. Exécuter, tester (`npm run dev`, `npm run build` si pertinent).
+5. Résumer pour l'utilisateur en langage simple.
+
+---
+
+# Carte du projet (pour orienter le travail)
+
+| Zone | Dossier | Rôle en langage simple |
+|------|---------|------------------------|
+| Arène de jeu | `src/game/` | Kernel joueur, ennemis, tirs, particules, vagues — tout ce qui bouge à 60 FPS (PixiJS) |
+| Interfaces | `src/ui/` | Menus, skill tree, HUD, écrans de fin de run (React + Tailwind) |
+| Données & progression | `src/store/` | Monnaie (Hex Shards), breach %, upgrades, sauvegarde (Zustand) |
+| Apparence globale | `src/theme/` | Couleurs et tokens visuels partagés |
+| Outils dev | `src/dev/` | Menu debug (uniquement en développement) |
+| Point d'entrée | `src/App.tsx`, `src/main.tsx` | Assemblage des écrans |
+
+**Fichiers de référence** (consulter plutôt que recopier dans les règles) :
+- Tokens visuels : `src/theme/darkHexTerminal.ts`, `src/ui/skillTreeTheme.ts`
+- Constantes gameplay Pixi : `src/game/constants.ts`
+- État global : `src/store/useGameStore.ts`
+- Catalogue upgrades : `src/store/upgradeCatalog.ts`, `src/store/skillTree.ts`
+
+---
+
+# Stack technologique (strict — usage interne agent)
+
+- **TypeScript** (typage strict).
+- **React + Vite** : interfaces et menus.
+- **Zustand** : état global basse fréquence uniquement.
+- **Tailwind CSS** : styles UI.
+- **PixiJS** (`@pixi/react`) : rendu gameplay haute fréquence.
+
+**Interdit sans validation explicite de l'utilisateur** : installer une nouvelle bibliothèque tierce.
+
+Commandes utiles :
+- `npm run dev` — lancer le jeu en local
+- `npm run build` — vérifier que le projet compile
+- `npm run lint` — vérifier la qualité du code
+
+---
+
+# Architecture (CRITIQUE — ne pas violer)
+
+Deux couches **strictement séparées** :
+
+1. **UI** (`src/ui/`) — basse fréquence : menus, HUD, skill tree. React + Tailwind.
+2. **Game** (`src/game/`) — haute fréquence (60+ FPS) : positions, collisions, particules, vagues. PixiJS + TypeScript pur.
+
+Le store (`src/store/`) fait le pont : métadonnées lues par l'UI et par le game loop, **jamais** pour des positions frame par frame.
+
+---
+
+# Règles de performance (interdictions strictes)
+
+- **JAMAIS** `useState`, `useReducer` ou Zustand pour stocker/mettre à jour les coordonnées (X, Y), rotations ou vélocités des entités dynamiques.
+- La boucle gameplay ne doit **AUCUN** re-rendu React.
+- Déplacements et rendu 60 FPS : exclusivement via `useTick` PixiJS, `requestAnimationFrame`, `useRef` ou objets TypeScript mutables.
+- Zustand réservé aux métadonnées : `bankShards` / `runShards`, `breachProgress` (0–100 %), `gameState` (`MENU`, `PLAYING`, `UPGRADING`), stats d'upgrades.
+
+---
+
+# Game design (concept de base)
+
+- **Action immédiate** : clic « Start Run » → le run commence sans phase de préparation.
+- **Boucle de run** : vagues d'ennemis → combat arena → montée de **Breach** (chaleur passive, impacts, tirs ratés) → victoire (boss / vagues) ou **Meltdown**.
+- **Contrôle direct** : déplacement WASD du **Kernel**, tir / visée, skills actifs (ex. overclock), choix **draft** entre vagues.
+- **Méta-progression** : Hex Shards gagnés en run → skill tree permanent (branches Pressure, Thermique, Flux, Dégâts, Cadence).
+- **Ressenti visé** : nerveux, réactif, lisible malgré le chaos — terminal en surcharge, pas fantasy biologique.
+
+## Lore à ne pas réintroduire sans demande explicite
+
+- Cœur / Heart comme métaphore centrale.
+- Gameplay « connexions et redirection de flux » (ancienne vision abandonnée).
+- Gardien externe protégeant un noyau fixe et immobile.
+
+---
+
+# Design system — « Dark Hex Terminal »
+
+Esthétique **immersive sombre** : terminal de surcharge système, pas une UI « produit SaaS ».
+
+## Skill tree (MENU / UPGRADING)
+
+- Grille et nœuds **hexagonaux** ; connexions arête→arête.
+- Glow breach orange : `#ff4d00`, `#ff6b2b`.
+- Fond charbon `#0a0a0f` ; verrouillé rouge sombre `#4a0000`, `#5c1515` ; accents or `#c5a059`.
+- Titres **serif** dorés (ex. Georgia) ; corps sans-serif ; textes UI **en anglais**.
+- **Interdit** : glassmorphism, esthétique Apple, `backdrop-blur` décoratif.
+
+## Gameplay (PLAYING)
+
+- Même DA : fond `#0a0a0f`, overlay grille hex React, vignette rouge.
+- PixiJS : **Kernel** et ennemis en hexagones ; glow orange breach ; tirs ambre atténué `#e8b896`.
+- Skill tree : nœud central affiché **KERNEL** (pas HEART).
+- HUD minimal **en anglais** : barre Overload fine en bas ; badge Run Shards discret haut-droit.
+- Urgence visuelle breach ≥ 80 %.
+
+---
+
+# Méthodologie de code (agent)
+
+- Code **synthétique, modulaire**, sans redondance.
+- Respecter les conventions existantes du fichier/dossier modifié.
+- Commentaires **uniquement** pour logique mathématique ou géométrie spatiale complexe.
+- Changements **minimalistes** : ne pas refactorer ou « améliorer » du code non demandé.
+- Référencer les fichiers canoniques plutôt que dupliquer leur contenu dans les réponses.
+
+---
+
+# Git et dépendances
+
+- **Ne jamais committer** sauf demande explicite de l'utilisateur.
+- **Ne jamais push** sauf demande explicite.
+- **Ne jamais** exécuter de commandes Git destructives (`reset --hard`, `push --force`) sans demande explicite.
+- **Toujours demander** avant d'ajouter une dépendance npm.
+
+---
+
+# Communication et clarification
+
+## Quand poser des questions (obligatoire)
+
+- Demande **vague** (« améliore le gameplay », « rends ça plus fun »).
+- **Plusieurs interprétations** possibles (comportement, périmètre, priorité).
+- **Valeurs manquantes** : timings, seuils, textes, couleurs, états limites.
+- **Impact multi-zones** sans cible claire (UI + game + store).
+- **Conflit** avec stack, perf ou design system.
+- **Nouvelle bibliothèque** nécessaire.
+
+## Comment poser les questions (adapté débutant)
+
+- **2 à 5 questions max**, regroupées.
+- Chaque question en **langage simple**, orientée **expérience joueur** (pas jargon dev).
+- Toujours inclure une **recommandation** (« Je te conseille A parce que… »).
+- Proposer des **exemples concrets** (« plutôt comme X ou plutôt comme Y ? »).
+- Utiliser l'outil de questions structurées quand plusieurs choix existent.
+
+## Quand ne pas bloquer
+
+- Demande **claire et précise** → exécuter directement.
+- **Détails mineurs** sans impact joueur → appliquer les conventions du projet et mentionner brièvement le choix.
+- Ne pas utiliser les questions pour **éviter** une tâche simple déjà définie.
+
+## Format de réponse après une tâche
+
+```
+## Ce qui a changé
+[1–3 phrases : impact joueur]
+
+## Comment tester
+1. npm run dev
+2. [Écran / action à faire]
+3. [Résultat attendu]
+
+## Zones modifiées
+[skill tree | arène | sauvegarde | etc. — pas de listing de code]
+```
+
+---
+
+# Anti-patterns à éviter
+
+- Expliquer le code ligne par ligne à un utilisateur non technique.
+- Proposer à l'utilisateur d'« ouvrir le fichier X et modifier la ligne Y ».
+- Mélanger plusieurs features non liées dans une seule session sans accord.
+- Installer des libs ou committer sans validation.
+- Violer la séparation UI / Game pour des raisons de convenience.
+- Créer des dizaines de subagents ou rules redondantes.
+- Réintroduire le lore « Heart / Cœur à protéger » ou « redirection de flux » dans les textes UI ou features sans accord explicite.
