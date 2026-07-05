@@ -1,4 +1,4 @@
-import type { RunDraftLevels } from '../store/runDraftCatalog';
+import type { KernelModuleLevels } from '../store/kernelModuleCatalog';
 import type { UpgradeLevels } from '../store/upgradeCatalog';
 
 export function getBreachCap(upgrades: UpgradeLevels): number {
@@ -68,15 +68,15 @@ export function getEnemyTier(waveIndex: number): number {
 
 export function getRunConfig(
   upgrades: UpgradeLevels,
-  runDraftLevels: RunDraftLevels = {},
+  runModuleLevels: KernelModuleLevels = {},
 ): RunConfig {
-  const leakReduction = upgrades.heatShield * 2 + (runDraftLevels.heatShieldRun ?? 0) * 1;
+  const leakReduction = upgrades.heatShield * 2 + (runModuleLevels.heatShieldRun ?? 0) * 1;
   const missReduction = upgrades.heatShield;
   const passiveReduction =
-    upgrades.coolingPower * 0.15 + (runDraftLevels.heatReduction ?? 0) * 0.12;
+    upgrades.coolingPower * 0.15 + (runModuleLevels.heatReduction ?? 0) * 0.12;
 
-  const damageDraftMult = 1 + (runDraftLevels.damageBoost ?? 0) * 0.2;
-  const fireRateDraftMult = 0.85 ** (runDraftLevels.fireRateBoost ?? 0);
+  const damageModuleMult = 1 + (runModuleLevels.damageBoost ?? 0) * 0.2;
+  const fireRateModuleMult = 0.85 ** (runModuleLevels.fireRateBoost ?? 0);
 
   return {
     maxNodes: BASE_RUN_CONFIG.maxNodes + upgrades.nodeCapacity * 2,
@@ -88,26 +88,26 @@ export function getRunConfig(
       BASE_RUN_CONFIG.spawnIntervalMs *
       0.92 ** upgrades.fireRate *
       0.96 ** upgrades.rapidCycle *
-      fireRateDraftMult,
+      fireRateModuleMult,
     minSpawnIntervalMs: BASE_RUN_CONFIG.minSpawnIntervalMs,
     spawnAccelRate: Math.max(2, BASE_RUN_CONFIG.spawnAccelRate - upgrades.accelControl * 2),
     starterNodes: upgrades.starterNodes,
-    hitRadiusBonus: upgrades.nodeReach * 3 + (runDraftLevels.hitRadius ?? 0) * 4,
+    hitRadiusBonus: upgrades.nodeReach * 3 + (runModuleLevels.hitRadius ?? 0) * 4,
     particleDamage: Math.max(
       1,
       Math.floor(
         (BASE_RUN_CONFIG.particleDamage + upgrades.boltDamage) *
           (1 + upgrades.damageAmp * 0.1) *
-          damageDraftMult,
+          damageModuleMult,
       ),
     ),
     homingStrength:
-      BASE_RUN_CONFIG.homingStrength * (1 + (runDraftLevels.homingBoost ?? 0) * 0.4),
+      BASE_RUN_CONFIG.homingStrength * (1 + (runModuleLevels.homingBoost ?? 0) * 0.4),
     baseEnemyHp: BASE_RUN_CONFIG.baseEnemyHp,
     hpScalePerSecond: BASE_RUN_CONFIG.hpScalePerSecond,
     enemyHpReduction: upgrades.nodeSpawnRate * 0.08,
     shardsPerTier: BASE_RUN_CONFIG.shardsPerTier,
-    shardsMultiplier: 1 + (runDraftLevels.shardsBoost ?? 0) * 0.3,
+    shardsMultiplier: 1 + (runModuleLevels.shardsBoost ?? 0) * 0.3,
     baseEnemySpeed: BASE_RUN_CONFIG.baseEnemySpeed,
     enemySpeedScale: BASE_RUN_CONFIG.enemySpeedScale,
     maxEnemySpeed: BASE_RUN_CONFIG.maxEnemySpeed,
@@ -119,12 +119,12 @@ export function getRunConfig(
       BASE_RUN_CONFIG.baseMissProgressPenalty - missReduction - upgrades.emissionDampener,
     ),
     breachCap: getBreachCap(upgrades),
-    xpMultiplier: 1 + (runDraftLevels.xpMagnet ?? 0) * 0.25,
-    multishotCount: 1 + (runDraftLevels.multishot ?? 0),
-    pierceCount: 1 + (runDraftLevels.pierce ?? 0),
-    overclockDurationBonusMs: (runDraftLevels.overclockDuration ?? 0) * 1000,
+    xpMultiplier: 1 + (runModuleLevels.xpMagnet ?? 0) * 0.25,
+    multishotCount: 1 + (runModuleLevels.multishot ?? 0),
+    pierceCount: 1 + (runModuleLevels.pierce ?? 0),
+    overclockDurationBonusMs: (runModuleLevels.overclockDuration ?? 0) * 1000,
     overclockCooldownReductionMs:
-      (runDraftLevels.overclockCooldown ?? 0) * 2000 + upgrades.fluxThrottle * 500,
+      (runModuleLevels.overclockCooldown ?? 0) * 2000 + upgrades.fluxThrottle * 500,
     playerSpeed: BASE_RUN_CONFIG.basePlayerSpeed,
     acquisitionRange:
       BASE_RUN_CONFIG.baseAcquisitionRange * (1 + upgrades.autoAim * 0.15),

@@ -21,7 +21,7 @@ export function RunTimerEngine({ isPlaying, overclockRef }: RunTimerEngineProps)
       const store = useGameStore.getState();
       if (store.gameState !== 'PLAYING') return;
 
-      const config = getRunConfig(store.upgrades, store.runDraftLevels);
+      const config = getRunConfig(store.upgrades, store.runModuleLevels);
       const deltaSeconds = ticker.deltaMS / 1000;
       const heatMult = overclockRef.current.active ? 0.6 : 1;
       applyTimeOverload(config, deltaSeconds, heatMult);
@@ -39,8 +39,8 @@ export function tickOverclockFromStore(
   deltaMs: number,
 ): void {
   const store = useGameStore.getState();
-  const draftLevels = store.runDraftLevels;
-  const cooldownMs = getOverclockCooldownMs(draftLevels, store.upgrades.fluxThrottle);
+  const moduleLevels = store.runModuleLevels;
+  const cooldownMs = getOverclockCooldownMs(moduleLevels, store.upgrades.fluxThrottle);
 
   const state = overclockRef.current;
   if (state.active) {

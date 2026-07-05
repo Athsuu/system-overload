@@ -1,33 +1,5 @@
-import type { Graphics } from 'pixi.js';
+import type { FillGradient, Graphics } from 'pixi.js';
 import { getFlatTopHexVertices, type HexPoint } from './hexUtils';
-
-function clipPolygonAtOrAboveY(vertices: HexPoint[], lineY: number): HexPoint[] {
-  const clipped: HexPoint[] = [];
-
-  for (let i = 0; i < vertices.length; i += 1) {
-    const current = vertices[i];
-    const next = vertices[(i + 1) % vertices.length];
-    const currentInside = current.y >= lineY;
-    const nextInside = next.y >= lineY;
-
-    if (currentInside) {
-      clipped.push(current);
-    }
-
-    if (currentInside !== nextInside) {
-      const deltaY = next.y - current.y;
-      if (Math.abs(deltaY) > 1e-6) {
-        const t = (lineY - current.y) / deltaY;
-        clipped.push({
-          x: current.x + t * (next.x - current.x),
-          y: lineY,
-        });
-      }
-    }
-  }
-
-  return clipped;
-}
 
 export function drawFlatTopHexStroke(
   graphics: Graphics,
@@ -64,31 +36,89 @@ export function drawFlatTopHexFill(
   graphics.fill({ color, alpha });
 }
 
-/** Jauge HP : remplissage hexagonal clipé de bas en haut. */
-export function drawFlatTopHexHpFill(
+function rotateHexVertices(
+  vertices: HexPoint[],
+  cx: number,
+  cy: number,
+  rotation: number,
+): HexPoint[] {
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  return vertices.map((vertex) => {
+    const dx = vertex.x - cx;
+    const dy = vertex.y - cy;
+    return {
+      x: cx + dx * cos - dy * sin,
+      y: cy + dx * sin + dy * cos,
+    };
+  });
+}
+
+function drawHexPolygon(
+  graphics: Graphics,
+  vertices: HexPoint[],
+  mode: 'fill' | 'stroke',
+  color: number,
+  widthOrAlpha: number,
+  alpha = 1,
+  cap: CanvasLineCap = 'round',
+  join: CanvasLineJoin = 'round',
+): void {
+  graphics.moveTo(vertices[0].x, vertices[0].y);
+  for (let i = 1; i < vertices.length; i += 1) {
+    graphics.lineTo(vertices[i].x, vertices[i].y);
+  }
+  graphics.closePath();
+  if (mode === 'fill') {
+    graphics.fill({ color, alpha: widthOrAlpha });
+    return;
+  }
+  graphics.stroke({ color, width: widthOrAlpha, alpha, cap, join });
+}
+
+export function drawRotatedFlatTopHexFill(
   graphics: Graphics,
   cx: number,
   cy: number,
   radius: number,
-  hpRatio: number,
+  rotation: number,
   color: number,
+  alpha = 1,
 ): void {
-  const inner = radius - 3;
-  const ratio = Math.max(0, Math.min(1, hpRatio));
-  if (ratio <= 0) return;
+  const vertices = rotateHexVertices(getFlatTopHexVertices(cx, cy, radius), cx, cy, rotation);
+  drawHexPolygon(graphics, vertices, 'fill', color, alpha);
+}
 
-  const halfH = (inner * Math.sqrt(3)) / 2;
-  const bottomY = cy + halfH;
-  const topY = cy - halfH;
-  const fillLineY = bottomY - (bottomY - topY) * ratio;
-
-  const clipped = clipPolygonAtOrAboveY(getFlatTopHexVertices(cx, cy, inner), fillLineY);
-  if (clipped.length < 3) return;
-
-  graphics.moveTo(clipped[0].x, clipped[0].y);
-  for (let i = 1; i < clipped.length; i += 1) {
-    graphics.lineTo(clipped[i].x, clipped[i].y);
+export function drawRotatedFlatTopHexFillGradient(
+  graphics: Graphics,
+  cx: number,
+  cy: number,
+  radius: number,
+  rotation: number,
+  gradient: FillGradient,
+  alpha = 1,
+): void {
+  const vertices = rotateHexVertices(getFlatTopHexVertices(cx, cy, radius), cx, cy, rotation);
+  graphics.moveTo(vertices[0].x, vertices[0].y);
+  for (let i = 1; i < vertices.length; i += 1) {
+    graphics.lineTo(vertices[i].x, vertices[i].y);
   }
   graphics.closePath();
-  graphics.fill({ color });
+  graphics.fill({ fill: gradient, alpha });
+}
+
+export function drawRotatedFlatTopHexStroke(
+  graphics: Graphics,
+  cx: number,
+  cy: number,
+  radius: number,
+  rotation: number,
+  color: number,
+  width: number,
+  alpha = 1,
+  cap: CanvasLineCap = 'round',
+  join: CanvasLineJoin = 'round',
+): void {
+  const vertices = rotateHexVertices(getFlatTopHexVertices(cx, cy, radius), cx, cy, rotation);
+  drawHexPolygon(graphics, vertices, 'stroke', color, width, alpha, cap, join);
 }

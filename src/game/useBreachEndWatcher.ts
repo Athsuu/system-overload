@@ -8,7 +8,7 @@ export function useBreachEndWatcher() {
   const endRun = useGameStore((state) => state.endRun);
 
   useEffect(() => {
-    if (gameState !== 'PLAYING' && gameState !== 'DRAFT') return;
+    if (gameState !== 'PLAYING' && gameState !== 'MODULE_BAY') return;
 
     const breachCap = 100 + upgrades.criticalThreshold * 10;
     if (breachProgress >= breachCap) {

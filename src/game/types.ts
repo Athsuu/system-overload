@@ -1,17 +1,14 @@
-export type EnemyShape = 'hex';
-
 export interface DissipationNode {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   hp: number;
   maxHp: number;
   tier: number;
-  shape: EnemyShape;
   flashTimer: number;
+  satelliteAngle: number;
+  hexAngle: number;
+  corruptSeed: number;
   isBoss?: boolean;
-  bossId?: string;
   moveSpeed: number;
 }
 
@@ -26,4 +23,13 @@ export interface Particle {
   lockTargetX: number;
   lockTargetY: number;
   homingStrength: number;
+  trailX1: number;
+  trailY1: number;
+  trailX2: number;
+  trailY2: number;
+  hitsLanded: number;
+  multishotIndex: number;
+  multishotTotal: number;
+  overclockTint: boolean;
+  fadeAlpha: number;
 }

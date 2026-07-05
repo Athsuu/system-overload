@@ -16,7 +16,7 @@ import {
   type PlayerState,
 } from './playerMovement';
 import { getOverclockDurationMs, RunTimerEngine, tickOverclockFromStore } from './RunTimerEngine';
-import { spawnStarterNodes } from './NodeSpawner';
+import { spawnStarterNodes } from './enemyMovement';
 import { getRunConfig } from './runConfig';
 import { resetWaveRuntime, WaveEngine } from './WaveEngine';
 import type { DissipationNode } from './types';
@@ -33,9 +33,9 @@ interface WaveRuntime {
 export function GameArena() {
   const gameState = useGameStore((state) => state.gameState);
   const isPlaying = gameState === 'PLAYING';
-  const isDraft = gameState === 'DRAFT';
+  const isModuleBay = gameState === 'MODULE_BAY';
   const isPaused = gameState === 'PAUSED';
-  const isRunActive = isPlaying || isDraft || isPaused;
+  const isRunActive = isPlaying || isModuleBay || isPaused;
   const { app } = useApplication();
   const spawnCenter = getArenaCenter(app.screen.width, app.screen.height);
   const nodesRef = useRef<DissipationNode[]>([]);
@@ -57,7 +57,7 @@ export function GameArena() {
   useEffect(() => {
     const prev = prevGameStateRef.current;
     const isNewRun =
-      gameState === 'PLAYING' && prev !== 'PLAYING' && prev !== 'DRAFT' && prev !== 'PAUSED';
+      gameState === 'PLAYING' && prev !== 'PLAYING' && prev !== 'MODULE_BAY' && prev !== 'PAUSED';
 
     if (isNewRun) {
       const center = getArenaCenter(app.screen.width, app.screen.height);
@@ -73,10 +73,10 @@ export function GameArena() {
 
       const config = getRunConfig(
         useGameStore.getState().upgrades,
-        useGameStore.getState().runDraftLevels,
+        useGameStore.getState().runModuleLevels,
       );
       const bounds = getScreenBounds(app.screen.width, app.screen.height);
-      spawnStarterNodes(config.starterNodes, center, nodesRef.current, bounds, config);
+      spawnStarterNodes(config.starterNodes, nodesRef.current, bounds, config);
     }
 
     prevGameStateRef.current = gameState;
@@ -89,7 +89,7 @@ export function GameArena() {
   }, [isPlaying]);
 
   useEffect(() => {
-    if (!isPlaying && !isDraft) return;
+    if (!isPlaying && !isModuleBay) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (WASD_KEY_CODES.has(event.code)) {
@@ -103,7 +103,7 @@ export function GameArena() {
 
       const store = useGameStore.getState();
       const durationMs =
-        getOverclockDurationMs(store.runDraftLevels) + store.upgrades.rapidCycle * 200;
+        getOverclockDurationMs(store.runModuleLevels) + store.upgrades.rapidCycle * 200;
       tryActivateOverclock(overclockRef.current, durationMs);
     };
 
@@ -120,10 +120,10 @@ export function GameArena() {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [isPlaying, isDraft]);
+  }, [isPlaying, isModuleBay]);
 
   useEffect(() => {
-    if (!isPlaying && !isDraft) return;
+    if (!isPlaying && !isModuleBay) return;
 
     let frameId = 0;
     let lastTime = performance.now();
@@ -135,7 +135,7 @@ export function GameArena() {
       const bounds = getScreenBounds(app.screen.width, app.screen.height);
       const config = getRunConfig(
         useGameStore.getState().upgrades,
-        useGameStore.getState().runDraftLevels,
+        useGameStore.getState().runModuleLevels,
       );
       tickPlayerMovement(
         playerRef.current,
@@ -154,7 +154,7 @@ export function GameArena() {
 
     frameId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frameId);
-  }, [app.screen.height, app.screen.width, isPlaying, isDraft]);
+  }, [app.screen.height, app.screen.width, isPlaying, isModuleBay]);
 
   return (
     <>
@@ -165,7 +165,6 @@ export function GameArena() {
         isPlaying={isPlaying}
         nodesRef={nodesRef}
         effectsRef={effectsRef}
-        playerRef={playerRef}
         waveRuntimeRef={waveRuntimeRef}
       />
       <DissipationNodes

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
 
 export function usePauseHotkey(): void {
@@ -7,6 +8,13 @@ export function usePauseHotkey(): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code !== 'Escape') return;
+
+      const settingsOpen = useSettingsStore.getState().isOpen;
+      if (settingsOpen) {
+        event.preventDefault();
+        useSettingsStore.getState().closeSettings();
+        return;
+      }
 
       const gameState = useGameStore.getState().gameState;
       if (gameState !== 'PLAYING' && gameState !== 'PAUSED') return;

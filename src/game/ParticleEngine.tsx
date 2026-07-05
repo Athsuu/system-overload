@@ -8,18 +8,19 @@ import {
   type MutableRefObject,
   type RefObject,
 } from 'react';
-import { getXpRewardForTier } from '../store/runDraftCatalog';
+import { getXpRewardForTier } from '../store/kernelModuleCatalog';
 import { useGameStore } from '../store/useGameStore';
 import { resolveAutoFireTarget } from './aimUtils';
 import { type OverclockState } from './activeSkill';
+import { getBoltRotation, computeBoltEdgeFade, renderFluxBolts } from './boltVisual';
 import { isParticleHittingEnemy } from './enemyHitbox';
-import { pushDeathEffect, pushHitSpark, pushMissRipple, type GameEffect } from './effects';
+import { pushBoltHit, pushDeathEffect, pushMissRipple, pushMuzzleFlash, type GameEffect } from './effects';
 import { applyMissedShotOverload } from './overload';
 import {
+  CORE_RADIUS,
+  FLASH_DURATION_MS,
   getScreenBounds,
   isParticleOutOfBounds,
-  PARTICLE_COLOR,
-  PARTICLE_GLOW,
   PARTICLE_RADIUS,
   PARTICLE_SPEED,
   type Vec2,
@@ -39,8 +40,8 @@ interface ParticleEngineProps {
   overclockRef: MutableRefObject<OverclockState>;
 }
 
-function getDraftHomingStrength(runDraftLevels: { homingBoost?: number }): number {
-  return (runDraftLevels.homingBoost ?? 0) * 1.5;
+function getModuleHomingStrength(runModuleLevels: { homingBoost?: number }): number {
+  return (runModuleLevels.homingBoost ?? 0) * 1.5;
 }
 
 function createParticle(
@@ -50,6 +51,9 @@ function createParticle(
   damage: number,
   pierceRemaining: number,
   homingStrength: number,
+  multishotIndex: number,
+  multishotTotal: number,
+  overclockTint: boolean,
   angleOffset = 0,
 ): Particle {
   const dx = aimTarget.x - originX;
@@ -69,6 +73,15 @@ function createParticle(
     lockTargetX: aimTarget.x,
     lockTargetY: aimTarget.y,
     homingStrength,
+    trailX1: originX,
+    trailY1: originY,
+    trailX2: originX,
+    trailY2: originY,
+    hitsLanded: 0,
+    multishotIndex,
+    multishotTotal,
+    overclockTint,
+    fadeAlpha: 1,
   };
 }
 
@@ -90,20 +103,16 @@ function applyHomingToLockedTarget(
   particle.vy += (desiredVy - particle.vy) * blend;
 }
 
-function renderParticles(graphics: Graphics, particles: Particle[]) {
-  graphics.clear();
-
-  for (const particle of particles) {
-    graphics.circle(particle.x, particle.y, PARTICLE_RADIUS + 3);
-    graphics.fill({ color: PARTICLE_GLOW, alpha: 0.25 });
-    graphics.circle(particle.x, particle.y, PARTICLE_RADIUS);
-    graphics.fill({ color: PARTICLE_COLOR });
-  }
+function advanceParticleTrail(particle: Particle): void {
+  particle.trailX2 = particle.trailX1;
+  particle.trailY2 = particle.trailY1;
+  particle.trailX1 = particle.x;
+  particle.trailY1 = particle.y;
 }
 
 function handleEnemyKill(node: DissipationNode): void {
   const store = useGameStore.getState();
-  const config = getRunConfig(store.upgrades, store.runDraftLevels);
+  const config = getRunConfig(store.upgrades, store.runModuleLevels);
   store.addRunShards(getShardReward(config, node.tier));
   store.addRunXp(Math.floor(getXpRewardForTier(node.tier) * config.xpMultiplier));
 }
@@ -156,15 +165,17 @@ export function ParticleEngine({
       const store = useGameStore.getState();
       if (store.gameState !== 'PLAYING') return;
 
-      const config = getRunConfig(store.upgrades, store.runDraftLevels);
+      const config = getRunConfig(store.upgrades, store.runModuleLevels);
       const player = playerRef.current;
       const bounds = getScreenBounds(app.screen.width, app.screen.height);
       const deltaSeconds = ticker.deltaMS / 1000;
-      const homingStrength = getDraftHomingStrength(store.runDraftLevels);
+      const homingStrength = getModuleHomingStrength(store.runModuleLevels);
+      const effects = effectsRef.current ?? [];
 
       elapsedTimeRef.current += deltaSeconds;
       const fireRateMult = getOverclockFireRateMult(overclockRef);
       const spawnInterval = getSpawnInterval(elapsedTimeRef.current, config) * fireRateMult;
+      const overclockActive = overclockRef.current.active;
 
       spawnAccumulatorRef.current += ticker.deltaMS;
       while (spawnAccumulatorRef.current >= spawnInterval) {
@@ -183,18 +194,30 @@ export function ParticleEngine({
                 (_, index) => (index - (config.multishotCount - 1) / 2) * 0.12,
               );
 
-        for (const angleOffset of spreadAngles) {
-          particlesRef.current.push(
-            createParticle(
-              player.x,
-              player.y,
-              aimTarget,
-              config.particleDamage,
-              pierceRemaining,
-              homingStrength,
-              angleOffset,
-            ),
+        for (let shotIndex = 0; shotIndex < spreadAngles.length; shotIndex += 1) {
+          const angleOffset = spreadAngles[shotIndex];
+          const particle = createParticle(
+            player.x,
+            player.y,
+            aimTarget,
+            config.particleDamage,
+            pierceRemaining,
+            homingStrength,
+            shotIndex,
+            spreadAngles.length,
+            overclockActive,
+            angleOffset,
           );
+
+          if (overclockActive) {
+            const travelAngle = Math.atan2(particle.vy, particle.vx);
+            const rotation = getBoltRotation(particle.vx, particle.vy);
+            const muzzleX = player.x + Math.cos(travelAngle) * (CORE_RADIUS * 0.55);
+            const muzzleY = player.y + Math.sin(travelAngle) * (CORE_RADIUS * 0.55);
+            pushMuzzleFlash(effects, muzzleX, muzzleY, rotation);
+          }
+
+          particlesRef.current.push(particle);
         }
       }
 
@@ -203,13 +226,22 @@ export function ParticleEngine({
       for (let index = particles.length - 1; index >= 0; index -= 1) {
         const particle = particles[index];
         applyHomingToLockedTarget(particle, particle.homingStrength, deltaSeconds);
+        advanceParticleTrail(particle);
         particle.x += particle.vx * deltaSeconds;
         particle.y += particle.vy * deltaSeconds;
+        particle.fadeAlpha = computeBoltEdgeFade(particle.x, particle.y, bounds);
+
+        if (particle.fadeAlpha <= 0.02) {
+          particles.splice(index, 1);
+          applyMissedShotOverload(config);
+          pushMissRipple(effects, particle.x, particle.y);
+          continue;
+        }
 
         if (isParticleOutOfBounds(particle.x, particle.y, bounds, PARTICLE_RADIUS)) {
           particles.splice(index, 1);
           applyMissedShotOverload(config);
-          pushMissRipple(effectsRef.current ?? [], particle.x, particle.y);
+          pushMissRipple(effects, particle.x, particle.y);
           continue;
         }
 
@@ -235,19 +267,14 @@ export function ParticleEngine({
 
         const node = currentNodes[hitNodeIndex];
         particle.hitTargets.add(node);
+        particle.hitsLanded += 1;
         node.hp -= particle.damage;
-        node.flashTimer = 200;
-        pushHitSpark(effectsRef.current ?? [], particle.x, particle.y);
+        node.flashTimer = FLASH_DURATION_MS;
+        pushBoltHit(effects, particle.x, particle.y, getBoltRotation(particle.vx, particle.vy));
 
         if (node.hp <= 0) {
           handleEnemyKill(node);
-          pushDeathEffect(
-            effectsRef.current ?? [],
-            node.x,
-            node.y,
-            node.tier,
-            node.isBoss ?? false,
-          );
+          pushDeathEffect(effects, node.x, node.y, node.tier, node.isBoss ?? false);
           currentNodes.splice(hitNodeIndex, 1);
         }
 
@@ -257,7 +284,7 @@ export function ParticleEngine({
         }
       }
 
-      renderParticles(graphics, particles);
+      renderFluxBolts(graphics, particles);
     },
     [app.screen.height, app.screen.width, effectsRef, elapsedTimeRef, nodesRef, overclockRef, playerRef],
   );

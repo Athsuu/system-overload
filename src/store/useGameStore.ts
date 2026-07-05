@@ -2,13 +2,13 @@ import { create } from 'zustand';
 import { saveGame } from './persistence';
 import { DEFAULT_PRESTIGE } from './prestigeTypes';
 import {
-  DEFAULT_RUN_DRAFT_LEVELS,
+  DEFAULT_KERNEL_MODULE_LEVELS,
+  getCyclesForLevelUp,
+  getKernelModuleDefinition,
   getXpToNextLevel,
-  rollDraftOptions,
-  type RunDraftId,
-  type RunDraftLevels,
-  type RunDraftOption,
-} from './runDraftCatalog';
+  type KernelModuleId,
+  type KernelModuleLevels,
+} from './kernelModuleCatalog';
 import {
   DEFAULT_UPGRADES,
   getUpgradeCost,
@@ -20,7 +20,14 @@ import {
 import { getBreachCap } from '../game/runConfig';
 import { getSkillNode } from './skillTree';
 
-export type GameState = 'MENU' | 'PLAYING' | 'PAUSED' | 'DRAFT' | 'RUN_END' | 'UPGRADING' | 'GAME_OVER';
+export type GameState =
+  | 'MENU'
+  | 'PLAYING'
+  | 'PAUSED'
+  | 'MODULE_BAY'
+  | 'RUN_END'
+  | 'UPGRADING'
+  | 'GAME_OVER';
 export type RunOutcome = 'victory_boss' | 'defeat_breach';
 export type WavePhase = 'idle' | 'spawning' | 'combat' | 'intermission' | 'boss';
 
@@ -41,9 +48,8 @@ interface GameStore {
   runLevel: number;
   runXp: number;
   runXpToNext: number;
-  pendingDraftCount: number;
-  draftOptions: RunDraftOption[];
-  runDraftLevels: RunDraftLevels;
+  runCycles: number;
+  runModuleLevels: KernelModuleLevels;
   setGameState: (state: GameState) => void;
   pauseRun: () => void;
   resumeRun: () => void;
@@ -57,8 +63,9 @@ interface GameStore {
   startRun: () => void;
   resetRun: () => void;
   addRunXp: (amount: number) => void;
-  openDraft: () => void;
-  pickDraft: (id: RunDraftId) => void;
+  openModuleBay: () => void;
+  closeModuleBay: () => void;
+  purchaseModule: (id: KernelModuleId) => boolean;
   setWaveIndex: (waveIndex: number) => void;
   setWavePhase: (phase: WavePhase) => void;
   setShowWaveClear: (show: boolean) => void;
@@ -72,6 +79,23 @@ function persistProgress(
   prestigeLevel: number,
 ): void {
   saveGame({ bankShards, upgrades, prestigeUnlocked, prestigeLevel });
+}
+
+function resetRunProgress(): Pick<
+  GameStore,
+  | 'runLevel'
+  | 'runXp'
+  | 'runXpToNext'
+  | 'runCycles'
+  | 'runModuleLevels'
+> {
+  return {
+    runLevel: 1,
+    runXp: 0,
+    runXpToNext: getXpToNextLevel(1),
+    runCycles: 0,
+    runModuleLevels: { ...DEFAULT_KERNEL_MODULE_LEVELS },
+  };
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -91,9 +115,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   runLevel: 1,
   runXp: 0,
   runXpToNext: getXpToNextLevel(1),
-  pendingDraftCount: 0,
-  draftOptions: [],
-  runDraftLevels: { ...DEFAULT_RUN_DRAFT_LEVELS },
+  runCycles: 0,
+  runModuleLevels: { ...DEFAULT_KERNEL_MODULE_LEVELS },
   setGameState: (gameState) => set({ gameState }),
   pauseRun: () => {
     if (get().gameState !== 'PLAYING') return;
@@ -126,12 +149,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         waveIndex: 0,
         wavePhase: 'idle',
         showWaveClear: false,
-        runLevel: 1,
-        runXp: 0,
-        runXpToNext: getXpToNextLevel(1),
-        pendingDraftCount: 0,
-        draftOptions: [],
-        runDraftLevels: { ...DEFAULT_RUN_DRAFT_LEVELS },
+        ...resetRunProgress(),
       };
     }),
   addBreachProgress: (delta) =>
@@ -195,12 +213,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       waveIndex: 1,
       wavePhase: 'spawning',
       showWaveClear: false,
-      runLevel: 1,
-      runXp: 0,
-      runXpToNext: getXpToNextLevel(1),
-      pendingDraftCount: 0,
-      draftOptions: [],
-      runDraftLevels: { ...DEFAULT_RUN_DRAFT_LEVELS },
+      ...resetRunProgress(),
     }),
   resetRun: () =>
     set((state) => {
@@ -219,52 +232,44 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let runXp = state.runXp + amount;
     let runLevel = state.runLevel;
     let runXpToNext = state.runXpToNext;
-    let pendingDraftCount = state.pendingDraftCount;
+    let cyclesGained = 0;
 
     while (runXp >= runXpToNext) {
       runXp -= runXpToNext;
       runLevel += 1;
       runXpToNext = getXpToNextLevel(runLevel);
-      pendingDraftCount += 1;
+      cyclesGained += getCyclesForLevelUp(runLevel);
     }
 
-    set({ runXp, runLevel, runXpToNext, pendingDraftCount });
+    const runCycles = state.runCycles + cyclesGained;
+    set({ runXp, runLevel, runXpToNext, runCycles });
 
-    if (pendingDraftCount > state.pendingDraftCount && get().gameState === 'PLAYING') {
-      get().openDraft();
+    if (cyclesGained > 0 && get().gameState === 'PLAYING') {
+      get().openModuleBay();
     }
   },
-  openDraft: () => {
-    const state = get();
-    if (state.pendingDraftCount <= 0) return;
-
-    set({
-      gameState: 'DRAFT',
-      draftOptions: rollDraftOptions(state.runDraftLevels),
-    });
+  openModuleBay: () => {
+    if (get().gameState !== 'PLAYING' && get().gameState !== 'MODULE_BAY') return;
+    set({ gameState: 'MODULE_BAY' });
   },
-  pickDraft: (id) => {
+  closeModuleBay: () => {
+    if (get().gameState !== 'MODULE_BAY') return;
+    set({ gameState: 'PLAYING' });
+  },
+  purchaseModule: (id) => {
     const state = get();
-    const level = (state.runDraftLevels[id] ?? 0) + 1;
-    const runDraftLevels = { ...state.runDraftLevels, [id]: level };
-    const pendingDraftCount = Math.max(0, state.pendingDraftCount - 1);
+    if (state.gameState !== 'MODULE_BAY') return false;
 
-    if (pendingDraftCount > 0) {
-      set({
-        runDraftLevels,
-        pendingDraftCount,
-        draftOptions: rollDraftOptions(runDraftLevels),
-        gameState: 'DRAFT',
-      });
-      return;
-    }
+    const definition = getKernelModuleDefinition(id);
+    const level = state.runModuleLevels[id] ?? 0;
+    if (level >= definition.maxLevel) return false;
+    if (state.runCycles < definition.cycleCost) return false;
 
     set({
-      runDraftLevels,
-      pendingDraftCount: 0,
-      draftOptions: [],
-      gameState: 'PLAYING',
+      runCycles: state.runCycles - definition.cycleCost,
+      runModuleLevels: { ...state.runModuleLevels, [id]: level + 1 },
     });
+    return true;
   },
   setWaveIndex: (waveIndex) => set({ waveIndex }),
   setWavePhase: (wavePhase) => set({ wavePhase }),

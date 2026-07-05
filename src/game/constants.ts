@@ -1,32 +1,21 @@
 import { DARK_HEX, DARK_HEX_PIXI } from '../theme/darkHexTerminal';
 
 export const CORE_RADIUS = 52;
-export const ENEMY_HEX_RADIUS_T0 = 26;
-export const ENEMY_HEX_RADIUS_T1 = 32;
-export const ENEMY_HEX_RADIUS_BOSS = 44;
-/** @deprecated */
-export const ENEMY_CIRCLE_RADIUS = ENEMY_HEX_RADIUS_T0;
-/** @deprecated */
-export const ENEMY_SQUARE_HALF = ENEMY_HEX_RADIUS_T1;
-/** @deprecated */
-export const NODE_RADIUS = ENEMY_HEX_RADIUS_T0;
-/** @deprecated */
-export const SQUARE_HALF_SIZE = ENEMY_HEX_RADIUS_T1;
+export const ENEMY_HEX_RADIUS_T0 = 32.5;
+export const ENEMY_HEX_RADIUS_T1 = 40;
+export const ENEMY_HEX_RADIUS_BOSS = 55;
 
 export const PARTICLE_RADIUS = 6;
 export const PARTICLE_SPEED = 220;
+export const BOLT_BASE_RADIUS = 5;
+export const BOLT_FADE_MARGIN = 72;
 
 export const ARENA_PADDING = 40;
-
 export const FLASH_DURATION_MS = 200;
 
 export const CORE_COLOR = DARK_HEX_PIXI.coreFill;
 export const CORE_STROKE = DARK_HEX_PIXI.coreStroke;
 export const CORE_GLOW = DARK_HEX_PIXI.coreGlow;
-export const NODE_SHELL_COLOR = DARK_HEX_PIXI.enemyShell;
-export const NODE_FILL_FULL = DARK_HEX_PIXI.enemyFillFull;
-export const NODE_FILL_LOW = DARK_HEX_PIXI.enemyFillLow;
-export const NODE_FLASH_COLOR = DARK_HEX_PIXI.enemyFlash;
 export const PARTICLE_COLOR = DARK_HEX_PIXI.flux;
 export const PARTICLE_GLOW = DARK_HEX_PIXI.fluxGlow;
 
@@ -73,18 +62,6 @@ export function isParticleOutOfBounds(
     y < bounds.padding - margin ||
     y > bounds.height - bounds.padding + margin
   );
-}
-
-export function lerpFillColor(hpRatio: number): number {
-  if (hpRatio >= 0.3) return NODE_FILL_FULL;
-
-  const t = hpRatio / 0.3;
-  const low = NODE_FILL_LOW;
-  const full = NODE_FILL_FULL;
-  const r = ((low >> 16) & 0xff) + (((full >> 16) & 0xff) - ((low >> 16) & 0xff)) * t;
-  const g = ((low >> 8) & 0xff) + (((full >> 8) & 0xff) - ((low >> 8) & 0xff)) * t;
-  const b = (low & 0xff) + ((full & 0xff) - (low & 0xff)) * t;
-  return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b);
 }
 
 export { DARK_HEX };

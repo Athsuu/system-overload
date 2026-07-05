@@ -1,87 +1,159 @@
 import { useTick } from '@pixi/react';
-import { Container, Graphics } from 'pixi.js';
+import { Container, FillGradient, Graphics } from 'pixi.js';
 import { useLayoutEffect, useRef, type MutableRefObject } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
+import { BREACH_URGENT_THRESHOLD, DARK_HEX_PIXI } from '../theme/darkHexTerminal';
 import type { OverclockState } from './activeSkill';
-import {
-  CORE_COLOR,
-  CORE_GLOW,
-  CORE_RADIUS,
-  CORE_STROKE,
-} from './constants';
-import { drawFlatTopHexFill, drawFlatTopHexStroke } from './hexDraw';
+import { CORE_RADIUS, CORE_STROKE } from './constants';
+import { drawRotatedFlatTopHexFill, drawRotatedFlatTopHexStroke } from './hexDraw';
 import type { PlayerState } from './playerMovement';
+import { getBreachCap } from './runConfig';
 
 interface PlayerCoreProps {
   playerRef: MutableRefObject<PlayerState>;
   overclockRef: MutableRefObject<OverclockState>;
 }
 
-function drawRotatedHexStroke(
+const KERNEL_FILL = 0x120808;
+const KERNEL_GOLD = 0xc5a059;
+const IDLE_BREATH_HZ = 0.5;
+const URGENT_BREATH_HZ = 1.35;
+const IDLE_CORE_ROTATION = 0.00032;
+const URGENT_CORE_ROTATION = 0.00055;
+const OVERCLOCK_RING_ROTATION = 0.0025;
+const IDLE_CORE_SCALE_AMP = 0.028;
+const URGENT_CORE_SCALE_AMP = 0.045;
+
+const KERNEL_GLOW_GRADIENT = new FillGradient({
+  type: 'radial',
+  center: { x: 0.5, y: 0.5 },
+  innerRadius: 0,
+  outerCenter: { x: 0.5, y: 0.5 },
+  outerRadius: 0.5,
+  colorStops: [
+    { offset: 0, color: 'rgba(255, 77, 0, 0.42)' },
+    { offset: 0.28, color: 'rgba(255, 107, 43, 0.2)' },
+    { offset: 0.58, color: 'rgba(255, 77, 0, 0.07)' },
+    { offset: 1, color: 'rgba(255, 77, 0, 0)' },
+  ],
+  textureSpace: 'local',
+});
+
+const KERNEL_GLOW_URGENT_GRADIENT = new FillGradient({
+  type: 'radial',
+  center: { x: 0.5, y: 0.5 },
+  innerRadius: 0,
+  outerCenter: { x: 0.5, y: 0.5 },
+  outerRadius: 0.5,
+  colorStops: [
+    { offset: 0, color: 'rgba(255, 107, 43, 0.55)' },
+    { offset: 0.22, color: 'rgba(255, 77, 0, 0.28)' },
+    { offset: 0.52, color: 'rgba(255, 60, 0, 0.09)' },
+    { offset: 1, color: 'rgba(255, 77, 0, 0)' },
+  ],
+  textureSpace: 'local',
+});
+
+function drawRadialGlowShadow(
   graphics: Graphics,
   cx: number,
   cy: number,
   radius: number,
-  rotation: number,
-  color: number,
-  width: number,
+  gradient: FillGradient,
   alpha: number,
 ): void {
-  const vertices = Array.from({ length: 6 }, (_, index) => {
-    const angle = rotation + (index * Math.PI) / 3;
-    return {
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-    };
-  });
-
-  graphics.moveTo(vertices[0].x, vertices[0].y);
-  for (let i = 1; i < vertices.length; i += 1) {
-    graphics.lineTo(vertices[i].x, vertices[i].y);
-  }
-  graphics.closePath();
-  graphics.stroke({ color, width, alpha });
+  graphics.circle(cx, cy, radius);
+  graphics.fill({ fill: gradient, alpha });
 }
 
 function renderPlayer(
   graphics: Graphics,
   player: PlayerState,
   overclockActive: boolean,
-  rotation: number,
+  elapsedMs: number,
 ): void {
   graphics.clear();
-  const breachProgress = useGameStore.getState().breachProgress;
-  const pulse = 0.12 + (breachProgress / 100) * 0.28;
-  const glowRadius = CORE_RADIUS + 10 + pulse * 8;
+
+  const store = useGameStore.getState();
+  const breachCap = getBreachCap(store.upgrades);
+  const breachPercent = breachCap > 0 ? (store.breachProgress / breachCap) * 100 : 0;
+  const isUrgent = breachPercent >= BREACH_URGENT_THRESHOLD;
+  const breachRatio = breachPercent / 100;
+
+  const elapsedSec = elapsedMs * 0.001;
+  const breathHz = isUrgent ? URGENT_BREATH_HZ : IDLE_BREATH_HZ;
+  const breath = Math.sin(elapsedSec * Math.PI * 2 * breathHz);
+  const scaleAmp = isUrgent ? URGENT_CORE_SCALE_AMP : IDLE_CORE_SCALE_AMP;
+  const coreScale = 1 + breath * scaleAmp;
+  const coreRotation = elapsedMs * (isUrgent ? URGENT_CORE_ROTATION : IDLE_CORE_ROTATION);
+  const coreRadius = CORE_RADIUS * coreScale;
+
+  const glowBase = CORE_RADIUS + 8 + breachRatio * 12 + breath * (isUrgent ? 8 : 5);
+  const glowRadius = glowBase * 1.35;
+  const glowAlpha = isUrgent ? 0.88 + breachRatio * 0.12 : 0.72 + breachRatio * 0.08;
+  const glowGradient = isUrgent ? KERNEL_GLOW_URGENT_GRADIENT : KERNEL_GLOW_GRADIENT;
+
+  drawRadialGlowShadow(
+    graphics,
+    player.x,
+    player.y + 3,
+    glowRadius,
+    glowGradient,
+    glowAlpha,
+  );
 
   if (overclockActive) {
-    drawRotatedHexStroke(
+    const ocRotation = elapsedMs * OVERCLOCK_RING_ROTATION;
+    drawRotatedFlatTopHexStroke(
       graphics,
       player.x,
       player.y,
-      CORE_RADIUS + 22,
-      rotation,
+      coreRadius + 18,
+      ocRotation,
       DARK_HEX_PIXI.breach,
       2,
-      0.55,
-    );
-    drawRotatedHexStroke(
-      graphics,
-      player.x,
-      player.y,
-      CORE_RADIUS + 16,
-      -rotation * 1.4,
-      DARK_HEX_PIXI.breachGlow,
-      1,
-      0.35,
+      0.5 + breath * 0.15,
     );
   }
 
-  drawFlatTopHexFill(graphics, player.x, player.y, glowRadius, CORE_GLOW, pulse * 0.35);
-  drawFlatTopHexStroke(graphics, player.x, player.y, CORE_RADIUS + 4, CORE_STROKE, 1, 0.45);
-  drawFlatTopHexFill(graphics, player.x, player.y, CORE_RADIUS, CORE_COLOR);
-  drawFlatTopHexStroke(graphics, player.x, player.y, CORE_RADIUS, CORE_STROKE, 2.5);
+  drawRotatedFlatTopHexFill(
+    graphics,
+    player.x,
+    player.y,
+    coreRadius,
+    coreRotation,
+    KERNEL_FILL,
+  );
+
+  drawRotatedFlatTopHexStroke(
+    graphics,
+    player.x,
+    player.y,
+    coreRadius * 0.68,
+    coreRotation,
+    KERNEL_GOLD,
+    1,
+    isUrgent ? 0.55 + breath * 0.12 : 0.4 + breath * 0.1,
+  );
+
+  const outerStroke = isUrgent ? DARK_HEX_PIXI.breach : CORE_STROKE;
+  drawRotatedFlatTopHexStroke(
+    graphics,
+    player.x,
+    player.y,
+    coreRadius,
+    coreRotation,
+    outerStroke,
+    2.5,
+    isUrgent ? 0.95 : 0.85,
+  );
+
+  const coreDotRadius = 3.5 + breath * (isUrgent ? 1.2 : 0.8);
+  graphics.circle(player.x, player.y, coreDotRadius);
+  graphics.fill({
+    color: isUrgent ? DARK_HEX_PIXI.breachGlow : KERNEL_GOLD,
+    alpha: isUrgent ? 0.85 + breath * 0.1 : 0.65 + breath * 0.15,
+  });
 }
 
 export function PlayerCore({ playerRef, overclockRef }: PlayerCoreProps) {
@@ -106,8 +178,12 @@ export function PlayerCore({ playerRef, overclockRef }: PlayerCoreProps) {
   useTick(() => {
     const graphics = graphicsRef.current;
     if (!graphics) return;
-    const rotation = performance.now() * 0.002;
-    renderPlayer(graphics, playerRef.current, overclockRef.current.active, rotation);
+    renderPlayer(
+      graphics,
+      playerRef.current,
+      overclockRef.current.active,
+      performance.now(),
+    );
   });
 
   return <pixiContainer ref={containerRef} />;

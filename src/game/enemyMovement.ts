@@ -29,39 +29,49 @@ export interface SpawnEnemyOptions {
   tier: number;
   waveIndex: number;
   isBoss?: boolean;
-  bossId?: string;
   bossHpMult?: number;
   bossSpeedMult?: number;
 }
 
 export function spawnEnemyOnEdge(
-  target: Vec2,
   bounds: ScreenBounds,
   config: RunConfig,
   options: SpawnEnemyOptions,
 ): DissipationNode {
-  const { tier, waveIndex, isBoss, bossId, bossHpMult = 1, bossSpeedMult = 1 } = options;
+  const { tier, waveIndex, isBoss, bossHpMult = 1, bossSpeedMult = 1 } = options;
   const spawnPos = pickEdgeSpawn(bounds);
-  const dx = target.x - spawnPos.x;
-  const dy = target.y - spawnPos.y;
-  const distance = Math.hypot(dx, dy) || 1;
   const speed = getEnemySpeed(config, tier, waveIndex, bossSpeedMult);
   const maxHp = getEnemyMaxHp(config, tier, waveIndex, bossHpMult);
 
   return {
     x: spawnPos.x,
     y: spawnPos.y,
-    vx: (dx / distance) * speed,
-    vy: (dy / distance) * speed,
     hp: maxHp,
     maxHp,
     tier,
-    shape: 'hex',
     flashTimer: 0,
+    satelliteAngle: Math.random() * Math.PI * 2,
+    hexAngle: Math.random() * Math.PI * 2,
+    corruptSeed: Math.random() * 10000,
     isBoss,
-    bossId,
     moveSpeed: speed,
   };
+}
+
+export function spawnStarterNodes(
+  count: number,
+  nodes: DissipationNode[],
+  bounds: ScreenBounds,
+  config: RunConfig,
+): void {
+  for (let index = 0; index < count; index += 1) {
+    nodes.push(
+      spawnEnemyOnEdge(bounds, config, {
+        tier: 0,
+        waveIndex: 1,
+      }),
+    );
+  }
 }
 
 export function tickEnemyMovement(
@@ -75,12 +85,10 @@ export function tickEnemyMovement(
     const dx = target.x - node.x;
     const dy = target.y - node.y;
     const distance = Math.hypot(dx, dy) || 1;
-    const speed = node.moveSpeed;
+    const step = (node.moveSpeed * deltaSeconds) / distance;
 
-    node.vx = (dx / distance) * speed;
-    node.vy = (dy / distance) * speed;
-    node.x += node.vx * deltaSeconds;
-    node.y += node.vy * deltaSeconds;
+    node.x += dx * step;
+    node.y += dy * step;
 
     if (isEnemyHittingCore(node, target)) {
       onPlayerHit(node);

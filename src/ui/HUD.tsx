@@ -37,6 +37,7 @@ function RunLevelBadge() {
   const runLevel = useGameStore((state) => state.runLevel);
   const runXp = useGameStore((state) => state.runXp);
   const runXpToNext = useGameStore((state) => state.runXpToNext);
+  const runCycles = useGameStore((state) => state.runCycles);
   const xpPercent = runXpToNext > 0 ? (runXp / runXpToNext) * 100 : 0;
 
   return (
@@ -56,6 +57,12 @@ function RunLevelBadge() {
           }}
         />
       </div>
+      {runCycles > 0 && (
+        <p className="mt-1.5 text-[9px] tracking-[0.15em] text-white/35 uppercase">
+          {GAME_NARRATIVE.hud.cyclesLabel}{' '}
+          <span className="font-mono text-white/55">{runCycles}</span>
+        </p>
+      )}
     </div>
   );
 }

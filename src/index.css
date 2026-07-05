@@ -146,22 +146,22 @@ body {
 }
 
 .so-animate-reveal-title {
-  animation: so-reveal-title 450ms ease-out forwards;
+  animation: so-reveal-title 338ms ease-out forwards;
   opacity: 0;
 }
 
 .so-animate-reveal-step-1 {
-  animation: so-fade-in 350ms ease-out 450ms forwards;
+  animation: so-fade-in 263ms ease-out 338ms forwards;
   opacity: 0;
 }
 
 .so-animate-reveal-step-2 {
-  animation: so-fade-in 400ms ease-out 650ms forwards;
+  animation: so-fade-in 300ms ease-out 488ms forwards;
   opacity: 0;
 }
 
 .so-animate-reveal-step-3 {
-  animation: so-slide-up 350ms ease-out 900ms forwards;
+  animation: so-slide-up 263ms ease-out 675ms forwards;
   opacity: 0;
 }
 

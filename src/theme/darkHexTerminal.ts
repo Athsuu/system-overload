@@ -16,6 +16,8 @@ export const DARK_HEX = {
   coreFillTop: '#2a0808',
   coreFillBottom: '#120404',
   nodeFill: '#120808',
+  corruptViolet: '#8b5cf6',
+  corruptCyan: '#22d3ee',
 } as const;
 
 /** Couleurs Pixi (0xRRGGBB). */
@@ -25,13 +27,10 @@ export const DARK_HEX_PIXI = {
   coreFill: 0x2a0808,
   coreStroke: 0xff5533,
   coreGlow: 0xff4d00,
-  enemyShell: 0x5c1515,
-  enemyFillLow: 0x1a0a0a,
-  enemyFillMid: 0xc4894a,
-  enemyFillFull: 0xe8b896,
-  enemyFlash: 0xff6b2b,
   breach: 0xff4d00,
   breachGlow: 0xff6b2b,
+  corruptViolet: 0x8b5cf6,
+  corruptCyan: 0x22d3ee,
 } as const;
 
 export const BREACH_URGENT_THRESHOLD = 80;

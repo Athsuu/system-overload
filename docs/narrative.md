@@ -63,12 +63,18 @@ Pas de fantasy biologique (cœur, sang, organes). Tout est **système, chaleur, 
 | **Skill Tree** | Hub de meta-progression entre les runs |
 | **Start Run** | Lancer une tentative |
 
-### Ennemis (à trancher plus tard)
+### Ennemis — Corrupted Processes
 
-**Option A — technique (actuel code)** : *Dissipation Nodes*  
-**Option B — lore** : *Corrupted processes* / *Overflow entities*
+**Nom lore** : *Corrupted Processes* — fragments de processus corrompus / overflow attirés par le Kernel.
 
-Pour l'instant, le code parle de « nodes » et « dissipation ». Le lore peut les décrire comme des **fragments de processus corrompus** attirés par le Kernel.
+**Look visuel** (gameplay) :
+- Silhouette **creuse** : anneau hex violet rotatif + noyau cyan instable (orbit + pulse)
+- Palette **terminal glitch** : violet `#8b5cf6` + cyan `#22d3ee` — contraste net vs Kernel doré et Flux Bolts
+- **Animation continue** 60 FPS : rotation, breath, scanlines défilantes, micro-glitch render-only
+- **Boss** (`core_breach`) : triple anneau + fuite breach orange au centre (overflow critique)
+- LOD adaptatif selon densité d'ennemis (perf) — boss et menaces lourdes restent en rendu complet
+
+Le code interne garde parfois « DissipationNode » / « nodes » ; l'UI et le lore parlent de processus corrompus.
 
 ### Branches du skill tree (modules du Kernel)
 
@@ -129,7 +135,7 @@ Le nœud central du tree = **KERNEL** — le hub depuis lequel partent tous les 
 
 ## Questions ouvertes (à peaufiner)
 
-1. **Nom public des ennemis** : garder *Dissipation Nodes* ou passer à *Corrupted processes* partout ?
+1. ~~**Nom public des ennemis**~~ — retenu : *Corrupted Processes* (lore) ; identifiants code `DissipationNode` inchangés v1
 2. **Y a-t-il une entité antagoniste** (IA, virus, admin) ou seulement « le système qui collapse » ?
 3. **Prestige** : quel récit pour la reset permanente (fragments de Kernel, recompilation, etc.) ?
 4. **Boss** : représentent-ils quoi narrativement (purge finale, fragment maître, seuil de breach incarné) ?
@@ -143,3 +149,4 @@ Le nœud central du tree = **KERNEL** — le hub depuis lequel partent tous les 
 |---------|------|-------|
 | v0.1 | 2026-07-05 | Première rédaction — pivot Heart → Kernel, aligné gameplay arena survivor |
 | v0.2 | 2026-07-05 | Rebrand monnaie TFLOPS → Hex Shards (vault, Run Shards) |
+| v0.3 | 2026-07-05 | Skin ennemis Corrupted Processes — palette glitch, animation LOD |

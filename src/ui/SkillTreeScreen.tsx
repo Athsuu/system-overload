@@ -4,6 +4,7 @@ import type { UpgradeId } from '../store/upgradeCatalog';
 import { CurrencyBadge } from './CurrencyBadge';
 import { GAME_NARRATIVE } from './gameNarrative';
 import { PlayRunButton } from './PlayRunButton';
+import { SettingsGearButton } from './SettingsGearButton';
 import { SkillTreeViewport } from './SkillTreeViewport';
 
 interface SkillTreeScreenProps {
@@ -43,6 +44,12 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
             <p className="mt-3 max-w-lg text-center text-[10px] leading-relaxed text-white/30">
               {GAME_NARRATIVE.objective}
             </p>
+            <p className="mt-3 max-w-lg text-center text-[9px] leading-relaxed text-white/25">
+              {GAME_NARRATIVE.lore.progression}
+            </p>
+            <p className="mt-2 max-w-md text-center text-[9px] italic leading-relaxed text-white/20">
+              {GAME_NARRATIVE.lore.moduleBay}
+            </p>
           </>
         ) : (
           <p className="mt-2 text-[11px] tracking-[0.3em] text-white/50 uppercase">
@@ -62,6 +69,9 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
       />
 
       <div className="pointer-events-none absolute inset-0 z-10">
+        <div className="pointer-events-auto absolute top-8 left-8">
+          <SettingsGearButton />
+        </div>
         <div className="pointer-events-auto absolute right-8 bottom-8">
           <PlayRunButton />
         </div>

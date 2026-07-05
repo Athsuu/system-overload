@@ -2,19 +2,18 @@ import { useTick } from '@pixi/react';
 import { Container, Graphics } from 'pixi.js';
 import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
+import { CORE_RADIUS } from './constants';
 import {
-  CORE_RADIUS,
-  getEnemyHexRadius,
-  lerpFillColor,
-  NODE_FLASH_COLOR,
-  NODE_SHELL_COLOR,
-} from './constants';
+  drawCorruptDeathEffect,
+  drawCorruptSpawnFlash,
+} from './corruptedProcessVisual';
 import type { GameEffect } from './effects';
 import { tickEffects } from './effects';
 import {
   drawFlatTopHexFill,
-  drawFlatTopHexHpFill,
   drawFlatTopHexStroke,
+  drawRotatedFlatTopHexFill,
+  drawRotatedFlatTopHexStroke,
 } from './hexDraw';
 
 interface EffectEngineProps {
@@ -22,32 +21,72 @@ interface EffectEngineProps {
   effectsRef: RefObject<GameEffect[]>;
 }
 
-function drawHitSpark(graphics: Graphics, effect: GameEffect): void {
+function drawBoltHit(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = 1 - progress;
-  const radius = 8 + progress * 6;
-  drawFlatTopHexFill(graphics, effect.x, effect.y, radius, NODE_FLASH_COLOR, alpha * 0.6);
+  const flashRadius = 4 + progress * 10;
+
+  drawRotatedFlatTopHexFill(
+    graphics,
+    effect.x,
+    effect.y,
+    flashRadius,
+    effect.rotation,
+    DARK_HEX_PIXI.flux,
+    alpha * 0.95,
+  );
+  drawRotatedFlatTopHexStroke(
+    graphics,
+    effect.x,
+    effect.y,
+    flashRadius,
+    effect.rotation,
+    DARK_HEX_PIXI.breach,
+    2,
+    alpha * 0.9,
+  );
+
+  for (let shard = 0; shard < 3; shard += 1) {
+    const angle = effect.rotation + (shard * Math.PI * 2) / 3;
+    const dist = 3 + progress * 16;
+    const shardX = effect.x + Math.cos(angle) * dist;
+    const shardY = effect.y + Math.sin(angle) * dist;
+    const shardRadius = Math.max(1.2, 2.8 - progress * 1.2);
+    drawRotatedFlatTopHexFill(
+      graphics,
+      shardX,
+      shardY,
+      shardRadius,
+      angle,
+      DARK_HEX_PIXI.breachGlow,
+      alpha * 0.75,
+    );
+  }
 }
 
-function drawDeathEffect(graphics: Graphics, effect: GameEffect): void {
+function drawMuzzleFlash(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
-  const alpha = 1 - progress;
-  const radius = getEnemyHexRadius(effect.tier, effect.isBoss);
-  const strokeColor = effect.isBoss ? DARK_HEX_PIXI.breach : NODE_SHELL_COLOR;
-  const fillColor = effect.isBoss ? DARK_HEX_PIXI.breachGlow : lerpFillColor(1 - progress);
-
-  drawFlatTopHexStroke(graphics, effect.x, effect.y, radius, strokeColor, 2, alpha * 0.9);
-  drawFlatTopHexHpFill(graphics, effect.x, effect.y, radius, 1 - progress, fillColor);
-}
-
-function drawSpawnFlash(graphics: Graphics, effect: GameEffect): void {
-  const progress = effect.elapsedMs / effect.durationMs;
-  const scale = 0.55 + progress * 0.45;
-  const alpha = (1 - progress) * 0.7;
-  const radius = getEnemyHexRadius(effect.tier, effect.isBoss) * scale;
-  const color = effect.isBoss ? DARK_HEX_PIXI.breach : DARK_HEX_PIXI.breachGlow;
-  drawFlatTopHexStroke(graphics, effect.x, effect.y, radius, color, 2, alpha);
-  drawFlatTopHexFill(graphics, effect.x, effect.y, radius * 0.85, color, alpha * 0.25);
+  const alpha = (1 - progress) * 0.85;
+  const radius = 4 + progress * 8;
+  drawRotatedFlatTopHexFill(
+    graphics,
+    effect.x,
+    effect.y,
+    radius,
+    effect.rotation,
+    DARK_HEX_PIXI.breachGlow,
+    alpha * 0.45,
+  );
+  drawRotatedFlatTopHexStroke(
+    graphics,
+    effect.x,
+    effect.y,
+    radius,
+    effect.rotation,
+    DARK_HEX_PIXI.breach,
+    1.5,
+    alpha,
+  );
 }
 
 function drawKernelImpactFlash(graphics: Graphics, effect: GameEffect): void {
@@ -70,14 +109,17 @@ function renderEffects(graphics: Graphics, effects: GameEffect[]): void {
 
   for (const effect of effects) {
     switch (effect.kind) {
-      case 'hitSpark':
-        drawHitSpark(graphics, effect);
+      case 'boltHit':
+        drawBoltHit(graphics, effect);
+        break;
+      case 'muzzleFlash':
+        drawMuzzleFlash(graphics, effect);
         break;
       case 'death':
-        drawDeathEffect(graphics, effect);
+        drawCorruptDeathEffect(graphics, effect);
         break;
       case 'spawn':
-        drawSpawnFlash(graphics, effect);
+        drawCorruptSpawnFlash(graphics, effect);
         break;
       case 'kernelImpact':
         drawKernelImpactFlash(graphics, effect);

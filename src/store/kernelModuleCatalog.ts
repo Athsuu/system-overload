@@ -1,4 +1,4 @@
-export type RunDraftId =
+export type KernelModuleId =
   | 'damageBoost'
   | 'fireRateBoost'
   | 'heatShieldRun'
@@ -12,124 +12,109 @@ export type RunDraftId =
   | 'shardsBoost'
   | 'homingBoost';
 
-export type RunDraftLevels = Partial<Record<RunDraftId, number>>;
+export type KernelModuleLevels = Partial<Record<KernelModuleId, number>>;
 
-export interface RunDraftOption {
-  id: RunDraftId;
+export interface KernelModuleDefinition {
+  id: KernelModuleId;
   name: string;
   description: string;
-}
-
-export interface RunDraftDefinition extends RunDraftOption {
   maxLevel: number;
+  cycleCost: number;
 }
 
-export const RUN_DRAFT_CATALOG: RunDraftDefinition[] = [
+export const KERNEL_MODULE_CATALOG: KernelModuleDefinition[] = [
   {
     id: 'damageBoost',
     name: 'Overdrive',
     description: '+20% bolt damage',
     maxLevel: 5,
+    cycleCost: 2,
   },
   {
     id: 'fireRateBoost',
     name: 'Rapid Pulse',
     description: '+15% fire rate',
     maxLevel: 5,
+    cycleCost: 2,
   },
   {
     id: 'heatShieldRun',
     name: 'Heat Sink',
     description: '-10% leak heat per level',
     maxLevel: 3,
+    cycleCost: 1,
   },
   {
     id: 'multishot',
     name: 'Forked Flux',
     description: '+1 bolt per volley',
     maxLevel: 2,
+    cycleCost: 3,
   },
   {
     id: 'pierce',
     name: 'Penetrator',
     description: 'Bolts pierce +1 target',
     maxLevel: 2,
+    cycleCost: 3,
   },
   {
     id: 'xpMagnet',
     name: 'Data Harvest',
     description: '+25% XP from kills',
     maxLevel: 3,
+    cycleCost: 1,
   },
   {
     id: 'overclockDuration',
     name: 'Extended Overclock',
     description: '+1s overclock duration',
     maxLevel: 3,
+    cycleCost: 2,
   },
   {
     id: 'overclockCooldown',
     name: 'Fast Cycle',
     description: '-2s overclock cooldown',
     maxLevel: 3,
+    cycleCost: 2,
   },
   {
     id: 'heatReduction',
     name: 'Passive Coolant',
     description: '-12% passive heat gain',
     maxLevel: 3,
+    cycleCost: 1,
   },
   {
     id: 'hitRadius',
     name: 'Wide Intercept',
     description: '+4px hit radius',
     maxLevel: 3,
+    cycleCost: 1,
   },
   {
     id: 'shardsBoost',
     name: 'Yield Amplifier',
     description: '+30% Shards from kills',
     maxLevel: 3,
+    cycleCost: 2,
   },
   {
     id: 'homingBoost',
     name: 'Seeker Lock',
     description: '+40% homing strength',
     maxLevel: 3,
+    cycleCost: 2,
   },
 ];
 
-export const DEFAULT_RUN_DRAFT_LEVELS: RunDraftLevels = {};
+export const DEFAULT_KERNEL_MODULE_LEVELS: KernelModuleLevels = {};
 
-export function getRunDraftDefinition(id: RunDraftId): RunDraftDefinition {
-  const definition = RUN_DRAFT_CATALOG.find((entry) => entry.id === id);
-  if (!definition) throw new Error(`Unknown run draft: ${id}`);
+export function getKernelModuleDefinition(id: KernelModuleId): KernelModuleDefinition {
+  const definition = KERNEL_MODULE_CATALOG.find((entry) => entry.id === id);
+  if (!definition) throw new Error(`Unknown kernel module: ${id}`);
   return definition;
-}
-
-export function rollDraftOptions(
-  currentLevels: RunDraftLevels,
-  count = 3,
-): RunDraftOption[] {
-  const available = RUN_DRAFT_CATALOG.filter((draft) => {
-    const level = currentLevels[draft.id] ?? 0;
-    return level < draft.maxLevel;
-  });
-
-  if (available.length === 0) {
-    return RUN_DRAFT_CATALOG.slice(0, count).map(({ id, name, description }) => ({
-      id,
-      name,
-      description,
-    }));
-  }
-
-  const shuffled = [...available].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(count, shuffled.length)).map(({ id, name, description }) => ({
-    id,
-    name,
-    description,
-  }));
 }
 
 export function getXpToNextLevel(runLevel: number): number {
@@ -138,4 +123,8 @@ export function getXpToNextLevel(runLevel: number): number {
 
 export function getXpRewardForTier(tier: number): number {
   return [8, 14, 22][Math.min(tier, 2)] ?? 8;
+}
+
+export function getCyclesForLevelUp(_newLevel: number): number {
+  return 1;
 }

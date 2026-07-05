@@ -17,18 +17,18 @@ export function createOverclockState(): OverclockState {
   };
 }
 
-export function getOverclockDurationMs(draftLevels: { overclockDuration?: number }): number {
-  return OVERCLOCK_DURATION_MS + (draftLevels.overclockDuration ?? 0) * 1000;
+export function getOverclockDurationMs(moduleLevels: { overclockDuration?: number }): number {
+  return OVERCLOCK_DURATION_MS + (moduleLevels.overclockDuration ?? 0) * 1000;
 }
 
 export function getOverclockCooldownMs(
-  draftLevels: { overclockCooldown?: number },
+  moduleLevels: { overclockCooldown?: number },
   fluxThrottleLevel = 0,
 ): number {
   return Math.max(
     4000,
     OVERCLOCK_COOLDOWN_MS -
-      (draftLevels.overclockCooldown ?? 0) * 2000 -
+      (moduleLevels.overclockCooldown ?? 0) * 2000 -
       fluxThrottleLevel * 500,
   );
 }

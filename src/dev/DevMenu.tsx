@@ -1,5 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import { UPGRADE_CATALOG, type UpgradeId } from '../store/upgradeCatalog';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useGameStore, type GameState } from '../store/useGameStore';
 import {
   devAddBankShards,
@@ -10,15 +9,13 @@ import {
   devResetUpgrades,
   devSetBreachProgress,
   devSetGameState,
-  devSetUpgradeLevel,
   devTogglePrestigeUnlocked,
   devWipeProgress,
 } from './devActions';
+import { DevModulePanel } from './DevModulePanel';
+import { DevUpgradePanel } from './DevUpgradePanel';
 
-const GAME_STATES: GameState[] = ['MENU', 'PLAYING', 'PAUSED', 'DRAFT', 'RUN_END', 'UPGRADING', 'GAME_OVER'];
-
-const selectClassName =
-  'w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-xs text-white/80 outline-none focus:border-cyan-500/40';
+const GAME_STATES: GameState[] = ['MENU', 'PLAYING', 'PAUSED', 'MODULE_BAY', 'RUN_END', 'UPGRADING', 'GAME_OVER'];
 
 function DevButton({
   children,
@@ -45,23 +42,11 @@ function DevButton({
 
 export function DevMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedUpgradeId, setSelectedUpgradeId] = useState<UpgradeId>(UPGRADE_CATALOG[0].id);
   const gameState = useGameStore((state) => state.gameState);
   const breachProgress = useGameStore((state) => state.breachProgress);
   const bankShards = useGameStore((state) => state.bankShards);
   const runShards = useGameStore((state) => state.runShards);
   const prestigeUnlocked = useGameStore((state) => state.prestigeUnlocked);
-  const upgrades = useGameStore((state) => state.upgrades);
-
-  const selectedDefinition = useMemo(
-    () => UPGRADE_CATALOG.find((entry) => entry.id === selectedUpgradeId) ?? UPGRADE_CATALOG[0],
-    [selectedUpgradeId],
-  );
-  const currentLevel = upgrades[selectedUpgradeId];
-  const levelOptions = useMemo(
-    () => Array.from({ length: selectedDefinition.maxLevel + 1 }, (_, level) => level),
-    [selectedDefinition.maxLevel],
-  );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -88,8 +73,8 @@ export function DevMenu() {
       )}
 
       {isOpen && (
-        <div className="w-72 rounded-2xl border border-amber-500/20 bg-black/80 p-4 shadow-2xl backdrop-blur-md">
-          <div className="mb-3 flex items-center justify-between">
+        <div className="flex max-h-[calc(100dvh-2rem)] w-80 flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-black/80 shadow-2xl backdrop-blur-md">
+          <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-4 py-3">
             <span className="text-[10px] font-bold tracking-widest text-amber-400 uppercase">
               Menu Dev
             </span>
@@ -102,6 +87,7 @@ export function DevMenu() {
             </button>
           </div>
 
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
           <div className="mb-4 space-y-1 rounded-lg border border-white/5 bg-white/5 px-3 py-2 font-mono text-[11px] text-white/60">
             <p>État : {gameState}</p>
             <p>Breach : {Math.round(breachProgress)}%</p>
@@ -152,42 +138,22 @@ export function DevMenu() {
             </DevButton>
           </div>
 
-          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Enhancements</p>
-          <div className="mb-4 space-y-2 rounded-lg border border-white/5 bg-white/5 p-2">
-            <label className="block space-y-1">
-              <span className="text-[10px] text-white/45">Skill</span>
-              <select
-                className={selectClassName}
-                value={selectedUpgradeId}
-                onChange={(event) => setSelectedUpgradeId(event.target.value as UpgradeId)}
-              >
-                {UPGRADE_CATALOG.map((definition) => (
-                  <option key={definition.id} value={definition.id}>
-                    {definition.name} (LVL {upgrades[definition.id]}/{definition.maxLevel})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[10px] text-white/45">Niveau</span>
-              <select
-                className={selectClassName}
-                value={currentLevel}
-                onChange={(event) =>
-                  devSetUpgradeLevel(selectedUpgradeId, Number(event.target.value))
-                }
-              >
-                {levelOptions.map((level) => (
-                  <option key={level} value={level}>
-                    LVL {level}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <p className="text-[10px] leading-relaxed text-white/35">{selectedDefinition.description}</p>
+          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Kernel Modules</p>
+          <p className="mb-2 text-[10px] text-white/30">Mid-run modules (Overdrive, Pierce, etc.)</p>
+          <div className="mb-4">
+            <DevModulePanel />
           </div>
 
-          <p className="text-[10px] text-white/30">Raccourci : ` ou Ctrl+Shift+D</p>
+          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Skill Tree</p>
+          <p className="mb-2 text-[10px] text-white/30">Permanent upgrades (Initial Relay, Bolt Power, etc.)</p>
+          <div className="mb-4">
+            <DevUpgradePanel />
+          </div>
+          </div>
+
+          <div className="shrink-0 border-t border-white/8 px-4 py-2">
+            <p className="text-[10px] text-white/30">Raccourci : ` ou Ctrl+Shift+D</p>
+          </div>
         </div>
       )}
     </div>

@@ -6,16 +6,6 @@ import {
 import { isPointInFlatTopHex } from './hexUtils';
 import type { DissipationNode } from './types';
 
-export function getEnemyBounds(): {
-  radius: number;
-  halfSize: number;
-} {
-  return {
-    radius: getEnemyHexRadius(0),
-    halfSize: getEnemyHexRadius(1),
-  };
-}
-
 export function isParticleHittingEnemy(
   px: number,
   py: number,

@@ -4,8 +4,6 @@ import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
 import { spawnEnemyOnEdge } from './enemyMovement';
 import { pushSpawnFlash, type GameEffect } from './effects';
-import type { PlayerState } from './playerMovement';
-import { getPlayerPosition } from './playerMovement';
 import { getRunConfig } from './runConfig';
 import type { DissipationNode } from './types';
 import { getWaveDefinition, REGULAR_WAVE_COUNT } from './waveConfig';
@@ -25,7 +23,6 @@ interface WaveEngineProps {
   isPlaying: boolean;
   nodesRef: RefObject<DissipationNode[]>;
   effectsRef: RefObject<GameEffect[]>;
-  playerRef: MutableRefObject<PlayerState>;
   waveRuntimeRef: MutableRefObject<WaveRuntime>;
 }
 
@@ -48,7 +45,6 @@ export function WaveEngine({
   isPlaying,
   nodesRef,
   effectsRef,
-  playerRef,
   waveRuntimeRef,
 }: WaveEngineProps) {
   const { app } = useApplication();
@@ -67,9 +63,8 @@ export function WaveEngine({
       const waveDef = getWaveDefinition(runtime.waveIndex);
       if (!waveDef) return;
 
-      const target = getPlayerPosition(playerRef.current);
       const bounds = getScreenBounds(app.screen.width, app.screen.height);
-      const config = getRunConfig(store.upgrades, store.runDraftLevels);
+      const config = getRunConfig(store.upgrades, store.runModuleLevels);
 
       if (runtime.state === 'intermission') {
         runtime.intermissionMs -= ticker.deltaMS;
@@ -106,11 +101,10 @@ export function WaveEngine({
           ) {
             runtime.spawnAccumulatorMs -= spawnGroup.intervalMs;
             runtime.spawnedInGroup += 1;
-            const spawned = spawnEnemyOnEdge(target, bounds, config, {
+            const spawned = spawnEnemyOnEdge(bounds, config, {
               tier: spawnGroup.tier,
               waveIndex: runtime.waveIndex,
               isBoss: waveDef.isBoss,
-              bossId: waveDef.bossId,
               bossHpMult: waveDef.bossHpMult ?? 1,
               bossSpeedMult: waveDef.bossSpeedMult ?? 1,
             });
@@ -142,7 +136,7 @@ export function WaveEngine({
         store.setShowWaveClear(true);
       }
     },
-    [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef, playerRef, waveRuntimeRef],
+    [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef, waveRuntimeRef],
   );
 
   useTick({ callback: tick, isEnabled: isPlaying });
