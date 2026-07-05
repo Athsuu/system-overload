@@ -1,32 +1,116 @@
-# React + TypeScript + Vite
+# System Overload
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**The system collapses under a wave of corrupted processes.**
 
-Currently, two official plugins are available:
+You are the **Kernel** — the last stable core. Move, auto-fire Flux Bolts, survive escalating waves, and keep **Breach** overload under control until you **Contain the Breach** or suffer a **Meltdown**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Roguelite arena shooter with instant-start runs, mid-run **Module Bay** upgrades, and permanent **Skill Tree** meta-progression. Dark Hex Terminal aesthetic: glass UI over a high-frequency WebGL battlefield.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Gameplay loop
 
-## Expanding the Oxlint configuration
+1. **Start Run** — drop straight into the arena (no setup phase).
+2. **Survive waves** of **Corrupted Processes** converging on the Kernel.
+3. **Manage Breach** — impacts, missed shots, and time drive overload toward Meltdown.
+4. **Level up** → earn **Cycles** → open the **Module Bay** and install Kernel Modules mid-run.
+5. **End of run** → **Run Shards** transfer to your vault → spend **Hex Shards** on permanent Skill Enhancements.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+| In-run | Between runs |
+|--------|----------------|
+| Cycles, Kernel Modules, XP | Hex Shards (vault) |
+| Breach / Overload | Skill Tree upgrades |
+| Wave progression | Permanent Kernel tuning |
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+---
+
+## Controls
+
+| Input | Action |
+|-------|--------|
+| **W A S D** / **Arrow keys** | Move the Kernel |
+| **Auto-fire** | Flux Bolts target the nearest Corrupted Process |
+| **Pause** | `Esc` — resume, settings, or abort run |
+
+---
+
+## Enemies — Corrupted Processes (NODE-ALPHA)
+
+Procedural threats rendered in PixiJS at 60 FPS:
+
+- Rotating violet hex shell with corruption texture (grain, scanlines, vertex glitches)
+- Cyan core whose **size scales with remaining HP** (invisible health read)
+- Orbiting satellite markers and hit-reactive core glow
+- **Boss wave** — breach-orange core variant (`core_breach`)
+
+Internal code name: `DissipationNode`. Player-facing lore: *Corrupted Processes*.
+
+---
+
+## Tech stack
+
+| Layer | Tools |
+|-------|--------|
+| Language | **TypeScript** (strict) |
+| UI | **React 19** + **Vite 8** + **Tailwind CSS 4** |
+| Game render | **PixiJS 8** via `@pixi/react` |
+| State (low frequency) | **Zustand** — currency, Breach, game phase, upgrades |
+| Lint | **Oxlint** |
+
+---
+
+## Architecture
+
+Strict separation between UI and game simulation:
+
+```
+src/
+├── ui/          React + Tailwind — menus, HUD, Module Bay, Skill Tree, settings
+├── game/        PixiJS + pure TS — arena, particles, enemies, effects (60+ FPS)
+├── store/       Zustand — persistence, upgrades, kernel module catalog
+└── theme/       Dark Hex Terminal design tokens
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+**Performance rules**
+
+- Entity positions, rotation, and velocity never live in React state or Zustand.
+- The gameplay loop uses Pixi `useTick` and mutable refs — **no React re-renders per frame**.
+- Zustand holds metadata only: `tflops`, Breach, `gameState`, upgrade levels, etc.
+
+---
+
+## Getting started
+
+**Requirements:** Node.js 20+
+
+```bash
+git clone https://github.com/Athsuu/system-overload.git
+cd system-overload
+npm install
+npm run dev
+```
+
+Open the URL shown by Vite (usually `http://localhost:5173`).
+
+### Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Dev server with HMR |
+| `npm run build` | Typecheck + production build |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Oxlint |
+
+---
+
+## Project docs
+
+- [`docs/narrative.md`](docs/narrative.md) — lore bible, canonical vocabulary, creative direction (FR, draft)
+
+---
+
+## Repository
+
+**GitHub:** [github.com/Athsuu/system-overload](https://github.com/Athsuu/system-overload)
+
+Private project — all rights reserved.
