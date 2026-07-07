@@ -2,18 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import { getBreachCap } from '../game/runConfig';
 import { overclockDisplayRef } from '../game/overclockDisplay';
 import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
+import { useGameStrings } from '../i18n/useGameStrings';
 import { useGameStore } from '../store/useGameStore';
 import { BREACH_URGENT_THRESHOLD, DARK_HEX } from '../theme/darkHexTerminal';
-import { GAME_NARRATIVE } from './gameNarrative';
+import { SkillBranchIcon } from './skillTreeBranchIcons';
+import { requestOverclockActivation } from '../game/overclockInput';
+import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
+import { OverclockButton } from './OverclockButton';
 import { hexagonPoints } from './skillTreeGeometry';
+
+const FLUX_COLOR = '#38bdf8';
 
 function RunShardsBadge() {
   const runShards = useGameStore((state) => state.runShards);
+  const strings = useGameStrings();
 
   return (
-    <div className="pointer-events-none absolute top-6 right-6 z-20 flex flex-col items-end gap-1">
+    <div
+      data-tutorial-anchor="run-shards"
+      className="pointer-events-none absolute top-6 right-6 z-20 flex flex-col items-end gap-1"
+    >
       <p className="text-[9px] font-medium tracking-[0.25em] text-white/40 uppercase">
-        {GAME_NARRATIVE.currency.runShardsLabel}
+        {strings.currency.runShardsLabel}
       </p>
       <div className="relative flex h-14 w-14 items-center justify-center">
         <svg viewBox="0 0 56 56" className="absolute inset-0 h-full w-full">
@@ -33,37 +43,52 @@ function RunShardsBadge() {
   );
 }
 
-function RunLevelBadge() {
-  const runLevel = useGameStore((state) => state.runLevel);
-  const runXp = useGameStore((state) => state.runXp);
-  const runXpToNext = useGameStore((state) => state.runXpToNext);
-  const runCycles = useGameStore((state) => state.runCycles);
-  const xpPercent = runXpToNext > 0 ? (runXp / runXpToNext) * 100 : 0;
+function FluxDriveToggle() {
+  const fluxDriveLevel = useGameStore((state) => state.upgrades.fluxDrive);
+  const fluxDriveEnabled = useGameStore((state) => state.fluxDriveEnabled);
+  const toggleFluxDriveEnabled = useGameStore((state) => state.toggleFluxDriveEnabled);
+  const strings = useGameStrings();
+  const { fluxDriveLabel, fluxDriveOn, fluxDriveOff } = strings.hud;
+
+  if (fluxDriveLevel <= 0) return null;
+
+  const isOn = fluxDriveEnabled;
+  const accent = isOn ? FLUX_COLOR : 'rgba(255,255,255,0.35)';
 
   return (
-    <div className="pointer-events-none absolute top-6 left-6 z-20 w-40">
-      <div className="mb-1 flex items-center justify-between text-[9px] tracking-[0.2em] uppercase">
-        <span style={{ color: DARK_HEX.gold }}>Level {runLevel}</span>
-        <span className="font-mono text-white/40">
-          {runXp}/{runXpToNext}
+    <button
+      type="button"
+      aria-pressed={isOn}
+      aria-label={isOn ? fluxDriveOn : fluxDriveOff}
+      onClick={() => toggleFluxDriveEnabled()}
+      className="pointer-events-auto absolute top-6 left-6 z-20 flex items-center gap-2 rounded border px-2 py-1.5 transition hover:brightness-110"
+      style={{
+        borderColor: isOn ? `${FLUX_COLOR}88` : 'rgba(255,255,255,0.12)',
+        backgroundColor: isOn ? 'rgba(56,189,248,0.12)' : 'rgba(10,10,15,0.75)',
+        boxShadow: isOn ? `0 0 14px ${FLUX_COLOR}33` : undefined,
+      }}
+    >
+      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center">
+        <svg viewBox="0 0 36 36" className="absolute inset-0 h-full w-full" aria-hidden>
+          <polygon
+            points={hexagonPoints(18, 18, 16)}
+            fill="#120808"
+            stroke={accent}
+            strokeWidth={1.25}
+            strokeOpacity={isOn ? 0.9 : 0.45}
+          />
+        </svg>
+        <span className="relative">
+          <SkillBranchIcon branch="flux" size={18} color={accent} />
         </span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full" style={{ backgroundColor: '#1a0808' }}>
-        <div
-          className="h-full rounded-full transition-all duration-150"
-          style={{
-            width: `${xpPercent}%`,
-            background: `linear-gradient(90deg, ${DARK_HEX.lockedStroke}, ${DARK_HEX.gold})`,
-          }}
-        />
+      <div className="flex flex-col items-start pr-1">
+        <span className="text-[9px] tracking-[0.2em] text-white/40 uppercase">{fluxDriveLabel}</span>
+        <span className="font-mono text-[10px] font-semibold" style={{ color: accent }}>
+          {isOn ? fluxDriveOn : fluxDriveOff}
+        </span>
       </div>
-      {runCycles > 0 && (
-        <p className="mt-1.5 text-[9px] tracking-[0.15em] text-white/35 uppercase">
-          {GAME_NARRATIVE.hud.cyclesLabel}{' '}
-          <span className="font-mono text-white/55">{runCycles}</span>
-        </p>
-      )}
-    </div>
+    </button>
   );
 }
 
@@ -71,9 +96,13 @@ function WaveCounter() {
   const waveIndex = useGameStore((state) => state.waveIndex);
   const wavePhase = useGameStore((state) => state.wavePhase);
   const showWaveClear = useGameStore((state) => state.showWaveClear);
+  const strings = useGameStrings();
 
   const isBoss = wavePhase === 'boss' || waveIndex > REGULAR_WAVE_COUNT;
-  const label = isBoss ? 'BOSS' : `Wave ${Math.min(waveIndex, REGULAR_WAVE_COUNT)}/${REGULAR_WAVE_COUNT}`;
+  const currentWave = Math.min(waveIndex, REGULAR_WAVE_COUNT);
+  const label = isBoss
+    ? strings.ui.boss
+    : `${strings.ui.wave} ${currentWave}/${REGULAR_WAVE_COUNT}`;
 
   return (
     <div className="pointer-events-none absolute top-6 left-1/2 z-20 -translate-x-1/2 text-center">
@@ -83,7 +112,7 @@ function WaveCounter() {
           className="so-animate-wave-clear text-xs tracking-[0.35em] uppercase"
           style={{ color: DARK_HEX.gold, textShadow: `0 0 20px ${DARK_HEX.breachGlow}44` }}
         >
-          Wave Clear
+          {strings.ui.waveClear}
         </p>
       ) : (
         <>
@@ -91,7 +120,7 @@ function WaveCounter() {
             className="text-[10px] tracking-[0.3em] uppercase"
             style={{ color: isBoss ? DARK_HEX.breach : DARK_HEX.goldMuted }}
           >
-            {isBoss ? 'Boss Incoming' : label}
+            {isBoss ? strings.ui.bossIncoming : label}
           </p>
           {!isBoss && (
             <p className="mt-0.5 font-mono text-sm text-white/70">{label}</p>
@@ -102,23 +131,33 @@ function WaveCounter() {
   );
 }
 
-function WasdControlsHint() {
+function PurgeControlsHint() {
+  const runSpotlightActive = useRunTutorialSpotlightActive();
+  const strings = useGameStrings();
+  if (runSpotlightActive) return null;
+
   return (
-    <div className="pointer-events-none absolute bottom-24 left-6 z-20 text-[9px] tracking-[0.2em] text-white/30 uppercase">
-      <p style={{ color: DARK_HEX.goldMuted }}>Move</p>
-      <p className="mt-1 font-mono text-white/45">W A S D</p>
+    <div
+      data-tutorial-anchor="purge-zone"
+      className="pointer-events-none absolute bottom-24 left-6 z-20 text-[9px] tracking-[0.2em] text-white/30 uppercase"
+    >
+      <p style={{ color: DARK_HEX.goldMuted }}>{strings.ui.purgeZone}</p>
+      <p className="mt-1 font-mono text-white/45">{strings.ui.mouse}</p>
     </div>
   );
 }
 
 function OverclockIndicator() {
   const gameState = useGameStore((state) => state.gameState);
+  const overclockLevel = useGameStore((state) => state.upgrades.overclock);
+  const runSpotlightActive = useRunTutorialSpotlightActive();
+  const strings = useGameStrings();
   const [display, setDisplay] = useState(overclockDisplayRef);
   const [ringPercent, setRingPercent] = useState(0);
   const smoothedRef = useRef(0);
 
   useEffect(() => {
-    if (gameState !== 'PLAYING') return;
+    if (overclockLevel <= 0 || gameState !== 'PLAYING') return;
 
     let frameId = 0;
 
@@ -134,34 +173,31 @@ function OverclockIndicator() {
 
     frameId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frameId);
-  }, [gameState]);
+  }, [gameState, overclockLevel]);
+
+  if (overclockLevel <= 0) return null;
+
+  const ready = !display.active && ringPercent >= 99.5;
+  const canActivate = ready && !runSpotlightActive;
+
+  const handleActivate = () => {
+    if (!canActivate) return;
+    requestOverclockActivation();
+  };
 
   return (
-    <div className="pointer-events-none absolute right-6 bottom-24 z-20 flex flex-col items-end gap-1">
-      <p className="text-[9px] tracking-[0.2em] text-white/35 uppercase">Overclock</p>
-      <p className="text-[9px] tracking-[0.15em] text-white/25 uppercase">[Space]</p>
-      <div className="relative flex h-10 w-10 items-center justify-center">
-        <svg viewBox="0 0 40 40" className="absolute inset-0 h-full w-full -rotate-90">
-          <circle cx="20" cy="20" r="17" fill="none" stroke="#1a0808" strokeWidth="2" />
-          <circle
-            cx="20"
-            cy="20"
-            r="17"
-            fill="none"
-            stroke={display.active ? DARK_HEX.breach : DARK_HEX.gold}
-            strokeWidth="2"
-            strokeDasharray={`${(ringPercent / 100) * 106.8} 106.8`}
-            strokeLinecap="round"
-            style={{ transition: 'stroke 150ms ease-out' }}
-          />
-        </svg>
-        <span
-          className="relative text-[10px] font-bold tracking-wider"
-          style={{ color: display.active ? DARK_HEX.breach : DARK_HEX.gold }}
-        >
-          OC
-        </span>
-      </div>
+    <div
+      data-tutorial-anchor="overclock"
+      className="pointer-events-auto absolute right-8 bottom-32 z-20"
+    >
+      <OverclockButton
+        label={strings.ui.overclock}
+        ringPercent={ringPercent}
+        active={display.active}
+        ready={ready}
+        onActivate={handleActivate}
+        disabled={!canActivate}
+      />
     </div>
   );
 }
@@ -169,13 +205,15 @@ function OverclockIndicator() {
 function OverloadBar() {
   const breachProgress = useGameStore((state) => state.breachProgress);
   const upgrades = useGameStore((state) => state.upgrades);
+  const strings = useGameStrings();
   const breachCap = getBreachCap(upgrades);
   const progressPercent = breachCap > 0 ? (breachProgress / breachCap) * 100 : 0;
   const isUrgent = progressPercent >= BREACH_URGENT_THRESHOLD;
-  const { overloadLabel, overloadStable, overloadUrgent, overloadHint } = GAME_NARRATIVE.hud;
+  const { overloadLabel, overloadStable, overloadUrgent, overloadHint } = strings.hud;
 
   return (
     <div
+      data-tutorial-anchor="overload-bar"
       className="pointer-events-none absolute inset-x-0 bottom-0 z-20 border-t px-6 py-3"
       style={{ borderColor: DARK_HEX.lockedStroke, backgroundColor: 'rgba(10, 10, 15, 0.85)' }}
     >
@@ -216,9 +254,9 @@ export function HUD() {
   return (
     <>
       <RunShardsBadge />
-      <RunLevelBadge />
+      <FluxDriveToggle />
       <WaveCounter />
-      <WasdControlsHint />
+      <PurgeControlsHint />
       <OverclockIndicator />
       <OverloadBar />
     </>

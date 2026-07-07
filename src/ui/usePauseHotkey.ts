@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
+import { isTutorialRunSpotlightActive } from '../tutorial/tutorialRunSpotlight';
 
 export function usePauseHotkey(): void {
   const togglePause = useGameStore((state) => state.togglePause);
@@ -18,6 +19,7 @@ export function usePauseHotkey(): void {
 
       const gameState = useGameStore.getState().gameState;
       if (gameState !== 'PLAYING' && gameState !== 'PAUSED') return;
+      if (isTutorialRunSpotlightActive()) return;
 
       event.preventDefault();
       togglePause();

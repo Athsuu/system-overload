@@ -1,10 +1,17 @@
-import { clearSave, saveGame } from '../store/persistence';
-import { DEFAULT_PRESTIGE } from '../store/prestigeTypes';
 import {
-  DEFAULT_KERNEL_MODULE_LEVELS,
-  KERNEL_MODULE_CATALOG,
-  type KernelModuleId,
-} from '../store/kernelModuleCatalog';
+  devSetInvincible,
+  devSetShowEnemyHpBars,
+  devToggleInvincible,
+  devToggleShowEnemyHpBars,
+  isDevInvincible,
+  isDevShowEnemyHpBars,
+} from './devFlags';
+import { clearSave, saveGame } from '../store/persistence';
+import { clearAllPlayerData } from '../store/playerReset';
+import { clearTutorialProgress } from '../tutorial/tutorialPersistence';
+import { clearArchAmbientHeard } from '../tutorial/archAmbientPersistence';
+import { resetTutorialSignals } from '../tutorial/tutorialSignals';
+import { DEFAULT_PRESTIGE } from '../store/prestigeTypes';
 import {
   DEFAULT_UPGRADES,
   UPGRADE_CATALOG,
@@ -16,11 +23,21 @@ import { useGameStore, type GameState } from '../store/useGameStore';
 function persist(state: ReturnType<typeof useGameStore.getState>): void {
   saveGame({
     bankShards: state.bankShards,
+    bankAnchorFragments: state.bankAnchorFragments,
     upgrades: state.upgrades,
     prestigeUnlocked: state.prestigeUnlocked,
     prestigeLevel: state.prestigeLevel,
   });
 }
+
+export {
+  devToggleInvincible,
+  devSetInvincible,
+  isDevInvincible,
+  devToggleShowEnemyHpBars,
+  devSetShowEnemyHpBars,
+  isDevShowEnemyHpBars,
+};
 
 export function devAddBankShards(amount: number): void {
   const state = useGameStore.getState();
@@ -48,13 +65,13 @@ export function devSetBreachProgress(percent: number): void {
 
 export function devForceEndBreach(): void {
   const state = useGameStore.getState();
-  if (state.gameState !== 'PLAYING' && state.gameState !== 'MODULE_BAY') return;
+  if (state.gameState !== 'PLAYING') return;
   state.endRun('defeat_breach');
 }
 
 export function devForceVictoryBoss(): void {
   const state = useGameStore.getState();
-  if (state.gameState !== 'PLAYING' && state.gameState !== 'MODULE_BAY') return;
+  if (state.gameState !== 'PLAYING') return;
   state.endRun('victory_boss');
 }
 
@@ -98,23 +115,6 @@ export function devSetUpgradeLevel(id: UpgradeId, level: number): void {
   useGameStore.setState({ upgrades });
 }
 
-export function devSetModuleLevel(id: KernelModuleId, level: number): void {
-  const definition = KERNEL_MODULE_CATALOG.find((entry) => entry.id === id);
-  if (!definition) return;
-
-  const state = useGameStore.getState();
-  const clampedLevel = Math.max(0, Math.min(definition.maxLevel, Math.floor(level)));
-  const runModuleLevels = { ...state.runModuleLevels };
-
-  if (clampedLevel === 0) {
-    delete runModuleLevels[id];
-  } else {
-    runModuleLevels[id] = clampedLevel;
-  }
-
-  useGameStore.setState({ runModuleLevels });
-}
-
 export function devWipeProgress(): void {
   clearSave();
   useGameStore.setState({
@@ -128,6 +128,25 @@ export function devWipeProgress(): void {
     prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
     runOutcome: null,
     prestigeUnlockedThisRun: false,
-    runModuleLevels: { ...DEFAULT_KERNEL_MODULE_LEVELS },
+    waveIndex: 0,
+    wavePhase: 'idle',
+    showWaveClear: false,
   });
+}
+
+export function devResetToNewPlayer(): void {
+  const confirmed = window.confirm(
+    'Effacer toute la progression et les réglages ?\n\n' +
+      'Comme une première ouverture du jeu : 0 Shards, skill tree vide, audio à 50 %.',
+  );
+  if (!confirmed) return;
+
+  clearAllPlayerData();
+  window.location.reload();
+}
+
+export function devResetTutorial(): void {
+  clearTutorialProgress();
+  clearArchAmbientHeard();
+  resetTutorialSignals();
 }

@@ -1,18 +1,23 @@
 import { DevMenu } from './dev/DevMenu';
 import { isDevMenuEnabled } from './dev/isDevMenuEnabled';
+import { useHubAudio } from './audio/useHubAudio';
 import { GameCanvas } from './game/GameCanvas';
 import { useBreachEndWatcher } from './game/useBreachEndWatcher';
+import { useProgressAutosave } from './store/useProgressAutosave';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useGameStore } from './store/useGameStore';
 import { ArenaHexOverlay } from './ui/ArenaHexOverlay';
 import { HUD } from './ui/HUD';
 import { PauseScreen } from './ui/PauseScreen';
-import { ModuleBayScreen } from './ui/ModuleBayScreen';
 import { RunEndScreen } from './ui/RunEndScreen';
 import { ScreenTransition } from './ui/ScreenTransition';
 import { SettingsOverlay } from './ui/SettingsOverlay';
+import { MainMenuScreen } from './ui/MainMenuScreen';
 import { SkillTreeScreen } from './ui/SkillTreeScreen';
+import { TutorialCoach } from './ui/TutorialCoach';
+import { ArchAmbient } from './ui/ArchAmbient';
 import { usePauseHotkey } from './ui/usePauseHotkey';
+import { DARK_HEX } from './theme/darkHexTerminal';
 
 function App() {
   useBreachEndWatcher();
@@ -21,14 +26,21 @@ function App() {
   const isSettingsOpen = useSettingsStore((state) => state.isOpen);
   const isPlaying = gameState === 'PLAYING';
   const isPaused = gameState === 'PAUSED';
-  const isModuleBay = gameState === 'MODULE_BAY';
   const isRunEnd = gameState === 'RUN_END';
-  const isArenaVisible = isPlaying || isPaused || isModuleBay || isRunEnd;
+  const isArenaVisible = isPlaying || isPaused || isRunEnd;
+  const isMainMenu = gameState === 'MAIN_MENU';
   const isHub = gameState === 'MENU' || gameState === 'UPGRADING';
   const showHubSettings = isSettingsOpen && isHub;
+  const showMainMenuSettings = isSettingsOpen && isMainMenu;
+
+  useHubAudio();
+  useProgressAutosave();
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#0a0a0f]">
+    <div
+      className="relative h-screen w-screen overflow-hidden"
+      style={{ backgroundColor: DARK_HEX.canvasBg }}
+    >
       {isArenaVisible && (
         <>
           <ArenaHexOverlay />
@@ -46,14 +58,14 @@ function App() {
             <PauseScreen />
           </ScreenTransition>
         )}
-        {isModuleBay && (
-          <ScreenTransition screenKey="module-bay" className="absolute inset-0">
-            <ModuleBayScreen />
-          </ScreenTransition>
-        )}
         {isRunEnd && (
           <ScreenTransition screenKey="run-end" className="absolute inset-0">
             <RunEndScreen />
+          </ScreenTransition>
+        )}
+        {isMainMenu && (
+          <ScreenTransition screenKey="main-menu" className="absolute inset-0">
+            <MainMenuScreen />
           </ScreenTransition>
         )}
         {isHub && (
@@ -62,7 +74,9 @@ function App() {
           </ScreenTransition>
         )}
       </div>
-      {showHubSettings && <SettingsOverlay />}
+      {(showHubSettings || showMainMenuSettings) && <SettingsOverlay />}
+      <TutorialCoach />
+      <ArchAmbient />
       {isDevMenuEnabled() && <DevMenu />}
     </div>
   );

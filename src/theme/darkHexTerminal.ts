@@ -1,8 +1,11 @@
 /** Tokens visuels partagés — DA "Dark Hex Terminal" (skill tree + gameplay). */
 
 export const DARK_HEX = {
-  canvasBg: '#0a0a0f',
-  hexGrid: 'rgba(90, 20, 20, 0.12)',
+  /** Charbon relevé — surface principale (hub, menus). */
+  canvasBg: '#131018',
+  /** Bords et vignettes — plus profond que canvasBg. */
+  canvasBgDeep: '#0a0a0f',
+  hexGrid: 'rgba(120, 42, 32, 0.2)',
   breach: '#ff4d00',
   breachGlow: '#ff6b2b',
   breachStroke: '#ff5533',
@@ -10,7 +13,8 @@ export const DARK_HEX = {
   lockedStroke: '#5c1515',
   gold: '#c5a059',
   goldMuted: 'rgba(197, 160, 89, 0.45)',
-  vignette: 'rgba(255, 77, 0, 0.06)',
+  vignette: 'rgba(255, 77, 0, 0.1)',
+  hubCenterGlow: 'rgba(255, 77, 0, 0.08)',
   tooltipBg: '#1a0a0a',
   tooltipBorder: 'rgba(197, 160, 89, 0.35)',
   coreFillTop: '#2a0808',

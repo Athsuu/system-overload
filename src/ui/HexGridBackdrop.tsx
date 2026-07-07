@@ -56,7 +56,7 @@ export function HexGridBackdrop({
         <div
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 70% 55% at 50% 50%, ${DARK_HEX.vignette} 0%, transparent 60%)`,
+            background: `radial-gradient(ellipse 72% 58% at 50% 48%, ${DARK_HEX.vignette} 0%, transparent 62%)`,
           }}
         />
       )}

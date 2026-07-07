@@ -1,0 +1,43 @@
+---
+description: Références glitch/WebGL/CSS pour effets visuels Zero Archive (UI + Pixi)
+globs: src/ui/**/*,src/game/**/*,src/theme/**/*,docs/visual-effects-references.md
+alwaysApply: false
+---
+
+# Effets visuels — sources et contraintes
+
+Avant d'ajouter glitch, scanlines, aberration chromatique ou shaders :
+
+1. **Lire** `docs/visual-effects-references.md` (sources intégrées + mapping Dark Hex Terminal).
+
+## Sources canoniques
+
+- WebGL perf : https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
+- Glitch Canvas 2D : https://www.kirupa.com/codingexercises/advanced_glitch_effect.htm
+- Glitch CSS : https://alvarotrigo.com/fullPage/css-glitch-effect/
+- Veille / docs : https://lucianolupo.com/
+
+## Règles rapides
+
+| Zone | Faire | Éviter |
+|------|-------|--------|
+| `src/ui/` (menus, HUD, overlays) | CSS `clip-path` + `steps()`, pseudo-éléments, tokens `darkHexTerminal` | `getImageData` en boucle, glassmorphism |
+| `src/game/` (Pixi 60 FPS) | Graphics, Filters Pixi, effets procéduraux existants | DOM/CSS animé par frame, `readPixels`, nouveau RAF parallèle |
+| Urgence Breach | Glitch **seuil-driven** (≥80 %), intensité croissante | Glitch permanent sur tout l'écran |
+
+## MDN / Pixi (perf)
+
+- Batch draw calls ; réutiliser textures/objets ; `destroy()` explicite.
+- Pas de `getError` / `getParameter` / `readPixels` en production sur le thread principal.
+- Préférer vertex shader au fragment quand possible (shaders custom).
+
+## Glitch feel
+
+- Timing `steps(2|3)` — pas d'easing fluide.
+- Couleurs breach orange `#ff4d00` / `#ff6b2b`, fond `#0a0a0f`.
+- UI visible en **anglais**.
+
+## Stack
+
+- Pas de nouvelle lib npm sans validation utilisateur.
+- Respecter séparation UI (React) / Game (Pixi + useTick).

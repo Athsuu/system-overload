@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CORE_POSITION, TREE_CANVAS } from '../store/skillTree';
+import { NODE0_HUB_POSITION } from '../store/skillTree';
 
 const VIEWPORT_STORAGE_KEY = 'system-overload-tree-viewport';
 
+export function clearSkillTreeViewport(): void {
+  sessionStorage.removeItem(VIEWPORT_STORAGE_KEY);
+}
+
 const MIN_SCALE = 0.45;
 const MAX_SCALE = 2;
+const DEFAULT_SCALE = 1;
 const ZOOM_STEP = 0.12;
+const PAN_THRESHOLD_PX = 4;
 
 interface ViewportTransform {
   x: number;
@@ -43,32 +49,42 @@ function saveViewportTransform(transform: ViewportTransform): void {
   sessionStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(transform));
 }
 
-function getFitScale(viewport: HTMLDivElement): number {
-  const scaleX = viewport.clientWidth / TREE_CANVAS.width;
-  const scaleY = viewport.clientHeight / TREE_CANVAS.height;
-  return clampScale(Math.min(scaleX, scaleY) * 0.92);
-}
-
 function getCoreCenteredTransform(
   viewport: HTMLDivElement,
-  scale?: number,
+  scale: number = DEFAULT_SCALE,
 ): ViewportTransform {
-  const fitScale = scale ?? getFitScale(viewport);
+  const fitScale = clampScale(scale);
   return {
-    x: viewport.clientWidth / 2 - CORE_POSITION.x * fitScale,
-    y: viewport.clientHeight / 2 - CORE_POSITION.y * fitScale,
+    x: viewport.clientWidth / 2 - NODE0_HUB_POSITION.x * fitScale,
+    y: viewport.clientHeight / 2 - NODE0_HUB_POSITION.y * fitScale,
     scale: fitScale,
   };
 }
 
+function isPanBlockedTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return Boolean(target.closest('[data-skill-node], [data-skill-tooltip], button'));
+}
+
 export function useSkillTreePan(viewportRef: React.RefObject<HTMLDivElement | null>) {
   const [transform, setTransform] = useState<ViewportTransform>({ x: 0, y: 0, scale: 1 });
+  const [isGrabbing, setIsGrabbing] = useState(false);
+  const transformRef = useRef(transform);
+  transformRef.current = transform;
+
   const isPanningRef = useRef(false);
+  const pendingPanRef = useRef(false);
+  const activePointerIdRef = useRef<number | null>(null);
   const startPointerRef = useRef({ x: 0, y: 0 });
   const startTransformRef = useRef<ViewportTransform>({ x: 0, y: 0, scale: 1 });
 
   const persistTransform = useCallback((next: ViewportTransform) => {
     saveViewportTransform(next);
+  }, []);
+
+  const applyTransform = useCallback((next: ViewportTransform) => {
+    transformRef.current = next;
+    setTransform(next);
   }, []);
 
   const centerOnCore = useCallback(
@@ -78,13 +94,13 @@ export function useSkillTreePan(viewportRef: React.RefObject<HTMLDivElement | nu
 
       const saved = loadViewportTransform();
       if (saved) {
-        setTransform(saved);
+        applyTransform(saved);
         return;
       }
 
-      setTransform(getCoreCenteredTransform(viewport, scale));
+      applyTransform(getCoreCenteredTransform(viewport, scale));
     },
-    [viewportRef],
+    [applyTransform, viewportRef],
   );
 
   useEffect(() => {
@@ -123,6 +139,7 @@ export function useSkillTreePan(viewportRef: React.RefObject<HTMLDivElement | nu
           x: pointerX - treeX * nextScale,
           y: pointerY - treeY * nextScale,
         };
+        transformRef.current = next;
         persistTransform(next);
         return next;
       });
@@ -144,43 +161,74 @@ export function useSkillTreePan(viewportRef: React.RefObject<HTMLDivElement | nu
     return () => viewport.removeEventListener('wheel', onWheel);
   }, [viewportRef, zoomAtPoint]);
 
+  const endPan = useCallback(() => {
+    if (!isPanningRef.current && !pendingPanRef.current) return;
+
+    isPanningRef.current = false;
+    pendingPanRef.current = false;
+    activePointerIdRef.current = null;
+    setIsGrabbing(false);
+    persistTransform(transformRef.current);
+  }, [persistTransform]);
+
   const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return;
-      isPanningRef.current = true;
+      if (isPanBlockedTarget(event.target)) return;
+
+      pendingPanRef.current = true;
+      activePointerIdRef.current = event.pointerId;
       startPointerRef.current = { x: event.clientX, y: event.clientY };
-      startTransformRef.current = { ...transform };
-      event.currentTarget.setPointerCapture(event.pointerId);
+      startTransformRef.current = { ...transformRef.current };
     },
-    [transform],
+    [],
   );
 
   const onPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (!isPanningRef.current) return;
+    if (activePointerIdRef.current !== event.pointerId) return;
 
     const deltaX = event.clientX - startPointerRef.current.x;
     const deltaY = event.clientY - startPointerRef.current.y;
+
+    if (!isPanningRef.current) {
+      if (!pendingPanRef.current) return;
+      if (Math.hypot(deltaX, deltaY) < PAN_THRESHOLD_PX) return;
+
+      isPanningRef.current = true;
+      setIsGrabbing(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
     const next = {
       ...startTransformRef.current,
       x: startTransformRef.current.x + deltaX,
       y: startTransformRef.current.y + deltaY,
     };
-    setTransform(next);
-  }, []);
+    applyTransform(next);
+  }, [applyTransform]);
 
   const onPointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!isPanningRef.current) return;
-      isPanningRef.current = false;
-      event.currentTarget.releasePointerCapture(event.pointerId);
+      if (activePointerIdRef.current !== event.pointerId) return;
 
-      setTransform((current) => {
-        persistTransform(current);
-        return current;
-      });
+      if (isPanningRef.current) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      endPan();
     },
-    [persistTransform],
+    [endPan],
   );
+
+  useEffect(() => {
+    const onWindowPointerUp = () => endPan();
+    window.addEventListener('pointerup', onWindowPointerUp);
+    window.addEventListener('pointercancel', onWindowPointerUp);
+    return () => {
+      window.removeEventListener('pointerup', onWindowPointerUp);
+      window.removeEventListener('pointercancel', onWindowPointerUp);
+    };
+  }, [endPan]);
 
   const zoomIn = useCallback(() => {
     const viewport = viewportRef.current;
@@ -199,13 +247,14 @@ export function useSkillTreePan(viewportRef: React.RefObject<HTMLDivElement | nu
   const resetView = useCallback(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
-    const next = getCoreCenteredTransform(viewport);
-    setTransform(next);
+    const next = getCoreCenteredTransform(viewport, DEFAULT_SCALE);
+    applyTransform(next);
     persistTransform(next);
-  }, [persistTransform, viewportRef]);
+  }, [applyTransform, persistTransform, viewportRef]);
 
   return {
     transform,
+    isGrabbing,
     onPointerDown,
     onPointerMove,
     onPointerUp,

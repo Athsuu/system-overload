@@ -4,11 +4,12 @@ import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
 import { spawnEnemyOnEdge } from './enemyMovement';
 import { pushSpawnFlash, type GameEffect } from './effects';
-import { getRunConfig } from './runConfig';
+import { getRunConfig, getSpawnIntervalMs, getWaveMaxAlive } from './runConfig';
+import { scaleDeltaMs } from './runTimeScale';
 import type { DissipationNode } from './types';
 import { getWaveDefinition, REGULAR_WAVE_COUNT } from './waveConfig';
 
-type WaveState = 'spawning' | 'combat' | 'intermission';
+type WaveState = 'active' | 'intermission';
 
 interface WaveRuntime {
   state: WaveState;
@@ -28,7 +29,7 @@ interface WaveEngineProps {
 
 function createWaveRuntime(): WaveRuntime {
   return {
-    state: 'spawning',
+    state: 'active',
     waveIndex: 1,
     spawnGroupIndex: 0,
     spawnedInGroup: 0,
@@ -39,6 +40,31 @@ function createWaveRuntime(): WaveRuntime {
 
 export function resetWaveRuntime(ref: MutableRefObject<WaveRuntime>): void {
   ref.current = createWaveRuntime();
+}
+
+function trySpawnFromGroup(
+  nodes: DissipationNode[],
+  bounds: ReturnType<typeof getScreenBounds>,
+  config: ReturnType<typeof getRunConfig>,
+  waveDef: NonNullable<ReturnType<typeof getWaveDefinition>>,
+  spawnGroup: (typeof waveDef.spawns)[number],
+  runtime: WaveRuntime,
+  effects: GameEffect[],
+  waveSpawnQuota: number,
+): void {
+  if (runtime.spawnedInGroup >= waveSpawnQuota) return;
+  if (nodes.length >= getWaveMaxAlive(spawnGroup.maxAlive, config)) return;
+
+  const spawned = spawnEnemyOnEdge(bounds, config, {
+    tier: spawnGroup.tier,
+    waveIndex: runtime.waveIndex,
+    isBoss: waveDef.isBoss,
+    bossHpMult: waveDef.bossHpMult ?? 1,
+    bossSpeedMult: waveDef.bossSpeedMult ?? 1,
+  });
+  pushSpawnFlash(effects, spawned.x, spawned.y, spawned.tier, spawned.isBoss ?? false);
+  nodes.push(spawned);
+  runtime.spawnedInGroup += 1;
 }
 
 export function WaveEngine({
@@ -64,76 +90,100 @@ export function WaveEngine({
       if (!waveDef) return;
 
       const bounds = getScreenBounds(app.screen.width, app.screen.height);
-      const config = getRunConfig(store.upgrades, store.runModuleLevels);
+      const config = getRunConfig(store.upgrades);
+      const effects = effectsRef.current ?? [];
+
+      const spawnGroup = waveDef.spawns[runtime.spawnGroupIndex];
+      const waveSpawnQuota =
+        spawnGroup && runtime.waveIndex === 1
+          ? spawnGroup.count + config.starterNodes
+          : (spawnGroup?.count ?? 0);
 
       if (runtime.state === 'intermission') {
-        runtime.intermissionMs -= ticker.deltaMS;
+        runtime.intermissionMs -= scaleDeltaMs(ticker.deltaMS);
         if (runtime.intermissionMs <= 0) {
           runtime.waveIndex += 1;
           runtime.spawnGroupIndex = 0;
           runtime.spawnedInGroup = 0;
           runtime.spawnAccumulatorMs = 0;
-          runtime.state = 'spawning';
+          runtime.state = 'active';
 
           const nextWave = getWaveDefinition(runtime.waveIndex);
           store.setWaveIndex(runtime.waveIndex);
-          store.setWavePhase(nextWave?.isBoss ? 'boss' : 'combat');
+          store.setWavePhase(nextWave?.isBoss ? 'boss' : 'spawning');
           store.setShowWaveClear(false);
         }
         return;
       }
 
-      const spawnGroup = waveDef.spawns[runtime.spawnGroupIndex];
-      if (runtime.state === 'spawning' && spawnGroup) {
-        if (spawnGroup.intervalMs <= 0 || runtime.spawnedInGroup >= spawnGroup.count) {
-          if (runtime.spawnGroupIndex < waveDef.spawns.length - 1) {
-            runtime.spawnGroupIndex += 1;
-            runtime.spawnedInGroup = 0;
-            runtime.spawnAccumulatorMs = 0;
+      if (spawnGroup) {
+        const quotaMet = runtime.spawnedInGroup >= waveSpawnQuota;
+        const waveMaxAlive = getWaveMaxAlive(spawnGroup.maxAlive, config);
+        const spawnIntervalMs = getSpawnIntervalMs(spawnGroup.intervalMs, config);
+
+        if (!quotaMet) {
+          const spawnDelta = Math.min(scaleDeltaMs(ticker.deltaMS), spawnIntervalMs);
+
+          if (spawnIntervalMs <= 0) {
+            if (nodes.length < waveMaxAlive) {
+              trySpawnFromGroup(
+                nodes,
+                bounds,
+                config,
+                waveDef,
+                spawnGroup,
+                runtime,
+                effects,
+                waveSpawnQuota,
+              );
+            }
           } else {
-            runtime.state = 'combat';
-          }
-        } else {
-          runtime.spawnAccumulatorMs += ticker.deltaMS;
-          while (
-            runtime.spawnAccumulatorMs >= spawnGroup.intervalMs &&
-            runtime.spawnedInGroup < spawnGroup.count
-          ) {
-            runtime.spawnAccumulatorMs -= spawnGroup.intervalMs;
-            runtime.spawnedInGroup += 1;
-            const spawned = spawnEnemyOnEdge(bounds, config, {
-              tier: spawnGroup.tier,
-              waveIndex: runtime.waveIndex,
-              isBoss: waveDef.isBoss,
-              bossHpMult: waveDef.bossHpMult ?? 1,
-              bossSpeedMult: waveDef.bossSpeedMult ?? 1,
-            });
-            pushSpawnFlash(
-              effectsRef.current ?? [],
-              spawned.x,
-              spawned.y,
-              spawned.tier,
-              spawned.isBoss ?? false,
-            );
-            nodes.push(spawned);
+            runtime.spawnAccumulatorMs += spawnDelta;
+            if (
+              runtime.spawnAccumulatorMs >= spawnIntervalMs &&
+              runtime.spawnedInGroup < waveSpawnQuota &&
+              nodes.length < waveMaxAlive
+            ) {
+              runtime.spawnAccumulatorMs -= spawnIntervalMs;
+              trySpawnFromGroup(
+                nodes,
+                bounds,
+                config,
+                waveDef,
+                spawnGroup,
+                runtime,
+                effects,
+                waveSpawnQuota,
+              );
+            }
           }
         }
-      }
 
-      if (runtime.state === 'combat' && nodes.length === 0) {
-        if (waveDef.isBoss) {
-          store.endRun('victory_boss');
-          return;
+        if (nodes.length > 0) {
+          store.setWavePhase(waveDef.isBoss ? 'boss' : 'combat');
+        } else if (!quotaMet) {
+          store.setWavePhase('spawning');
         }
 
-        if (runtime.waveIndex >= REGULAR_WAVE_COUNT + 1) {
-          return;
-        }
+        const groupComplete =
+          runtime.spawnedInGroup >= waveSpawnQuota &&
+          runtime.spawnGroupIndex >= waveDef.spawns.length - 1;
 
-        runtime.state = 'intermission';
-        runtime.intermissionMs = waveDef.interWaveMs;
-        store.setWavePhase('intermission');
-        store.setShowWaveClear(true);
+        if (groupComplete && nodes.length === 0) {
+          if (waveDef.isBoss) {
+            store.endRun('victory_boss');
+            return;
+          }
+
+          if (runtime.waveIndex >= REGULAR_WAVE_COUNT + 1) {
+            return;
+          }
+
+          runtime.state = 'intermission';
+          runtime.intermissionMs = waveDef.interWaveMs;
+          store.setWavePhase('intermission');
+          store.setShowWaveClear(true);
+        }
       }
     },
     [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef, waveRuntimeRef],

@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import type { GameState } from '../store/useGameStore';
-import type { UpgradeId } from '../store/upgradeCatalog';
+import type { TreeNodeId } from '../store/skillTree';
+import { markTutorialSignal } from '../tutorial/tutorialSignals';
+import { useGameStrings } from '../i18n/useGameStrings';
+import { DARK_HEX } from '../theme/darkHexTerminal';
 import { CurrencyBadge } from './CurrencyBadge';
-import { GAME_NARRATIVE } from './gameNarrative';
 import { PlayRunButton } from './PlayRunButton';
 import { SettingsGearButton } from './SettingsGearButton';
 import { SkillTreeViewport } from './SkillTreeViewport';
+import { TerminalBackdrop } from './TerminalBackdrop';
+import { ArchGlitchLine } from './ArchGlitchText';
 
 interface SkillTreeScreenProps {
   mode: Extract<GameState, 'MENU' | 'UPGRADING'>;
 }
 
 export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
-  const [selectedId, setSelectedId] = useState<UpgradeId | null>(null);
+  const [selectedId, setSelectedId] = useState<TreeNodeId | null>(null);
+  const strings = useGameStrings();
   const isMenu = mode === 'MENU';
 
-  const toggleSkillSelection = (id: UpgradeId) => {
+  const toggleSkillSelection = (id: TreeNodeId) => {
+    markTutorialSignal('skillNodeSelected');
     setSelectedId((current) => (current === id ? null : id));
   };
 
@@ -24,36 +30,31 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
   };
 
   return (
-    <div className="pointer-events-auto absolute inset-0 overflow-hidden bg-[#0a0a0f]">
+    <div
+      className="pointer-events-auto absolute inset-0 overflow-hidden"
+      style={{ backgroundColor: DARK_HEX.canvasBg }}
+    >
+      <TerminalBackdrop patternId="hubHexGrid" variant="hub" />
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-center px-6 pt-8">
         <h1
-          className="text-xl font-normal tracking-[0.35em] uppercase"
-          style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: '#c5a059' }}
+          className="so-font-display so-hub-glitch-title text-xl font-semibold tracking-[0.35em] uppercase"
+          style={{ color: '#c5a059' }}
         >
-          {isMenu ? GAME_NARRATIVE.title : GAME_NARRATIVE.hub.upgradesTitle}
+          <ArchGlitchLine
+            text={isMenu ? strings.title : strings.hub.upgradesTitle}
+            variant="title"
+            quote={false}
+            glitchChance={0.06}
+          />
         </h1>
 
         {isMenu ? (
-          <>
-            <p className="mt-3 max-w-md text-center text-[11px] leading-relaxed tracking-[0.12em] text-white/50">
-              {GAME_NARRATIVE.tagline}
-            </p>
-            <p className="mt-2 text-[10px] tracking-[0.22em] text-white/40 uppercase">
-              {GAME_NARRATIVE.role}
-            </p>
-            <p className="mt-3 max-w-lg text-center text-[10px] leading-relaxed text-white/30">
-              {GAME_NARRATIVE.objective}
-            </p>
-            <p className="mt-3 max-w-lg text-center text-[9px] leading-relaxed text-white/25">
-              {GAME_NARRATIVE.lore.progression}
-            </p>
-            <p className="mt-2 max-w-md text-center text-[9px] italic leading-relaxed text-white/20">
-              {GAME_NARRATIVE.lore.moduleBay}
-            </p>
-          </>
+          <p className="so-hub-glitch-tagline mt-3 max-w-md text-center text-[10px] tracking-[0.18em] text-white/35">
+            <ArchGlitchLine text={strings.tagline} variant="dialogue" quote={false} glitchChance={0.1} />
+          </p>
         ) : (
           <p className="mt-2 text-[11px] tracking-[0.3em] text-white/50 uppercase">
-            {GAME_NARRATIVE.hub.upgradesSubtitle}
+            {strings.hub.upgradesSubtitle}
           </p>
         )}
 

@@ -9,6 +9,7 @@ import {
 import { syncOverclockDisplay } from './overclockDisplay';
 import { applyTimeOverload } from './overload';
 import { getRunConfig } from './runConfig';
+import { scaleDeltaSeconds } from './runTimeScale';
 
 interface RunTimerEngineProps {
   isPlaying: boolean;
@@ -21,8 +22,8 @@ export function RunTimerEngine({ isPlaying, overclockRef }: RunTimerEngineProps)
       const store = useGameStore.getState();
       if (store.gameState !== 'PLAYING') return;
 
-      const config = getRunConfig(store.upgrades, store.runModuleLevels);
-      const deltaSeconds = ticker.deltaMS / 1000;
+      const config = getRunConfig(store.upgrades);
+      const deltaSeconds = scaleDeltaSeconds(ticker.deltaMS / 1000);
       const heatMult = overclockRef.current.active ? 0.6 : 1;
       applyTimeOverload(config, deltaSeconds, heatMult);
     },
@@ -38,9 +39,7 @@ export function tickOverclockFromStore(
   overclockRef: MutableRefObject<OverclockState>,
   deltaMs: number,
 ): void {
-  const store = useGameStore.getState();
-  const moduleLevels = store.runModuleLevels;
-  const cooldownMs = getOverclockCooldownMs(moduleLevels, store.upgrades.fluxThrottle);
+  const cooldownMs = getOverclockCooldownMs();
 
   const state = overclockRef.current;
   if (state.active) {
@@ -57,10 +56,6 @@ export function tickOverclockFromStore(
   }
 
   syncOverclockDisplay(state.active, state.cooldownTimerMs, cooldownMs);
-}
-
-export function getOverclockFireRateMult(overclockRef: MutableRefObject<OverclockState>): number {
-  return overclockRef.current.active ? 0.5 : 1;
 }
 
 export { getOverclockDurationMs, getOverclockCooldownMs };

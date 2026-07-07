@@ -1,21 +1,28 @@
 import { useMemo, useRef, useState } from 'react';
 import {
   getUpgradeCost,
-  UPGRADE_CATALOG,
+  getUpgradeDefinition,
   type UpgradeId,
 } from '../store/upgradeCatalog';
-import { BRANCH_LABELS, getSkillNode } from '../store/skillTree';
+import {
+  getSkillIconBranch,
+  getSkillIconBranchMeta,
+  getSkillNode,
+  SKILL_TREE_NODES,
+} from '../store/skillTree';
 import { useGameStore } from '../store/useGameStore';
+import { SkillBranchIcon } from '../ui/skillTreeBranchIcons';
 import { devSetUpgradeLevel } from './devActions';
 import { DevFloatingTooltip } from './DevFloatingTooltip';
 
 function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
   const upgrades = useGameStore((state) => state.upgrades);
   const skillNode = getSkillNode(upgradeId);
-  const definition = skillNode;
-  const branch = BRANCH_LABELS[skillNode.branch];
+  const definition = getUpgradeDefinition(upgradeId);
+  const iconBranch = getSkillIconBranch(upgradeId, skillNode.branch);
+  const branch = getSkillIconBranchMeta()[iconBranch];
   const level = upgrades[upgradeId];
-  const nextCost = level < definition.maxLevel ? getUpgradeCost(definition.baseCost, level) : null;
+  const nextCost = level < definition.maxLevel ? getUpgradeCost(definition, level) : null;
 
   return (
     <>
@@ -24,7 +31,7 @@ function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded border text-[11px] font-bold text-white"
           style={{ borderColor: `${branch.color}66`, backgroundColor: `${branch.color}18` }}
         >
-          {skillNode.icon}
+          <SkillBranchIcon branch={iconBranch} size={18} color={branch.color} />
         </span>
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold text-white">{definition.name}</p>
@@ -44,13 +51,9 @@ function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
           </span>
         </p>
         <p>
-          Base cost <span className="text-white/70">{definition.baseCost}</span>
+          Next cost{' '}
           {nextCost !== null && (
-            <>
-              {' '}
-              · Next{' '}
-              <span className="text-white/70">{nextCost.toLocaleString()}</span>
-            </>
+            <span className="text-white/70">{nextCost.toLocaleString()}</span>
           )}
         </p>
         <p className="text-white/30">id: {definition.id}</p>
@@ -79,23 +82,21 @@ function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
 
 export function DevUpgradePanel() {
   const upgrades = useGameStore((state) => state.upgrades);
-  const [selectedId, setSelectedId] = useState<UpgradeId>(UPGRADE_CATALOG[0].id);
+  const [selectedId, setSelectedId] = useState<UpgradeId>('node0Boot');
   const [hoveredId, setHoveredId] = useState<UpgradeId | null>(null);
   const rowRefs = useRef<Partial<Record<UpgradeId, HTMLDivElement | null>>>({});
 
   const selectedDefinition = useMemo(
-    () => UPGRADE_CATALOG.find((entry) => entry.id === selectedId) ?? UPGRADE_CATALOG[0],
+    () => getUpgradeDefinition(selectedId),
     [selectedId],
   );
   const currentLevel = upgrades[selectedId];
 
-  const sortedCatalog = useMemo(
+  const sortedTreeNodes = useMemo(
     () =>
-      [...UPGRADE_CATALOG].sort((a, b) => {
-        const branchA = getSkillNode(a.id).branch;
-        const branchB = getSkillNode(b.id).branch;
-        if (branchA !== branchB) return branchA.localeCompare(branchB);
-        return a.name.localeCompare(b.name);
+      [...SKILL_TREE_NODES].sort((a, b) => {
+        if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
+        return getUpgradeDefinition(a.id).name.localeCompare(getUpgradeDefinition(b.id).name);
       }),
     [],
   );
@@ -113,24 +114,26 @@ export function DevUpgradePanel() {
   return (
     <div className="space-y-2">
       <div className="max-h-32 overflow-y-auto rounded-lg border border-white/8 bg-black/30 pr-1">
-        {sortedCatalog.map((definition) => {
-          const skillNode = getSkillNode(definition.id);
-          const level = upgrades[definition.id];
-          const branch = BRANCH_LABELS[skillNode.branch];
-          const isSelected = selectedId === definition.id;
+        {sortedTreeNodes.map((treeNode) => {
+          const definition = getUpgradeDefinition(treeNode.id);
+          const skillNode = getSkillNode(treeNode.id);
+          const level = upgrades[treeNode.id];
+          const iconBranch = getSkillIconBranch(treeNode.id, skillNode.branch);
+          const branch = getSkillIconBranchMeta()[iconBranch];
+          const isSelected = selectedId === treeNode.id;
 
           return (
             <div
-              key={definition.id}
+              key={treeNode.id}
               ref={(node) => {
-                rowRefs.current[definition.id] = node;
+                rowRefs.current[treeNode.id] = node;
               }}
-              onMouseEnter={() => setHoveredId(definition.id)}
-              onMouseLeave={() => setHoveredId((current) => (current === definition.id ? null : current))}
+              onMouseEnter={() => setHoveredId(treeNode.id)}
+              onMouseLeave={() => setHoveredId((current) => (current === treeNode.id ? null : current))}
             >
               <button
                 type="button"
-                onClick={() => setSelectedId(definition.id)}
+                onClick={() => setSelectedId(treeNode.id)}
                 className={`flex w-full items-center gap-2 px-2 py-1.5 text-left transition ${
                   isSelected
                     ? 'bg-amber-500/15 text-white'
@@ -145,9 +148,9 @@ export function DevUpgradePanel() {
                     color: branch.color,
                   }}
                 >
-                  {skillNode.icon}
+                  <SkillBranchIcon branch={iconBranch} size={16} color={branch.color} />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[11px]">{definition.name}</span>
+                <span className="min-w-0 flex-1 truncate text-[11px]">{skillNode.name}</span>
                 <span
                   className={`shrink-0 font-mono text-[10px] ${
                     level >= definition.maxLevel ? 'text-emerald-400/90' : 'text-white/40'

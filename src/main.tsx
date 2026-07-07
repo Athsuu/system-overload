@@ -9,6 +9,7 @@ const save = loadSave();
 if (save) {
   useGameStore.setState({
     bankShards: save.bankShards,
+    bankAnchorFragments: save.bankAnchorFragments,
     upgrades: save.upgrades,
     prestigeUnlocked: save.prestigeUnlocked,
     prestigeLevel: save.prestigeLevel,

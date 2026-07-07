@@ -1,15 +1,25 @@
+import { useGameStrings } from '../i18n/useGameStrings';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { playHubSfx } from '../audio/hubAudio';
+import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { hexagonPoints } from './skillTreeGeometry';
 
 export function SettingsGearButton() {
   const openSettings = useSettingsStore((state) => state.openSettings);
+  const strings = useGameStrings();
+
+  const handleOpen = () => {
+    ensureHubAudioUnlocked();
+    playHubSfx('settingsOpen');
+    openSettings();
+  };
 
   return (
     <button
       type="button"
-      onClick={openSettings}
-      aria-label="Settings"
+      onClick={handleOpen}
+      aria-label={strings.settings.title}
       className="group relative flex h-11 w-11 items-center justify-center transition hover:scale-[1.05]"
     >
       <svg viewBox="0 0 44 44" className="absolute inset-0 h-full w-full">

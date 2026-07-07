@@ -1,30 +1,45 @@
 import { useGameStore } from '../store/useGameStore';
 import { getSkillState, type UpgradeId } from '../store/upgradeCatalog';
 import {
-  CORE_POSITION,
-  CORE_RADIUS,
+  NODE0_HUB_POSITION,
   getNodePosition,
-  SKILL_TREE_NODES,
+  getRevealedGraphNodes,
+  getSkillIconBranch,
+  getUpgradeBranch,
+  isPlaceholderId,
+  type PlaceholderId,
+  type TreeNodeId,
   TREE_CANVAS,
 } from '../store/skillTree';
 import {
   getHexagonEdgePoint,
   getNodeHexRadius,
-  hexagonPoints,
+  getNodeHexStartAngle,
 } from './skillTreeGeometry';
 import { SkillTreeNode } from './SkillTreeNode';
+import { SkillTreePlaceholderTooltip } from './SkillTreePlaceholderTooltip';
 import { SkillTreeTooltip } from './SkillTreeTooltip';
-import { getEdgeVisual, SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { getEdgeVisual } from './skillTreeTheme';
 
 interface SkillTreeProps {
-  selectedId: UpgradeId | null;
-  onSelectSkill: (id: UpgradeId) => void;
+  selectedId: TreeNodeId | null;
+  onSelectSkill: (id: TreeNodeId) => void;
   onClearSelection: () => void;
+}
+
+function resolveEdgeParentId(parentId: TreeNodeId | 'root'): TreeNodeId | 'core' {
+  if (parentId === 'root') return 'core';
+  return parentId;
 }
 
 export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: SkillTreeProps) {
   const bankShards = useGameStore((state) => state.bankShards);
+  const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
   const upgrades = useGameStore((state) => state.upgrades);
+
+  const revealedNodes = getRevealedGraphNodes(upgrades);
+  const upgradeNodes = revealedNodes.filter((node) => node.kind === 'upgrade');
+  const placeholderNodes = revealedNodes.filter((node) => node.kind === 'placeholder');
 
   return (
     <svg
@@ -39,13 +54,8 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
       }}
     >
       <defs>
-        <radialGradient id="coreRadial" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={SKILL_TREE_VISUAL.coreFillTop} stopOpacity={0.95} />
-          <stop offset="100%" stopColor={SKILL_TREE_VISUAL.coreFillBottom} stopOpacity={0.6} />
-        </radialGradient>
-
         <radialGradient id="ambientRed" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ff4d00" stopOpacity={0.08} />
+          <stop offset="0%" stopColor="#ff4d00" stopOpacity={0.16} />
           <stop offset="100%" stopColor="#ff4d00" stopOpacity={0} />
         </radialGradient>
 
@@ -67,24 +77,38 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
       </defs>
 
       <ellipse
-        cx={CORE_POSITION.x}
-        cy={CORE_POSITION.y}
+        cx={NODE0_HUB_POSITION.x}
+        cy={NODE0_HUB_POSITION.y}
         rx={480}
         ry={420}
         fill="url(#ambientRed)"
       />
 
-      {SKILL_TREE_NODES.map((node) => {
-        if (!node.parentId) return null;
-        const from = getNodePosition(node.parentId);
+      {revealedNodes.map((node) => {
+        if (node.parentId === 'root') return null;
+        const from = getNodePosition(resolveEdgeParentId(node.parentId));
         const to = node.position;
-        const fromRadius = getNodeHexRadius(node.parentId);
-        const toRadius = getNodeHexRadius(node.id);
-        const p1 = getHexagonEdgePoint(from.x, from.y, fromRadius, to.x, to.y);
-        const p2 = getHexagonEdgePoint(to.x, to.y, toRadius, from.x, from.y);
-        const unlocked =
-          getSkillState(node.id, 0, upgrades, node.requires) !== 'locked';
-        const edge = getEdgeVisual(unlocked);
+        const fromKey = resolveEdgeParentId(node.parentId);
+        const toKey = node.id;
+        const fromRadius = getNodeHexRadius(fromKey);
+        const toRadius = getNodeHexRadius(toKey);
+        const p1 = getHexagonEdgePoint(
+          from.x,
+          from.y,
+          fromRadius,
+          to.x,
+          to.y,
+          getNodeHexStartAngle(fromKey),
+        );
+        const p2 = getHexagonEdgePoint(
+          to.x,
+          to.y,
+          toRadius,
+          from.x,
+          from.y,
+          getNodeHexStartAngle(toKey),
+        );
+        const edge = getEdgeVisual(true);
 
         return (
           <g key={`edge-${node.id}`}>
@@ -94,9 +118,9 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
               x2={p2.x}
               y2={p2.y}
               stroke={edge.glow}
-              strokeWidth={unlocked ? 7 : 2}
+              strokeWidth={7}
               strokeLinecap="round"
-              opacity={unlocked ? 0.25 : 0.12}
+              opacity={0.25}
             />
             <line
               x1={p1.x}
@@ -104,61 +128,58 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
               x2={p2.x}
               y2={p2.y}
               stroke={edge.stroke}
-              strokeWidth={unlocked ? 2 : 1}
+              strokeWidth={2}
               strokeLinecap="round"
-              opacity={unlocked ? 0.95 : 0.5}
-              filter={unlocked ? 'url(#edgeGlow)' : undefined}
+              opacity={0.95}
+              filter="url(#edgeGlow)"
             />
           </g>
         );
       })}
 
-      <polygon
-        points={hexagonPoints(CORE_POSITION.x, CORE_POSITION.y, CORE_RADIUS + 12)}
-        fill={SKILL_TREE_VISUAL.coreGlow}
-        opacity={0.12}
-        filter="url(#nodeGlow)"
-      />
-      <polygon
-        points={hexagonPoints(CORE_POSITION.x, CORE_POSITION.y, CORE_RADIUS + 5)}
-        fill="none"
-        stroke={SKILL_TREE_VISUAL.gold}
-        strokeWidth={1}
-        strokeOpacity={0.5}
-      />
-      <polygon
-        points={hexagonPoints(CORE_POSITION.x, CORE_POSITION.y, CORE_RADIUS)}
-        fill="url(#coreRadial)"
-        stroke={SKILL_TREE_VISUAL.edgeActive}
-        strokeWidth={2.5}
-        strokeLinejoin="round"
-      />
-      <text
-        x={CORE_POSITION.x}
-        y={CORE_POSITION.y + 5}
-        textAnchor="middle"
-        fontSize={10}
-        fill={SKILL_TREE_VISUAL.gold}
-        fontWeight={700}
-        letterSpacing={2}
-      >
-        KERNEL
-      </text>
+      {upgradeNodes.map((node) => {
+        const upgradeId = node.id as UpgradeId;
+        const branch = getUpgradeBranch(upgradeId);
+        return (
+          <SkillTreeNode
+            key={node.id}
+            x={node.position.x}
+            y={node.position.y}
+            branch={getSkillIconBranch(upgradeId, branch)}
+            level={upgrades[upgradeId]}
+            state={getSkillState(
+              upgradeId,
+              bankShards,
+              bankAnchorFragments,
+              upgrades,
+              node.requires,
+            )}
+            isSelected={selectedId === node.id}
+            onSelect={() => onSelectSkill(node.id)}
+          />
+        );
+      })}
 
-      {SKILL_TREE_NODES.map((node) => (
+      {placeholderNodes.map((node) => (
         <SkillTreeNode
           key={node.id}
           x={node.position.x}
           y={node.position.y}
-          icon={node.icon}
-          level={upgrades[node.id]}
-          state={getSkillState(node.id, bankShards, upgrades, node.requires)}
+          branch={node.branch}
+          level={0}
+          state="reserved"
           isSelected={selectedId === node.id}
           onSelect={() => onSelectSkill(node.id)}
         />
       ))}
 
-      {selectedId && <SkillTreeTooltip selectedId={selectedId} />}
+      {selectedId && !isPlaceholderId(selectedId) && (
+        <SkillTreeTooltip selectedId={selectedId} />
+      )}
+
+      {selectedId && isPlaceholderId(selectedId) && (
+        <SkillTreePlaceholderTooltip placeholderId={selectedId as PlaceholderId} />
+      )}
     </svg>
   );
 }

@@ -28,6 +28,18 @@ export interface NodeVisualState {
 }
 
 export function getNodeVisualState(state: SkillState, isSelected: boolean, level: number): NodeVisualState {
+  if (state === 'reserved') {
+    return {
+      stroke: '#4a4a55',
+      strokeWidth: 1.5,
+      iconFill: '#64748b',
+      glowColor: DARK_HEX.breach,
+      glowOpacity: isSelected ? 0.12 : 0,
+      doubleBorder: false,
+      opacity: 0.55,
+    };
+  }
+
   if (state === 'locked') {
     return {
       stroke: DARK_HEX.lockedStroke,

@@ -6,16 +6,19 @@ import {
   devForceEndBreach,
   devForceVictoryBoss,
   devMaxAllUpgrades,
+  devResetToNewPlayer,
+  devResetTutorial,
   devResetUpgrades,
   devSetBreachProgress,
   devSetGameState,
+  devToggleInvincible,
   devTogglePrestigeUnlocked,
+  devToggleShowEnemyHpBars,
   devWipeProgress,
 } from './devActions';
-import { DevModulePanel } from './DevModulePanel';
 import { DevUpgradePanel } from './DevUpgradePanel';
 
-const GAME_STATES: GameState[] = ['MENU', 'PLAYING', 'PAUSED', 'MODULE_BAY', 'RUN_END', 'UPGRADING', 'GAME_OVER'];
+const GAME_STATES: GameState[] = ['MAIN_MENU', 'MENU', 'PLAYING', 'PAUSED', 'RUN_END', 'UPGRADING', 'GAME_OVER'];
 
 function DevButton({
   children,
@@ -42,6 +45,8 @@ function DevButton({
 
 export function DevMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [invincible, setInvincible] = useState(false);
+  const [enemyHpBars, setEnemyHpBars] = useState(false);
   const gameState = useGameStore((state) => state.gameState);
   const breachProgress = useGameStore((state) => state.breachProgress);
   const bankShards = useGameStore((state) => state.bankShards);
@@ -94,6 +99,18 @@ export function DevMenu() {
             <p>Vault : {bankShards.toLocaleString()} Shards</p>
             <p>Run : {runShards.toLocaleString()} Shards</p>
             <p>Prestige : {prestigeUnlocked ? 'unlocked' : 'locked'}</p>
+            <p>Invincible : {invincible ? 'ON' : 'OFF'}</p>
+            <p>Enemy HP : {enemyHpBars ? 'ON' : 'OFF'}</p>
+          </div>
+
+          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Run debug</p>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <DevButton onClick={() => setInvincible(devToggleInvincible())}>
+              Invincible {invincible ? 'ON' : 'OFF'}
+            </DevButton>
+            <DevButton onClick={() => setEnemyHpBars(devToggleShowEnemyHpBars())}>
+              Enemy HP {enemyHpBars ? 'ON' : 'OFF'}
+            </DevButton>
           </div>
 
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">État jeu</p>
@@ -129,19 +146,20 @@ export function DevMenu() {
           </div>
 
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Progression</p>
+          <p className="mb-2 text-[10px] text-white/30">
+            « Reset nouveau joueur » efface tout (Shards, skill tree, audio 50 %, vue skill tree).
+          </p>
           <div className="mb-4 flex flex-wrap gap-1.5">
             <DevButton onClick={() => devMaxAllUpgrades()}>Max upgrades</DevButton>
             <DevButton onClick={() => devTogglePrestigeUnlocked()}>Toggle prestige</DevButton>
             <DevButton onClick={() => devResetUpgrades()}>Reset upgrades</DevButton>
+            <DevButton onClick={() => devResetTutorial()}>Reset tutorial</DevButton>
             <DevButton onClick={() => devWipeProgress()} variant="danger">
               Wipe save
             </DevButton>
-          </div>
-
-          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Kernel Modules</p>
-          <p className="mb-2 text-[10px] text-white/30">Mid-run modules (Overdrive, Pierce, etc.)</p>
-          <div className="mb-4">
-            <DevModulePanel />
+            <DevButton onClick={() => devResetToNewPlayer()} variant="danger">
+              Reset nouveau joueur
+            </DevButton>
           </div>
 
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Skill Tree</p>

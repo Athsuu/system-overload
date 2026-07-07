@@ -1,17 +1,13 @@
 import { create } from 'zustand';
 import { saveGame } from './persistence';
+import { loadSettings, saveFluxDriveEnabled } from './settingsPersistence';
 import { DEFAULT_PRESTIGE } from './prestigeTypes';
 import {
-  DEFAULT_KERNEL_MODULE_LEVELS,
-  getCyclesForLevelUp,
-  getKernelModuleDefinition,
-  getXpToNextLevel,
-  type KernelModuleId,
-  type KernelModuleLevels,
-} from './kernelModuleCatalog';
-import {
+  ANCHOR_FRAGMENTS_PER_BOSS,
+  BOSS_VICTORY_SHARD_BONUS,
   DEFAULT_UPGRADES,
   getUpgradeCost,
+  getUpgradeCurrency,
   getUpgradeDefinition,
   isSkillUnlocked,
   type UpgradeId,
@@ -19,12 +15,13 @@ import {
 } from './upgradeCatalog';
 import { getBreachCap } from '../game/runConfig';
 import { getSkillNode } from './skillTree';
+import { markTutorialSignal } from '../tutorial/tutorialSignals';
 
 export type GameState =
+  | 'MAIN_MENU'
   | 'MENU'
   | 'PLAYING'
   | 'PAUSED'
-  | 'MODULE_BAY'
   | 'RUN_END'
   | 'UPGRADING'
   | 'GAME_OVER';
@@ -35,8 +32,11 @@ interface GameStore {
   gameState: GameState;
   breachProgress: number;
   bankShards: number;
+  bankAnchorFragments: number;
   runShards: number;
   lastRunShards: number;
+  lastRunAnchorFragments: number;
+  anchorFragmentEarnedThisRun: boolean;
   upgrades: UpgradeLevels;
   prestigeUnlocked: boolean;
   prestigeLevel: number;
@@ -45,11 +45,7 @@ interface GameStore {
   waveIndex: number;
   wavePhase: WavePhase;
   showWaveClear: boolean;
-  runLevel: number;
-  runXp: number;
-  runXpToNext: number;
-  runCycles: number;
-  runModuleLevels: KernelModuleLevels;
+  fluxDriveEnabled: boolean;
   setGameState: (state: GameState) => void;
   pauseRun: () => void;
   resumeRun: () => void;
@@ -61,49 +57,35 @@ interface GameStore {
   openSkillTree: () => void;
   purchaseUpgrade: (id: UpgradeId) => boolean;
   startRun: () => void;
-  resetRun: () => void;
-  addRunXp: (amount: number) => void;
-  openModuleBay: () => void;
-  closeModuleBay: () => void;
-  purchaseModule: (id: KernelModuleId) => boolean;
+  toggleFluxDriveEnabled: () => void;
   setWaveIndex: (waveIndex: number) => void;
   setWavePhase: (phase: WavePhase) => void;
   setShowWaveClear: (show: boolean) => void;
-  setPrestigeUnlocked: (unlocked: boolean) => void;
+  persistProgressSnapshot: () => void;
+  returnToMainMenu: () => void;
 }
 
 function persistProgress(
   bankShards: number,
+  bankAnchorFragments: number,
   upgrades: UpgradeLevels,
   prestigeUnlocked: boolean,
   prestigeLevel: number,
 ): void {
-  saveGame({ bankShards, upgrades, prestigeUnlocked, prestigeLevel });
+  saveGame({ bankShards, bankAnchorFragments, upgrades, prestigeUnlocked, prestigeLevel });
 }
 
-function resetRunProgress(): Pick<
-  GameStore,
-  | 'runLevel'
-  | 'runXp'
-  | 'runXpToNext'
-  | 'runCycles'
-  | 'runModuleLevels'
-> {
-  return {
-    runLevel: 1,
-    runXp: 0,
-    runXpToNext: getXpToNextLevel(1),
-    runCycles: 0,
-    runModuleLevels: { ...DEFAULT_KERNEL_MODULE_LEVELS },
-  };
-}
+const persistedSettings = loadSettings();
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  gameState: 'MENU',
+  gameState: 'MAIN_MENU',
   breachProgress: 0,
   bankShards: 0,
+  bankAnchorFragments: 0,
   runShards: 0,
   lastRunShards: 0,
+  lastRunAnchorFragments: 0,
+  anchorFragmentEarnedThisRun: false,
   upgrades: DEFAULT_UPGRADES,
   prestigeUnlocked: DEFAULT_PRESTIGE.prestigeUnlocked,
   prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
@@ -112,11 +94,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   waveIndex: 0,
   wavePhase: 'idle',
   showWaveClear: false,
-  runLevel: 1,
-  runXp: 0,
-  runXpToNext: getXpToNextLevel(1),
-  runCycles: 0,
-  runModuleLevels: { ...DEFAULT_KERNEL_MODULE_LEVELS },
+  fluxDriveEnabled: persistedSettings.fluxDriveEnabled,
   setGameState: (gameState) => set({ gameState }),
   pauseRun: () => {
     if (get().gameState !== 'PLAYING') return;
@@ -139,7 +117,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   abortRun: () =>
     set((state) => {
       const bankShards = state.bankShards + state.runShards;
-      persistProgress(bankShards, state.upgrades, state.prestigeUnlocked, state.prestigeLevel);
+      persistProgress(
+        bankShards,
+        state.bankAnchorFragments,
+        state.upgrades,
+        state.prestigeUnlocked,
+        state.prestigeLevel,
+      );
       return {
         gameState: 'UPGRADING',
         breachProgress: 0,
@@ -149,7 +133,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         waveIndex: 0,
         wavePhase: 'idle',
         showWaveClear: false,
-        ...resetRunProgress(),
+        anchorFragmentEarnedThisRun: false,
       };
     }),
   addBreachProgress: (delta) =>
@@ -165,19 +149,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })),
   endRun: (outcome) =>
     set((state) => {
-      const bankShards = state.bankShards + state.runShards;
-      const lastRunShards = state.runShards;
+      const bossBonus = outcome === 'victory_boss' ? BOSS_VICTORY_SHARD_BONUS : 0;
+      const bankShards = state.bankShards + state.runShards + bossBonus;
+      const lastRunShards = state.runShards + bossBonus;
+      const anchorGain = outcome === 'victory_boss' ? ANCHOR_FRAGMENTS_PER_BOSS : 0;
+      const bankAnchorFragments = state.bankAnchorFragments + anchorGain;
       const prestigeUnlockedThisRun =
         outcome === 'victory_boss' && !state.prestigeUnlocked;
       const prestigeUnlocked =
         state.prestigeUnlocked || outcome === 'victory_boss';
 
-      persistProgress(bankShards, state.upgrades, prestigeUnlocked, state.prestigeLevel);
+      persistProgress(
+        bankShards,
+        bankAnchorFragments,
+        state.upgrades,
+        prestigeUnlocked,
+        state.prestigeLevel,
+      );
 
       return {
         bankShards,
+        bankAnchorFragments,
         runShards: 0,
         lastRunShards,
+        lastRunAnchorFragments: anchorGain,
+        anchorFragmentEarnedThisRun: anchorGain > 0,
         runOutcome: outcome,
         prestigeUnlocked,
         prestigeUnlockedThisRun,
@@ -194,12 +190,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!isSkillUnlocked(id, state.upgrades, skillNode.requires)) return false;
     if (level >= definition.maxLevel) return false;
 
-    const cost = getUpgradeCost(definition.baseCost, level);
+    const cost = getUpgradeCost(definition, level);
+    const currency = getUpgradeCurrency(id);
+
+    if (currency === 'anchor') {
+      if (state.bankAnchorFragments < cost) return false;
+      const bankAnchorFragments = state.bankAnchorFragments - cost;
+      const upgrades = { ...state.upgrades, [id]: level + 1 };
+      persistProgress(
+        state.bankShards,
+        bankAnchorFragments,
+        upgrades,
+        state.prestigeUnlocked,
+        state.prestigeLevel,
+      );
+      markTutorialSignal('upgradePurchased');
+      set({ bankAnchorFragments, upgrades });
+      return true;
+    }
+
     if (state.bankShards < cost) return false;
 
     const upgrades = { ...state.upgrades, [id]: level + 1 };
     const bankShards = state.bankShards - cost;
-    persistProgress(bankShards, upgrades, state.prestigeUnlocked, state.prestigeLevel);
+    persistProgress(
+      bankShards,
+      state.bankAnchorFragments,
+      upgrades,
+      state.prestigeUnlocked,
+      state.prestigeLevel,
+    );
+    markTutorialSignal('upgradePurchased');
     set({ bankShards, upgrades });
     return true;
   },
@@ -210,73 +231,86 @@ export const useGameStore = create<GameStore>((set, get) => ({
       runShards: 0,
       runOutcome: null,
       prestigeUnlockedThisRun: false,
+      anchorFragmentEarnedThisRun: false,
       waveIndex: 1,
       wavePhase: 'spawning',
       showWaveClear: false,
-      ...resetRunProgress(),
     }),
-  resetRun: () =>
+  toggleFluxDriveEnabled: () =>
     set((state) => {
-      const bankShards = state.bankShards + state.runShards;
-      persistProgress(bankShards, state.upgrades, state.prestigeUnlocked, state.prestigeLevel);
-      return {
-        gameState: 'MENU',
-        breachProgress: 0,
-        runShards: 0,
-        bankShards,
-        runOutcome: null,
-      };
+      if (state.upgrades.fluxDrive <= 0) return state;
+      const fluxDriveEnabled = !state.fluxDriveEnabled;
+      saveFluxDriveEnabled(fluxDriveEnabled);
+      markTutorialSignal('fluxDriveToggled');
+      return { fluxDriveEnabled };
     }),
-  addRunXp: (amount) => {
-    const state = get();
-    let runXp = state.runXp + amount;
-    let runLevel = state.runLevel;
-    let runXpToNext = state.runXpToNext;
-    let cyclesGained = 0;
-
-    while (runXp >= runXpToNext) {
-      runXp -= runXpToNext;
-      runLevel += 1;
-      runXpToNext = getXpToNextLevel(runLevel);
-      cyclesGained += getCyclesForLevelUp(runLevel);
-    }
-
-    const runCycles = state.runCycles + cyclesGained;
-    set({ runXp, runLevel, runXpToNext, runCycles });
-
-    if (cyclesGained > 0 && get().gameState === 'PLAYING') {
-      get().openModuleBay();
-    }
-  },
-  openModuleBay: () => {
-    if (get().gameState !== 'PLAYING' && get().gameState !== 'MODULE_BAY') return;
-    set({ gameState: 'MODULE_BAY' });
-  },
-  closeModuleBay: () => {
-    if (get().gameState !== 'MODULE_BAY') return;
-    set({ gameState: 'PLAYING' });
-  },
-  purchaseModule: (id) => {
-    const state = get();
-    if (state.gameState !== 'MODULE_BAY') return false;
-
-    const definition = getKernelModuleDefinition(id);
-    const level = state.runModuleLevels[id] ?? 0;
-    if (level >= definition.maxLevel) return false;
-    if (state.runCycles < definition.cycleCost) return false;
-
-    set({
-      runCycles: state.runCycles - definition.cycleCost,
-      runModuleLevels: { ...state.runModuleLevels, [id]: level + 1 },
-    });
-    return true;
-  },
   setWaveIndex: (waveIndex) => set({ waveIndex }),
   setWavePhase: (wavePhase) => set({ wavePhase }),
   setShowWaveClear: (showWaveClear) => set({ showWaveClear }),
-  setPrestigeUnlocked: (prestigeUnlocked) => {
+  persistProgressSnapshot: () => {
     const state = get();
-    persistProgress(state.bankShards, state.upgrades, prestigeUnlocked, state.prestigeLevel);
-    set({ prestigeUnlocked });
+    persistProgress(
+      state.bankShards,
+      state.bankAnchorFragments,
+      state.upgrades,
+      state.prestigeUnlocked,
+      state.prestigeLevel,
+    );
+  },
+  returnToMainMenu: () => {
+    const state = get();
+    const inRun = state.gameState === 'PLAYING' || state.gameState === 'PAUSED';
+    const bankShards = inRun ? state.bankShards + state.runShards : state.bankShards;
+
+    persistProgress(
+      bankShards,
+      state.bankAnchorFragments,
+      state.upgrades,
+      state.prestigeUnlocked,
+      state.prestigeLevel,
+    );
+
+    set({
+      gameState: 'MAIN_MENU',
+      bankShards,
+      breachProgress: 0,
+      runShards: 0,
+      lastRunShards: 0,
+      lastRunAnchorFragments: 0,
+      runOutcome: null,
+      prestigeUnlockedThisRun: false,
+      anchorFragmentEarnedThisRun: false,
+      waveIndex: 0,
+      wavePhase: 'idle',
+      showWaveClear: false,
+    });
   },
 }));
+
+export function resetToFreshPlayer(): void {
+  const settings = loadSettings();
+  useGameStore.setState({
+    gameState: 'MENU',
+    breachProgress: 0,
+    bankShards: 0,
+    bankAnchorFragments: 0,
+    runShards: 0,
+    lastRunShards: 0,
+    lastRunAnchorFragments: 0,
+    anchorFragmentEarnedThisRun: false,
+    upgrades: DEFAULT_UPGRADES,
+    prestigeUnlocked: DEFAULT_PRESTIGE.prestigeUnlocked,
+    prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
+    runOutcome: null,
+    prestigeUnlockedThisRun: false,
+    waveIndex: 0,
+    wavePhase: 'idle',
+    showWaveClear: false,
+    fluxDriveEnabled: settings.fluxDriveEnabled,
+  });
+  useGameStore.getState().persistProgressSnapshot();
+}
+
+export function persistCurrentProgress(): void {
+  useGameStore.getState().persistProgressSnapshot();
+}

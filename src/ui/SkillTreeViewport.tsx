@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import type { UpgradeId } from '../store/upgradeCatalog';
-import { HexGridBackdrop } from './HexGridBackdrop';
+import { useRef } from 'react';
+import type { TreeNodeId } from '../store/skillTree';
 import { SkillTree } from './SkillTree';
+import { SkillTreeGlitchOverlay } from './SkillTreeGlitchOverlay';
 import { useSkillTreePan } from './useSkillTreePan';
 
 interface SkillTreeViewportProps {
-  selectedId: UpgradeId | null;
-  onSelectSkill: (id: UpgradeId) => void;
+  selectedId: TreeNodeId | null;
+  onSelectSkill: (id: TreeNodeId) => void;
   onClearSelection: () => void;
 }
 
@@ -37,60 +37,29 @@ export function SkillTreeViewport({
   onClearSelection,
 }: SkillTreeViewportProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
-  const { transform, onPointerDown, onPointerMove, onPointerUp, zoomIn, zoomOut, resetView } =
+  const { transform, isGrabbing, onPointerDown, onPointerMove, onPointerUp, zoomIn, zoomOut, resetView } =
     useSkillTreePan(viewportRef);
-  const [isGrabbing, setIsGrabbing] = useState(false);
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-
-    const updateSize = () => {
-      setViewportSize({
-        width: viewport.clientWidth,
-        height: viewport.clientHeight,
-      });
-    };
-
-    updateSize();
-    const observer = new ResizeObserver(updateSize);
-    observer.observe(viewport);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <>
       <div
         ref={viewportRef}
-        className={`absolute inset-0 overflow-hidden bg-[#0a0a0f] ${isGrabbing ? 'cursor-grabbing' : 'cursor-grab'}`}
+        data-tutorial-anchor="skill-tree"
+        className={`absolute inset-0 overflow-hidden ${isGrabbing ? 'cursor-grabbing' : 'cursor-grab'}`}
         onPointerDown={(event) => {
-          setIsGrabbing(true);
+          if ((event.target as Element).closest('[data-skill-node], [data-skill-tooltip], button')) {
+            return;
+          }
           onClearSelection();
           onPointerDown(event);
         }}
         onPointerMove={onPointerMove}
-        onPointerUp={(event) => {
-          setIsGrabbing(false);
-          onPointerUp(event);
-        }}
-        onPointerLeave={(event) => {
-          setIsGrabbing(false);
-          onPointerUp(event);
-        }}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
-        <div className="pointer-events-none absolute inset-0">
-          {viewportSize.width > 0 && (
-            <HexGridBackdrop
-              patternId="skillTreeHexGrid"
-              width={viewportSize.width}
-              height={viewportSize.height}
-            />
-          )}
-        </div>
-
+        <SkillTreeGlitchOverlay />
         <div
-          className="absolute left-0 top-0 origin-top-left will-change-transform"
+          className="so-skill-tree-canvas absolute left-0 top-0 origin-top-left will-change-transform"
           style={{
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}

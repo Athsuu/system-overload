@@ -1,10 +1,4 @@
-export type GameEffectKind =
-  | 'death'
-  | 'boltHit'
-  | 'muzzleFlash'
-  | 'spawn'
-  | 'kernelImpact'
-  | 'missRipple';
+export type GameEffectKind = 'death' | 'purgeHit' | 'spawn' | 'flowEscape';
 
 export interface GameEffect {
   kind: GameEffectKind;
@@ -17,13 +11,11 @@ export interface GameEffect {
   rotation: number;
 }
 
-export const BOLT_HIT_DURATION_MS = 100;
-export const MUZZLE_FLASH_DURATION_MS = 70;
+export const PURGE_HIT_DURATION_MS = 220;
 export const DEATH_DURATION_MS = 250;
 export const BOSS_DEATH_DURATION_MS = 400;
 export const SPAWN_FLASH_DURATION_MS = 200;
-export const KERNEL_IMPACT_FLASH_MS = 180;
-export const MISS_RIPPLE_DURATION_MS = 140;
+export const FLOW_ESCAPE_FLASH_MS = 180;
 
 function createEffect(
   partial: Omit<GameEffect, 'rotation'> & { rotation?: number },
@@ -31,37 +23,23 @@ function createEffect(
   return { rotation: 0, ...partial };
 }
 
-export function pushBoltHit(effects: GameEffect[], x: number, y: number, rotation: number): void {
-  effects.push(
-    createEffect({
-      kind: 'boltHit',
-      x,
-      y,
-      tier: 0,
-      isBoss: false,
-      elapsedMs: 0,
-      durationMs: BOLT_HIT_DURATION_MS,
-      rotation,
-    }),
-  );
-}
-
-export function pushMuzzleFlash(
+export function pushPurgeHit(
   effects: GameEffect[],
   x: number,
   y: number,
-  rotation: number,
+  tier: number,
+  isBoss: boolean,
 ): void {
   effects.push(
     createEffect({
-      kind: 'muzzleFlash',
+      kind: 'purgeHit',
       x,
       y,
-      tier: 0,
-      isBoss: false,
+      tier,
+      isBoss,
       elapsedMs: 0,
-      durationMs: MUZZLE_FLASH_DURATION_MS,
-      rotation,
+      durationMs: PURGE_HIT_DURATION_MS,
+      rotation: 0,
     }),
   );
 }
@@ -106,30 +84,16 @@ export function pushSpawnFlash(
   );
 }
 
-export function pushKernelImpactFlash(effects: GameEffect[], x: number, y: number): void {
+export function pushFlowEscapeFlash(effects: GameEffect[], x: number, y: number): void {
   effects.push(
     createEffect({
-      kind: 'kernelImpact',
+      kind: 'flowEscape',
       x,
       y,
       tier: 0,
       isBoss: false,
       elapsedMs: 0,
-      durationMs: KERNEL_IMPACT_FLASH_MS,
-    }),
-  );
-}
-
-export function pushMissRipple(effects: GameEffect[], x: number, y: number): void {
-  effects.push(
-    createEffect({
-      kind: 'missRipple',
-      x,
-      y,
-      tier: 0,
-      isBoss: false,
-      elapsedMs: 0,
-      durationMs: MISS_RIPPLE_DURATION_MS,
+      durationMs: FLOW_ESCAPE_FLASH_MS,
     }),
   );
 }

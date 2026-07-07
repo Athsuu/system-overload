@@ -1,28 +1,44 @@
 import type { ScreenBounds, Vec2 } from './constants';
+import { getEnemyHexRadius } from './constants';
 import {
   getEnemyMaxHp,
   getEnemySpeed,
   type RunConfig,
 } from './runConfig';
-import { isEnemyHittingCore } from './enemyHitbox';
 import type { DissipationNode } from './types';
 
-function pickEdgeSpawn(bounds: ScreenBounds): Vec2 {
-  const edge = Math.floor(Math.random() * 4);
-  const pad = bounds.padding;
-  const w = bounds.width;
-  const h = bounds.height;
-
+function pointOnEdge(
+  edge: number,
+  pad: number,
+  width: number,
+  height: number,
+  innerW: number,
+  innerH: number,
+  t: number,
+): Vec2 {
   switch (edge) {
     case 0:
-      return { x: pad + Math.random() * (w - pad * 2), y: pad };
+      return { x: pad + innerW * t, y: pad };
     case 1:
-      return { x: pad + Math.random() * (w - pad * 2), y: h - pad };
+      return { x: pad + innerW * t, y: height - pad };
     case 2:
-      return { x: pad, y: pad + Math.random() * (h - pad * 2) };
+      return { x: pad, y: pad + innerH * t };
     default:
-      return { x: w - pad, y: pad + Math.random() * (h - pad * 2) };
+      return { x: width - pad, y: pad + innerH * t };
   }
+}
+
+function pickFlowEndpoints(bounds: ScreenBounds): { spawn: Vec2; exit: Vec2 } {
+  const spawnEdge = Math.floor(Math.random() * 4);
+  const exitEdge = spawnEdge < 2 ? 1 - spawnEdge : 5 - spawnEdge;
+  const pad = bounds.padding;
+  const innerW = bounds.width - pad * 2;
+  const innerH = bounds.height - pad * 2;
+
+  return {
+    spawn: pointOnEdge(spawnEdge, pad, bounds.width, bounds.height, innerW, innerH, Math.random()),
+    exit: pointOnEdge(exitEdge, pad, bounds.width, bounds.height, innerW, innerH, Math.random()),
+  };
 }
 
 export interface SpawnEnemyOptions {
@@ -33,19 +49,21 @@ export interface SpawnEnemyOptions {
   bossSpeedMult?: number;
 }
 
-export function spawnEnemyOnEdge(
+function createFlowEnemy(
   bounds: ScreenBounds,
   config: RunConfig,
   options: SpawnEnemyOptions,
 ): DissipationNode {
   const { tier, waveIndex, isBoss, bossHpMult = 1, bossSpeedMult = 1 } = options;
-  const spawnPos = pickEdgeSpawn(bounds);
+  const { spawn, exit } = pickFlowEndpoints(bounds);
   const speed = getEnemySpeed(config, tier, waveIndex, bossSpeedMult);
   const maxHp = getEnemyMaxHp(config, tier, waveIndex, bossHpMult);
 
   return {
-    x: spawnPos.x,
-    y: spawnPos.y,
+    x: spawn.x,
+    y: spawn.y,
+    flowTargetX: exit.x,
+    flowTargetY: exit.y,
     hp: maxHp,
     maxHp,
     tier,
@@ -58,6 +76,14 @@ export function spawnEnemyOnEdge(
   };
 }
 
+export function spawnEnemyOnEdge(
+  bounds: ScreenBounds,
+  config: RunConfig,
+  options: SpawnEnemyOptions,
+): DissipationNode {
+  return createFlowEnemy(bounds, config, options);
+}
+
 export function spawnStarterNodes(
   count: number,
   nodes: DissipationNode[],
@@ -66,7 +92,7 @@ export function spawnStarterNodes(
 ): void {
   for (let index = 0; index < count; index += 1) {
     nodes.push(
-      spawnEnemyOnEdge(bounds, config, {
+      createFlowEnemy(bounds, config, {
         tier: 0,
         waveIndex: 1,
       }),
@@ -74,24 +100,35 @@ export function spawnStarterNodes(
   }
 }
 
+function hasEscapedArena(node: DissipationNode, bounds: ScreenBounds): boolean {
+  const margin = getEnemyHexRadius(node.tier, node.isBoss ?? false) * 0.35;
+  const pad = bounds.padding;
+  return (
+    node.x < pad - margin ||
+    node.x > bounds.width - pad + margin ||
+    node.y < pad - margin ||
+    node.y > bounds.height - pad + margin
+  );
+}
+
 export function tickEnemyMovement(
   nodes: DissipationNode[],
-  target: Vec2,
+  bounds: ScreenBounds,
   deltaSeconds: number,
-  onPlayerHit: (node: DissipationNode) => void,
+  onFlowEscape: (node: DissipationNode) => void,
 ): void {
   for (let index = nodes.length - 1; index >= 0; index -= 1) {
     const node = nodes[index];
-    const dx = target.x - node.x;
-    const dy = target.y - node.y;
+    const dx = node.flowTargetX - node.x;
+    const dy = node.flowTargetY - node.y;
     const distance = Math.hypot(dx, dy) || 1;
     const step = (node.moveSpeed * deltaSeconds) / distance;
 
     node.x += dx * step;
     node.y += dy * step;
 
-    if (isEnemyHittingCore(node, target)) {
-      onPlayerHit(node);
+    if (hasEscapedArena(node, bounds)) {
+      onFlowEscape(node);
       nodes.splice(index, 1);
     }
   }

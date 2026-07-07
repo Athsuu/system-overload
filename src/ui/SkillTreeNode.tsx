@@ -1,12 +1,16 @@
 import type { SkillState } from '../store/upgradeCatalog';
+import type { SkillIconBranch } from '../store/skillTree';
 import { NODE_RADIUS } from '../store/skillTree';
+import { playHubSfx } from '../audio/hubAudio';
+import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
 import { hexagonPoints } from './skillTreeGeometry';
+import { SkillTreeBranchGlyph } from './skillTreeBranchIcons';
 import { getNodeVisualState, SKILL_TREE_VISUAL } from './skillTreeTheme';
 
 interface SkillTreeNodeProps {
   x: number;
   y: number;
-  icon: string;
+  branch: SkillIconBranch;
   level: number;
   state: SkillState;
   isSelected: boolean;
@@ -16,7 +20,7 @@ interface SkillTreeNodeProps {
 export function SkillTreeNode({
   x,
   y,
-  icon,
+  branch,
   level,
   state,
   isSelected,
@@ -25,14 +29,24 @@ export function SkillTreeNode({
   const radius = NODE_RADIUS;
   const visual = getNodeVisualState(state, isSelected, level);
   const isLocked = state === 'locked';
+  const isReserved = state === 'reserved';
 
   return (
     <g
       data-skill-node
+      className={isSelected ? 'so-skill-tree-node--active' : undefined}
       style={{ cursor: isLocked ? 'not-allowed' : 'pointer', opacity: visual.opacity }}
       onPointerDown={(event) => {
         event.stopPropagation();
-        if (!isLocked) onSelect();
+        ensureHubAudioUnlocked();
+        if (isLocked) {
+          playHubSfx('nodeLocked');
+          return;
+        }
+        if (!isReserved) {
+          playHubSfx('nodeSelect');
+        }
+        onSelect();
       }}
     >
       {visual.glowOpacity > 0 && (
@@ -66,17 +80,12 @@ export function SkillTreeNode({
         <text x={x} y={y + 5} textAnchor="middle" fontSize={20} fill={visual.iconFill} fontWeight={600}>
           ?
         </text>
-      ) : (
-        <text
-          x={x}
-          y={y + 5}
-          textAnchor="middle"
-          fontSize={18}
-          fill={visual.iconFill}
-          fontWeight={700}
-        >
-          {icon}
+      ) : state === 'reserved' ? (
+        <text x={x} y={y + 4} textAnchor="middle" fontSize={11} fill={visual.iconFill} fontWeight={600}>
+          ···
         </text>
+      ) : (
+        <SkillTreeBranchGlyph branch={branch} x={x} y={y} color={visual.iconFill} />
       )}
     </g>
   );

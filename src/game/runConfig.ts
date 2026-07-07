@@ -1,141 +1,80 @@
-import type { KernelModuleLevels } from '../store/kernelModuleCatalog';
 import type { UpgradeLevels } from '../store/upgradeCatalog';
 
 export function getBreachCap(upgrades: UpgradeLevels): number {
-  return 100 + upgrades.criticalThreshold * 10;
+  return 100 * (1 + upgrades.criticalThreshold * 0.1);
 }
 
 export interface RunConfig {
-  maxNodes: number;
-  nodeSpawnIntervalMs: number;
-  spawnIntervalMs: number;
-  minSpawnIntervalMs: number;
-  spawnAccelRate: number;
   starterNodes: number;
-  hitRadiusBonus: number;
-  particleDamage: number;
-  homingStrength: number;
   baseEnemyHp: number;
   hpScalePerSecond: number;
-  enemyHpReduction: number;
   shardsPerTier: readonly [number, number, number];
   shardsMultiplier: number;
+  killBonusShards: number;
+  spawnIntervalMult: number;
+  maxAliveReduction: number;
   baseEnemySpeed: number;
   enemySpeedScale: number;
   maxEnemySpeed: number;
   passiveHeatPerSec: number;
   leakProgressPenalty: number;
   leakProgressTierBonus: number;
-  missProgressPenalty: number;
-  breachCap: number;
-  xpMultiplier: number;
-  multishotCount: number;
-  pierceCount: number;
-  overclockDurationBonusMs: number;
-  overclockCooldownReductionMs: number;
-  playerSpeed: number;
-  acquisitionRange: number;
+  purgeRadius: number;
+  purgeHitDamage: number;
+  purgeIntervalMs: number;
 }
 
 const BASE_RUN_CONFIG = {
-  maxNodes: 3,
-  nodeSpawnIntervalMs: 4500,
-  spawnIntervalMs: 1100,
-  minSpawnIntervalMs: 180,
-  spawnAccelRate: 5,
   starterNodes: 0,
-  particleDamage: 1,
-  homingStrength: 0,
-  baseEnemyHp: 4,
-  hpScalePerSecond: 0.15,
-  shardsPerTier: [5, 10, 18] as const,
-  baseEnemySpeed: 38.64,
-  enemySpeedScale: 0.552,
-  maxEnemySpeed: 75.9,
-  basePassiveHeatPerSec: 0.8,
-  baseLeakProgressPenalty: 10,
-  leakProgressTierBonus: 3,
-  baseMissProgressPenalty: 2,
-  basePlayerSpeed: 180,
-  baseAcquisitionRange: 600,
+  baseEnemyHp: 20,
+  hpScalePerSecond: 0.1,
+  shardsPerTier: [1, 2, 4] as const,
+  baseEnemySpeed: 52.16,
+  enemySpeedScale: 0.7452,
+  maxEnemySpeed: 102.47,
+  basePassiveHeatPerSec: 2.8,
+  baseLeakProgressPenalty: 20,
+  leakProgressTierBonus: 4,
+  basePurgeRadius: 58,
+  basePurgeHitDamage: 5,
+  basePurgeIntervalMs: 1000,
 };
 
-export function getEnemyTier(waveIndex: number): number {
-  if (waveIndex <= 2) return 0;
-  if (waveIndex <= 4) return 1;
-  return 2;
+export function getRunTimeScale(upgrades: UpgradeLevels, fluxDriveEnabled: boolean): number {
+  return upgrades.fluxDrive > 0 && fluxDriveEnabled ? 2 : 1;
 }
 
-export function getRunConfig(
-  upgrades: UpgradeLevels,
-  runModuleLevels: KernelModuleLevels = {},
-): RunConfig {
-  const leakReduction = upgrades.heatShield * 2 + (runModuleLevels.heatShieldRun ?? 0) * 1;
-  const missReduction = upgrades.heatShield;
-  const passiveReduction =
-    upgrades.coolingPower * 0.15 + (runModuleLevels.heatReduction ?? 0) * 0.12;
-
-  const damageModuleMult = 1 + (runModuleLevels.damageBoost ?? 0) * 0.2;
-  const fireRateModuleMult = 0.85 ** (runModuleLevels.fireRateBoost ?? 0);
+export function getRunConfig(upgrades: UpgradeLevels): RunConfig {
+  const passiveHeatMult = Math.max(0.1, 1 - upgrades.coolingPower * 0.1);
+  const leakImpactMult = Math.max(0.1, 1 - upgrades.heatShield * 0.1);
+  const attackSpeedMult = 1 + upgrades.fireRate * 0.1;
 
   return {
-    maxNodes: BASE_RUN_CONFIG.maxNodes + upgrades.nodeCapacity * 2,
-    nodeSpawnIntervalMs: Math.max(
-      1200,
-      BASE_RUN_CONFIG.nodeSpawnIntervalMs * 0.88 ** upgrades.nodeSpawnRate,
-    ),
-    spawnIntervalMs:
-      BASE_RUN_CONFIG.spawnIntervalMs *
-      0.92 ** upgrades.fireRate *
-      0.96 ** upgrades.rapidCycle *
-      fireRateModuleMult,
-    minSpawnIntervalMs: BASE_RUN_CONFIG.minSpawnIntervalMs,
-    spawnAccelRate: Math.max(2, BASE_RUN_CONFIG.spawnAccelRate - upgrades.accelControl * 2),
     starterNodes: upgrades.starterNodes,
-    hitRadiusBonus: upgrades.nodeReach * 3 + (runModuleLevels.hitRadius ?? 0) * 4,
-    particleDamage: Math.max(
-      1,
-      Math.floor(
-        (BASE_RUN_CONFIG.particleDamage + upgrades.boltDamage) *
-          (1 + upgrades.damageAmp * 0.1) *
-          damageModuleMult,
-      ),
-    ),
-    homingStrength:
-      BASE_RUN_CONFIG.homingStrength * (1 + (runModuleLevels.homingBoost ?? 0) * 0.4),
     baseEnemyHp: BASE_RUN_CONFIG.baseEnemyHp,
     hpScalePerSecond: BASE_RUN_CONFIG.hpScalePerSecond,
-    enemyHpReduction: upgrades.nodeSpawnRate * 0.08,
     shardsPerTier: BASE_RUN_CONFIG.shardsPerTier,
-    shardsMultiplier: 1 + (runModuleLevels.shardsBoost ?? 0) * 0.3,
+    shardsMultiplier: 1 + upgrades.shardYield * 0.15,
+    killBonusShards: upgrades.killBonus,
+    spawnIntervalMult: 1 + upgrades.spawnThrottle * 0.1,
+    maxAliveReduction: upgrades.containment,
     baseEnemySpeed: BASE_RUN_CONFIG.baseEnemySpeed,
     enemySpeedScale: BASE_RUN_CONFIG.enemySpeedScale,
     maxEnemySpeed: BASE_RUN_CONFIG.maxEnemySpeed,
-    passiveHeatPerSec: Math.max(0.2, BASE_RUN_CONFIG.basePassiveHeatPerSec - passiveReduction),
-    leakProgressPenalty: Math.max(3, BASE_RUN_CONFIG.baseLeakProgressPenalty - leakReduction),
+    passiveHeatPerSec: Math.max(0.35, BASE_RUN_CONFIG.basePassiveHeatPerSec * passiveHeatMult),
+    leakProgressPenalty: Math.max(5, BASE_RUN_CONFIG.baseLeakProgressPenalty * leakImpactMult),
     leakProgressTierBonus: BASE_RUN_CONFIG.leakProgressTierBonus,
-    missProgressPenalty: Math.max(
-      0,
-      BASE_RUN_CONFIG.baseMissProgressPenalty - missReduction - upgrades.emissionDampener,
-    ),
-    breachCap: getBreachCap(upgrades),
-    xpMultiplier: 1 + (runModuleLevels.xpMagnet ?? 0) * 0.25,
-    multishotCount: 1 + (runModuleLevels.multishot ?? 0),
-    pierceCount: 1 + (runModuleLevels.pierce ?? 0),
-    overclockDurationBonusMs: (runModuleLevels.overclockDuration ?? 0) * 1000,
-    overclockCooldownReductionMs:
-      (runModuleLevels.overclockCooldown ?? 0) * 2000 + upgrades.fluxThrottle * 500,
-    playerSpeed: BASE_RUN_CONFIG.basePlayerSpeed,
-    acquisitionRange:
-      BASE_RUN_CONFIG.baseAcquisitionRange * (1 + upgrades.autoAim * 0.15),
+    purgeRadius:
+      BASE_RUN_CONFIG.basePurgeRadius *
+      (1 + upgrades.nodeReach * 0.25) *
+      (1 + upgrades.purgeReach * 0.2),
+    purgeHitDamage:
+      (BASE_RUN_CONFIG.basePurgeHitDamage +
+        upgrades.node0Boot +
+        upgrades.boltDamage * 5) *
+      (1 + upgrades.damageAmp * 0.1),
+    purgeIntervalMs: BASE_RUN_CONFIG.basePurgeIntervalMs / attackSpeedMult,
   };
-}
-
-export function getSpawnInterval(elapsedSeconds: number, config: RunConfig): number {
-  return Math.max(
-    config.minSpawnIntervalMs,
-    config.spawnIntervalMs - elapsedSeconds * config.spawnAccelRate,
-  );
 }
 
 export function getEnemyMaxHp(
@@ -146,12 +85,10 @@ export function getEnemyMaxHp(
 ): number {
   const tierMultiplier = 1 + tier * 0.5;
   const waveScale = 1 + (waveIndex - 1) * 0.12;
-  const hpReduction = 1 - Math.min(0.4, config.enemyHpReduction);
   return Math.ceil(
-    (config.baseEnemyHp + waveIndex * config.hpScalePerSecond * 4) *
+    (config.baseEnemyHp + (waveIndex - 1) * config.hpScalePerSecond * 4) *
       tierMultiplier *
       waveScale *
-      hpReduction *
       bossHpMult,
   );
 }
@@ -172,9 +109,27 @@ export function getShardReward(config: RunConfig, tier: number): number {
   const base =
     config.shardsPerTier[Math.min(tier, config.shardsPerTier.length - 1)] ??
     config.shardsPerTier[0];
-  return Math.floor(base * config.shardsMultiplier);
+  return Math.floor(base * config.shardsMultiplier) + config.killBonusShards;
 }
 
 export function getLeakProgressPenalty(config: RunConfig, tier: number): number {
   return config.leakProgressPenalty + tier * config.leakProgressTierBonus;
+}
+
+export function getKillBreachRelief(upgrades: UpgradeLevels, tier: number): number {
+  const level = upgrades.fluxThrottle;
+  if (level <= 0) return 0;
+
+  const tierMult = [1, 1.5, 2][Math.min(tier, 2)] ?? 1;
+  const relief = level * 0.08 * tierMult;
+  return Math.min(1.5, relief);
+}
+
+export function getSpawnIntervalMs(baseIntervalMs: number, config: RunConfig): number {
+  if (baseIntervalMs <= 0) return baseIntervalMs;
+  return Math.floor(baseIntervalMs * config.spawnIntervalMult);
+}
+
+export function getWaveMaxAlive(baseMaxAlive: number, config: RunConfig): number {
+  return Math.max(1, baseMaxAlive - config.maxAliveReduction);
 }

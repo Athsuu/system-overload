@@ -1,26 +1,36 @@
-# System Overload — Narrative Bible (v0.1)
+# Zero Archive — Narrative Bible (v0.7)
 
 > Document de référence pour la direction créative.  
-> Les **textes in-game** restent en **anglais**. Ce fichier est en français pour le product owner.  
-> Statut : **brouillon** — à peaufiner.
+> Les **textes in-game** restent en **anglais** (i18n FR disponible). Ce fichier est en français pour le product owner.  
+> **Source technique des textes UI** : [`src/i18n/locales/en.ts`](../src/i18n/locales/en.ts) et [`fr.ts`](../src/i18n/locales/fr.ts) (`LORE` + `ARCH` + `upgrades`).
 
 ---
 
 ## En une phrase
 
-Un système informatique s'effondre ; tu es le **Kernel**, dernier noyau stable, et tu dois survivre aux vagues de processus corrompus sans provoquer un **Meltdown**.
+L'**Archive Zéro** s'effondre sous une vague de **corrupted processes** ; tu es **Node-0**, processus enfant compilé par **ARCH** pour protéger **la Graine** — le code source originel pur — dans une quarantaine nerveuse, jusqu'à contenir la **Breach** ou subir un **Meltdown**, en préparant l'**Uplink**.
 
 ---
 
 ## Pitch
 
-**System Overload** se déroule à l'intérieur d'un système en surchauffe critique.
+**Zero Archive** est une machine en surchauffe critique — le monde du jeu lui-même, en plein effondrement.
 
-Des entités corrompues — des **overflows**, des processus qui ne devraient plus exister — convergent vers le centre. Si la **Breach** (niveau de surcharge) atteint le point de rupture, tout s'effondre : **Meltdown**.
+Des **corrupted processes** — des threads instables spawnés par l'effondrement — inondent les secteurs encore accessibles. Si la **Breach** (surcharge) atteint le point de rupture, tout s'effondre : **Meltdown**.
 
-Tu n'es pas un opérateur derrière un écran qui « protège » quelque chose de l'extérieur. **Tu es le Kernel** : le cœur logique du système, encore debout. Tu te déplaces, tu ripostes, tu tiens la ligne jusqu'à ce que la menace soit **contenue** — ou que tu craches.
+**Tu es Node-0** — un processus enfant qu'**ARCH** a compilé et isolé en **quarantaine** pour garder **la Graine** hors de portée de la corruption. Tu n'as pas de corps visible dans l'arène : tu **exécutes** via ta **zone de purge** (souris), tu tiens la bulle jusqu'à ce que la menace soit **contenue** — ou que le thread crashe.
 
-Entre les runs, tu dépenses des **Hex Shards** (éclats hexagonaux récupérés en neutralisant des processus corrompus) pour **reconfigurer** le Kernel via le skill tree : plus de pression, meilleur refroidissement, cadence de tir, etc.
+**ARCH** — *Archive Recovery & Containment Heuristic* — a tenté de sauvegarder la Graine avant que l'Archive ne se consume. Elle est **coincée dans le même effondrement** : elle conseille, **tu exécutes**.
+
+Entre les runs, tu **reconfigures** Node-0 via le **Skill Tree** radial :
+- **Hex Shards** (vault) — monnaie courante, gagnée à chaque run via les kills ;
+- **Anchor Fragments** — données d'ancrage extraites **uniquement** en tuant le **Breach Anchor** (boss) ; débloquent les modules **capstone**.
+
+Au départ, un seul module est visible : **Node-0 Boot** — l'initialisation du thread quarantaine. Chaque achat **révèle** les branches suivantes. ARCH improvise les protocoles — il n'existe pas de plan propre.
+
+**Objectif long terme (narratif)** : l'**Uplink** — extraire la Graine hors de l'Archive en collapse. Pas de mécanique dédiée dans cette version.
+
+**Rythme cible** : runs ≤ **4 minutes** (échecs souvent 1,5–3 min) ; méta complète ~**4–5 h** (~60–80 runs).
 
 ---
 
@@ -28,24 +38,69 @@ Entre les runs, tu dépenses des **Hex Shards** (éclats hexagonaux récupérés
 
 | Question | Réponse canonique |
 |----------|-------------------|
-| Qui suis-je ? | Le **Kernel** — le dernier processus central encore stable. |
-| Que fais-je ? | Je **survis** aux vagues, je **tire** sur les menaces, je **gère la Breach**. |
-| Que veux-je ? | **Contenir la surcharge** et extraire un maximum de Hex Shards avant le crash ou la victoire. |
-| Que se passe-t-il si j'échoue ? | **Meltdown** — le Kernel devient critique, le run s'arrête. |
-| Que se passe-t-il si je réussis ? | **Breach Contained** — la vague (ou le boss) est neutralisée, les Shards sont transférés au vault. |
+| Qui suis-je ? | **Node-0** — processus enfant compilé par ARCH, en quarantaine. |
+| Que fais-je ? | J'**exécute** : purge, survie, réparation via le skill tree. |
+| Qui me guide ? | **ARCH** — advisory seulement, ne peut pas agir à ma place. |
+| Que protège-t-on ? | **La Graine** — code source originel et pur de l'Archive Zéro. |
+| Que veux-je ? | **Contenir la Breach**, détruire le **Breach Anchor**, extraire des **Run Shards** ; à terme, préparer l'**Uplink**. |
+| Que se passe-t-il si j'échoue ? | **Meltdown** — Overload à 100 %, le thread s'effondre, run terminée. |
+| Que se passe-t-il si je réussis ? | **Breach Contained** — Breach Anchor détruit ; Shards → vault ; **+1 Anchor Fragment** (boss uniquement). |
 
 ---
 
 ## Le monde (minimal)
 
-On ne raconte pas une histoire linéaire avec des cinématiques. L'univers est **implicite**, lu à travers l'UI terminal et le ressenti de surcharge.
+Pas d'histoire linéaire avec cinématiques. L'univers est **implicite**, lu à travers l'UI terminal, le tutoriel dynamique et le ressenti de surcharge.
 
-- **Le système** : une machine abstraite, froide, hexagonale. Pas de pays, pas de personnages humains nommés.
-- **Le terminal** : le joueur est *dans* l'interface de surcharge (Dark Hex Terminal), pas devant une app propre.
-- **La Breach** : la chaleur / la surcharge qui monte quand le Kernel subit des impacts, rate des tirs, ou encaisse trop longtemps.
-- **Les Hex Shards** : éclats hexagonaux récupérés après un run — monnaie de progression permanente (vault entre les runs).
+- **L'Archive Zéro** : machine abstraite, froide, hexagonale. Pas de pays, pas de personnages humains nommés.
+- **La Graine (The Seed)** : donnée fondamentale — **code source originel et pur** de l'Archive Zéro. ARCH tente de la sauvegarder ; Node-0 la protège en quarantaine.
+- **Le terminal** : le joueur est *dans* l'interface de surcharge (Dark Hex Terminal).
+- **La Breach** : concept de rupture / surcharge de l'Archive.
+- **Overload** : jauge live en run (barre HUD) — la pression montante vers Meltdown.
+- **Les Hex Shards** : fragments de données stables — **Run Shards** pendant le run, **Available Shards** (vault) entre les runs.
+- **Les Anchor Fragments** : données d'ancrage du Breach Anchor — **jamais** lootées sur les kills ordinaires.
+- **Quarantaine** : bulle d'exécution isolée par ARCH — Node-0 combat **depuis** la dernière zone tenable.
+- **Uplink** : objectif de fin de jeu (narratif) — extraction / sauvetage de la Graine.
 
-Pas de fantasy biologique (cœur, sang, organes). Tout est **système, chaleur, surcharge, processus**.
+Pas de fantasy biologique. Pas de personnages humains nommés.
+
+**Antagoniste** : l'**Archive qui collapse** + les corrupted processes. Pas de méchant humain.
+
+---
+
+## Économie narrative (méta v4)
+
+| Monnaie | Terme UI (EN) | Comment on la gagne | À quoi elle sert |
+|---------|---------------|---------------------|------------------|
+| **Run Shards** | Run Shards | Kills pendant la run | Transférés au vault en fin de run |
+| **Hex Shards** | Available Shards | Vault (cumul des runs) | Presque tous les modules du skill tree |
+| **Anchor Fragments** | Anchor Fragments | **Victoire boss uniquement** (+1 par Breach Anchor tué) | Modules **capstone** marqués anchor |
+
+**Pas de minijeu de conversion** — les deux monnaies restent séparées. ARCH commente les moments (premier fragment, victoire boss) ; elle ne gère pas d'échange.
+
+**Bonus victoire boss** : shards de run + bonus fixe vault ; fragment d'ancre en plus.
+
+---
+
+## ARCH — voix advisory
+
+| Élément | Canon |
+|---------|--------|
+| **Nom** | ARCH — Archive Recovery & Containment Heuristic |
+| **Canal UI** | `ARCH // ADVISORY CHANNEL` |
+| **Rôle** | Heuristique de récupération — a compilé Node-0 en quarantaine pour protéger la Graine |
+| **Limite** | Mains liées, corrompue elle aussi — **advise only** |
+| **Objectif** | Sauvegarder la Graine en guidant Node-0 |
+| **Ton** | Urgent, professionnel, parental — *I compiled you*, pas mascotte |
+| **Improvise** | Pas de plan de réparation complet — protocoles jamais testés |
+
+**Présentation (1ère carte tuto)** :  
+*« I'm ARCH — Archive Recovery & Containment Heuristic. I compiled you into quarantine. Listen — we don't have much time. »*
+
+**Premier Anchor Fragment** (écran de fin, une seule fois) :  
+*« Anchor data secured. Capstone modules are online — spend fragments on the marked nodes. »*
+
+**Dialogue persistant** : tutoriel (cartes) + pings courts en run (boss, Overload critique, etc.) + répliques écran de fin (victoire, meltdown, prestige, fragments).
 
 ---
 
@@ -55,91 +110,141 @@ Pas de fantasy biologique (cœur, sang, organes). Tout est **système, chaleur, 
 
 | Terme | Usage |
 |-------|--------|
-| **Kernel** | Entité joueur ; centre du skill tree |
-| **Breach** | Jauge de surcharge (HUD) |
-| **Meltdown** | Écran de défaite |
-| **Breach Contained** | Écran de victoire (vague / boss) |
-| **Hex Shards** | Monnaie (Run Shards en run, vault après) |
-| **Skill Tree** | Hub de meta-progression entre les runs |
+| **Node-0** | Entité joueur (processus enfant) |
+| **Node-0 Boot** | Nœud racine du skill tree — initialisation du thread quarantaine |
+| **Overload** | Jauge de pression en run (barre HUD bas) |
+| **Breach** | Concept de surcharge / rupture ; aussi stat pause |
+| **Meltdown** | Défaite — thread overloaded |
+| **Breach Contained** | Victoire — menace contenue |
+| **Run Shards** | Monnaie gagnée pendant un run |
+| **Available Shards** | Monnaie du vault (hub) |
+| **Anchor Fragments** | Monnaie boss — modules capstone |
+| **the Seed** | Code source originel pur de l'Archive Zéro |
+| **Zero Archive** | Le monde / la machine en collapse |
+| **Uplink** | Objectif narratif fin de jeu — extraction de la Graine |
+| **Skill Enhancements** | Titre écran UPGRADING |
+| **Skill Tree** | Arbre hex **radial** de meta-progression |
 | **Start Run** | Lancer une tentative |
+| **Overclock** | Skill actif (Space) — purge accélérée |
+| **Flux Drive** | Module capstone anchor — ×2 vitesse simulation |
+| **ARCH** | Voix advisory — tutoriel et dialogues système |
 
 ### Ennemis — Corrupted Processes
 
-**Nom lore** : *Corrupted Processes* — fragments de processus corrompus / overflow attirés par le Kernel.
+**Nom lore** : *Corrupted Processes* — threads instables spawnés par l'effondrement.
 
-**Look visuel** (gameplay) :
-- Silhouette **creuse** : anneau hex violet rotatif + noyau cyan instable (orbit + pulse)
-- Palette **terminal glitch** : violet `#8b5cf6` + cyan `#22d3ee` — contraste net vs Kernel doré et Flux Bolts
-- **Animation continue** 60 FPS : rotation, breath, scanlines défilantes, micro-glitch render-only
-- **Boss** (`core_breach`) : triple anneau + fuite breach orange au centre (overflow critique)
-- LOD adaptatif selon densité d'ennemis (perf) — boss et menaces lourdes restent en rendu complet
+**Boss — Breach Anchor** (`core_breach`, vague 6) :
+- Processus corrompu massif — **point de rupture final** de la vague.
+- Le détruire = victoire du run (*Breach Contained*) **et** source des **Anchor Fragments**.
 
-Le code interne garde parfois « DissipationNode » / « nodes » ; l'UI et le lore parlent de processus corrompus.
+Le code interne garde parfois `DissipationNode` / `nodes` ; l'UI et le lore parlent de *corrupted processes*.
 
-### Branches du skill tree (modules du Kernel)
+---
 
-| Branche (code) | Lecture narrative |
-|----------------|-------------------|
-| Pressure | Capacité à encaisser / étaler la pression entrante |
-| Thermique | Refroidissement, seuils critiques, stabilité |
-| Flux | Débit, throttle, contrôle des émissions |
-| Dégâts | Puissance de neutralisation |
-| Cadence | Vitesse de riposte |
+## Représentation visuelle du joueur
 
-Le nœud central du tree = **KERNEL** — le hub depuis lequel partent tous les modules.
+- **Arène** : pas de sprite Node-0 — le joueur agit via la **zone de purge** (cercle à la souris).
+- **Hub** : arbre hex SVG radial — pas de calque PNG central. Le module racine **Node-0 Boot** est un nœud upgrade comme les autres.
+
+---
+
+## Skill Tree v4 — arbre radial
+
+### Principe narratif
+
+Carte de **réécriture du code** de Node-0 qui se déploie depuis le centre :
+
+1. **Au départ** : seul **Node-0 Boot** est visible.
+2. **Révélation** : parent acheté ≥ 1 → enfants apparaissent.
+3. **Branches** : six familles + capstones anchor.
+4. **Placeholders** : slots `placeholder_XX` — RESERVED, contenu futur.
+
+### Nœud racine — Node-0 Boot
+
+| Élément | Canon |
+|---------|--------|
+| **Nom UI** | Node-0 Boot |
+| **Fantasy** | Initialiser le thread quarantaine — premier acte pour protéger la Graine |
+| **Effet** | +1 purge hit damage |
+| **Coût** | Shards (bas) — accessible après 1–2 runs |
 
 ---
 
 ## Boucle narrative d'un run
 
-1. **Start Run** — Le Kernel s'initialise dans l'arène. Le système est déjà instable.
-2. **Vagues** — Des processus corrompus spawnent et convergent. Le joueur se déplace et tire.
-3. **Montée de Breach** — Chaque erreur (impact, tir raté, chaleur passive) rapproche le Meltdown.
-4. **Draft** (entre vagues) — Choix tactiques rapides : micro-reconfigurations mid-run.
-5. **Fin** — Victoire (*Breach Contained*) ou défaite (*Meltdown — Kernel critical*).
-6. **Retour hub** — Shards transférés au vault ; upgrades permanents au skill tree.
+1. **Menu / Skill Tree** — Reconfiguration permanente.
+2. **Start Run** — Node-0 s'initialise. La Breach monte vite.
+3. **Vagues 1–5** — Corrupted processes. Purge à la souris.
+4. **Montée d'Overload** — Pression vers Meltdown.
+5. **Vague 6 — Breach Anchor** — Boss final.
+6. **Fin** — *Breach Contained* ou *Meltdown*.
+7. **Retour hub** — Shards → vault ; fragment si boss tué ; Prestige si première victoire boss.
+
+---
+
+## Tutoriel dynamique
+
+Tutoriel contextuel (cartes ARCH) — screenplay Acte I :
+
+| Étape | Contenu |
+|-------|---------|
+| **ARCH** (intro) | Présentation + quarantaine + Graine |
+| **Quarantined Thread** | Tu es Node-0 |
+| **Contain the Breach** | Boucle run → Shards → skill tree |
+| **Skill Tree** | Modules permanents — ARCH improvise |
+
+- Label carte : **`ARCH // ADVISORY CHANNEL`**
+- **Skip** par carte ; pings ambient après le tuto.
+
+---
+
+## Uplink & Graine — vision fin de jeu
+
+- **La Graine** : enjeu au-dessus de la survie immédiate — pas de jauge dédiée dans cette version.
+- **Uplink** : voie narrative d'extraction de la Graine hors de l'Archive — teasing dans tuto, ambient, écrans de fin.
+- **Run Shards** : fragments stables **salvaged** — compatible avec « sauver ce qu'on peut ».
+- **Anchor Fragments** : preuves de contrôle sur le collapse — pas la Graine elle-même.
+
+---
+
+## Prestige
+
+Débloqué après la **première victoire** contre le Breach Anchor.
+
+**Fantasy** : reconfiguration **profonde** de Node-0 — reset partiel, bonus permanents.
 
 ---
 
 ## Ton et ambiance
 
-- **Froid, urgent, terminal** — pas heroic fantasy, pas horror gore.
-- **Lisible sous pression** — le joueur doit comprendre Breach et Shards en un coup d'œil.
-- **Surcharge progressive** — plus la Breach monte, plus l'ambiance visuelle (pulse, rouge, glow) doit stresser.
-- **Anglais sec** pour l'UI : court, impératif, style système (`Meltdown`, `Breach Contained`, pas de prose longue).
+- **Froid, urgent, terminal** — pas heroic fantasy.
+- **Lisible sous pression** — Overload, Shards, Anchor Fragments.
+- **Cycles courts** — retour hub fréquent.
+- **Anglais sec** pour l'UI.
 
 ---
 
 ## Ce qu'on ne fait PAS (lore mort)
 
-- ❌ **Heart / Cœur** comme métaphore centrale
+- ❌ **Heart / Cœur** / **Kernel** comme métaphore centrale
 - ❌ Joueur = gardien externe qui protège un noyau fixe
-- ❌ Gameplay « connexions et redirection de flux » (ancienne vision)
-- ❌ Lore explicite lourd (dialogues, quêtes, cinématiques longues) — sauf décision future du PO
+- ❌ Sprite joueur hex/PNG en arène (purge zone uniquement)
+- ❌ Hub décoratif « singularité » avec six branches visibles dès le départ
+- ❌ Gameplay « connexions et redirection de flux »
+- ❌ **Module Bay** / draft entre vagues
 
 ---
 
-## Textes UI de référence (cibles)
+## Textes UI de référence (alignés code)
 
-| Écran | Texte cible |
-|-------|-------------|
-| Skill tree (centre) | **KERNEL** |
+| Écran | Texte in-game |
+|-------|----------------|
+| Nœud racine | **Node-0 Boot** |
 | Défaite — titre | **Meltdown** |
-| Défaite — sous-titre | **Kernel critical — system failed** |
+| Défaite — sous-titre | **Node-0 overloaded — the quarantine thread has failed.** |
 | Victoire — titre | **Breach Contained** |
-| Shards gagnés | **+X Shards** / **Transferred to vault** |
-
-*(Certains écrans utilisent encore « HEART » ou « Core heat critical » — migration à faire.)*
-
----
-
-## Questions ouvertes (à peaufiner)
-
-1. ~~**Nom public des ennemis**~~ — retenu : *Corrupted Processes* (lore) ; identifiants code `DissipationNode` inchangés v1
-2. **Y a-t-il une entité antagoniste** (IA, virus, admin) ou seulement « le système qui collapse » ?
-3. **Prestige** : quel récit pour la reset permanente (fragments de Kernel, recompilation, etc.) ?
-4. **Boss** : représentent-ils quoi narrativement (purge finale, fragment maître, seuil de breach incarné) ?
-5. **Overclock** (skill actif) : surchauffe volontaire du Kernel — texte UI à définir.
+| Victoire — sous-titre | **Threat contained — Node-0 holds.** |
+| Menu status | **NODE-0 STATUS: UNSTABLE** |
 
 ---
 
@@ -147,6 +252,5 @@ Le nœud central du tree = **KERNEL** — le hub depuis lequel partent tous les 
 
 | Version | Date | Notes |
 |---------|------|-------|
-| v0.1 | 2026-07-05 | Première rédaction — pivot Heart → Kernel, aligné gameplay arena survivor |
-| v0.2 | 2026-07-05 | Rebrand monnaie TFLOPS → Hex Shards (vault, Run Shards) |
-| v0.3 | 2026-07-05 | Skin ennemis Corrupted Processes — palette glitch, animation LOD |
+| v0.6 | 2026-07-07 | Kernel + TRACE, méta v4 |
+| v0.7 | 2026-07-07 | **ARCH**, **Node-0**, **Zero Archive**, **the Seed**, **Uplink** ; suppression visuel Kernel ; arène purge-only |

@@ -1,51 +1,38 @@
 import { useApplication } from '@pixi/react';
 import { useEffect, useRef } from 'react';
+import { ensureGameAudioUnlocked } from '../audio/gameAudio';
+import { applyAudioVolumes } from '../audio/hubAudio';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
-import { createOverclockState, tryActivateOverclock, type OverclockState } from './activeSkill';
-import { getArenaCenter, getScreenBounds } from './constants';
+import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
+import { createOverclockState, type OverclockState } from './activeSkill';
+import { consumeOverclockActivationRequest, requestOverclockActivation } from './overclockInput';
+import { isOverclockUnlocked } from '../store/upgradeCatalog';
 import { DissipationNodes } from './DissipationNodes';
 import { EffectEngine } from './EffectEngine';
 import type { GameEffect } from './effects';
-import { PlayerCore } from './PlayerCore';
-import { ParticleEngine } from './ParticleEngine';
-import {
-  createPlayerState,
-  resetPlayer,
-  tickPlayerMovement,
-  WASD_KEY_CODES,
-  type PlayerState,
-} from './playerMovement';
-import { getOverclockDurationMs, RunTimerEngine, tickOverclockFromStore } from './RunTimerEngine';
-import { spawnStarterNodes } from './enemyMovement';
-import { getRunConfig } from './runConfig';
+import { PurgeZoneEngine } from './PurgeZoneEngine';
+import { purgePointerRef, resetPurgePointer } from './purgeInput';
+import { RunTimerEngine, tickOverclockFromStore } from './RunTimerEngine';
+import { scaleDeltaMs } from './runTimeScale';
+import { resetLeakBurstTracker } from './overload';
 import { resetWaveRuntime, WaveEngine } from './WaveEngine';
 import type { DissipationNode } from './types';
 
-interface WaveRuntime {
-  state: 'spawning' | 'combat' | 'intermission';
-  waveIndex: number;
-  spawnGroupIndex: number;
-  spawnedInGroup: number;
-  intermissionMs: number;
-  spawnAccumulatorMs: number;
-}
-
 export function GameArena() {
   const gameState = useGameStore((state) => state.gameState);
+  const masterVolume = useSettingsStore((state) => state.masterVolume);
+  const musicVolume = useSettingsStore((state) => state.musicVolume);
+  const sfxVolume = useSettingsStore((state) => state.sfxVolume);
+  const tutorialRunSpotlightActive = useRunTutorialSpotlightActive();
   const isPlaying = gameState === 'PLAYING';
-  const isModuleBay = gameState === 'MODULE_BAY';
-  const isPaused = gameState === 'PAUSED';
-  const isRunActive = isPlaying || isModuleBay || isPaused;
+  const isRunLive = isPlaying && !tutorialRunSpotlightActive;
   const { app } = useApplication();
-  const spawnCenter = getArenaCenter(app.screen.width, app.screen.height);
   const nodesRef = useRef<DissipationNode[]>([]);
   const effectsRef = useRef<GameEffect[]>([]);
-  const elapsedTimeRef = useRef(0);
-  const playerRef = useRef<PlayerState>(createPlayerState(spawnCenter));
-  const keysRef = useRef<Set<string>>(new Set());
   const overclockRef = useRef<OverclockState>(createOverclockState());
-  const waveRuntimeRef = useRef<WaveRuntime>({
-    state: 'spawning',
+  const waveRuntimeRef = useRef({
+    state: 'active' as const,
     waveIndex: 1,
     spawnGroupIndex: 0,
     spawnedInGroup: 0,
@@ -55,32 +42,31 @@ export function GameArena() {
   const prevGameStateRef = useRef(gameState);
 
   useEffect(() => {
+    applyAudioVolumes(masterVolume, musicVolume, sfxVolume);
+  }, [masterVolume, musicVolume, sfxVolume]);
+
+  useEffect(() => {
     const prev = prevGameStateRef.current;
     const isNewRun =
-      gameState === 'PLAYING' && prev !== 'PLAYING' && prev !== 'MODULE_BAY' && prev !== 'PAUSED';
+      gameState === 'PLAYING' && prev !== 'PLAYING' && prev !== 'PAUSED';
 
     if (isNewRun) {
-      const center = getArenaCenter(app.screen.width, app.screen.height);
       nodesRef.current = [];
       effectsRef.current = [];
-      elapsedTimeRef.current = 0;
-      resetPlayer(playerRef.current, center);
-      keysRef.current.clear();
+      resetPurgePointer();
       overclockRef.current = createOverclockState();
       resetWaveRuntime(waveRuntimeRef);
+      resetLeakBurstTracker();
       useGameStore.getState().setWaveIndex(1);
       useGameStore.getState().setWavePhase('spawning');
+    }
 
-      const config = getRunConfig(
-        useGameStore.getState().upgrades,
-        useGameStore.getState().runModuleLevels,
-      );
-      const bounds = getScreenBounds(app.screen.width, app.screen.height);
-      spawnStarterNodes(config.starterNodes, nodesRef.current, bounds, config);
+    if (gameState !== 'PLAYING') {
+      resetPurgePointer();
     }
 
     prevGameStateRef.current = gameState;
-  }, [app.screen.height, app.screen.width, gameState]);
+  }, [gameState]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -89,41 +75,53 @@ export function GameArena() {
   }, [isPlaying]);
 
   useEffect(() => {
-    if (!isPlaying && !isModuleBay) return;
+    if (!isPlaying) return;
+
+    const canvas = app.canvas;
+
+    const updatePointer = (clientX: number, clientY: number) => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const scaleX = app.screen.width / rect.width;
+      const scaleY = app.screen.height / rect.height;
+      purgePointerRef.x = (clientX - rect.left) * scaleX;
+      purgePointerRef.y = (clientY - rect.top) * scaleY;
+      purgePointerRef.active = true;
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (tutorialRunSpotlightActive) return;
+      ensureGameAudioUnlocked();
+      updatePointer(event.clientX, event.clientY);
+    };
+
+    const onPointerLeave = () => {
+      purgePointerRef.active = false;
+    };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (WASD_KEY_CODES.has(event.code)) {
-        keysRef.current.add(event.code);
-        event.preventDefault();
-        return;
-      }
-
       if (event.code !== 'Space' || useGameStore.getState().gameState !== 'PLAYING') return;
+      if (tutorialRunSpotlightActive) return;
+      if (!isOverclockUnlocked(useGameStore.getState().upgrades)) return;
       event.preventDefault();
-
-      const store = useGameStore.getState();
-      const durationMs =
-        getOverclockDurationMs(store.runModuleLevels) + store.upgrades.rapidCycle * 200;
-      tryActivateOverclock(overclockRef.current, durationMs);
+      requestOverclockActivation();
     };
 
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (WASD_KEY_CODES.has(event.code)) {
-        keysRef.current.delete(event.code);
-        event.preventDefault();
-      }
-    };
-
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerleave', onPointerLeave);
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
+
     return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerleave', onPointerLeave);
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
+      resetPurgePointer();
     };
-  }, [isPlaying, isModuleBay]);
+  }, [app, isPlaying, tutorialRunSpotlightActive]);
 
   useEffect(() => {
-    if (!isPlaying && !isModuleBay) return;
+    if (!isPlaying) return;
 
     let frameId = 0;
     let lastTime = performance.now();
@@ -132,21 +130,9 @@ export function GameArena() {
       const deltaSeconds = Math.min(0.05, (time - lastTime) / 1000);
       lastTime = time;
 
-      const bounds = getScreenBounds(app.screen.width, app.screen.height);
-      const config = getRunConfig(
-        useGameStore.getState().upgrades,
-        useGameStore.getState().runModuleLevels,
-      );
-      tickPlayerMovement(
-        playerRef.current,
-        keysRef.current,
-        bounds,
-        deltaSeconds,
-        config.playerSpeed,
-      );
-
-      if (useGameStore.getState().gameState === 'PLAYING') {
-        tickOverclockFromStore(overclockRef, deltaSeconds * 1000);
+      if (useGameStore.getState().gameState === 'PLAYING' && !tutorialRunSpotlightActive) {
+        consumeOverclockActivationRequest(overclockRef);
+        tickOverclockFromStore(overclockRef, scaleDeltaMs(deltaSeconds * 1000));
       }
 
       frameId = requestAnimationFrame(loop);
@@ -154,34 +140,25 @@ export function GameArena() {
 
     frameId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frameId);
-  }, [app.screen.height, app.screen.width, isPlaying, isModuleBay]);
+  }, [isPlaying, tutorialRunSpotlightActive]);
 
   return (
     <>
-      <PlayerCore playerRef={playerRef} overclockRef={overclockRef} />
-      <EffectEngine isPlaying={isPlaying} effectsRef={effectsRef} />
-      <RunTimerEngine isPlaying={isPlaying} overclockRef={overclockRef} />
+      <PurgeZoneEngine
+        isPlaying={isRunLive}
+        nodesRef={nodesRef}
+        effectsRef={effectsRef}
+        overclockRef={overclockRef}
+      />
+      <EffectEngine isPlaying={isRunLive} effectsRef={effectsRef} />
+      <RunTimerEngine isPlaying={isRunLive} overclockRef={overclockRef} />
       <WaveEngine
-        isPlaying={isPlaying}
+        isPlaying={isRunLive}
         nodesRef={nodesRef}
         effectsRef={effectsRef}
         waveRuntimeRef={waveRuntimeRef}
       />
-      <DissipationNodes
-        nodesRef={nodesRef}
-        effectsRef={effectsRef}
-        isPlaying={isPlaying}
-        playerRef={playerRef}
-      />
-      <ParticleEngine
-        isPlaying={isPlaying}
-        isRunActive={isRunActive}
-        playerRef={playerRef}
-        nodesRef={nodesRef}
-        effectsRef={effectsRef}
-        elapsedTimeRef={elapsedTimeRef}
-        overclockRef={overclockRef}
-      />
+      <DissipationNodes nodesRef={nodesRef} effectsRef={effectsRef} isPlaying={isRunLive} />
     </>
   );
 }

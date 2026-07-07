@@ -1,29 +1,26 @@
-import { useTick } from '@pixi/react';
+import { useApplication, useTick } from '@pixi/react';
 import { Container, Graphics } from 'pixi.js';
-import { useCallback, useLayoutEffect, useRef, type MutableRefObject, type RefObject } from 'react';
+import { useCallback, useLayoutEffect, useRef, type RefObject } from 'react';
 import { useGameStore } from '../store/useGameStore';
+import { getScreenBounds } from './constants';
+import { isDevInvincible, isDevShowEnemyHpBars } from '../dev/devFlags';
 import { drawCorruptedProcess, tickCorruptProcessAnim } from './corruptedProcessVisual';
+import { drawEnemyHpBar } from './enemyHpBar';
 import { tickEnemyMovement } from './enemyMovement';
-import { pushKernelImpactFlash, type GameEffect } from './effects';
+import { pushFlowEscapeFlash, type GameEffect } from './effects';
 import { applyImpactOverload } from './overload';
-import type { PlayerState } from './playerMovement';
-import { getPlayerPosition } from './playerMovement';
 import { getRunConfig } from './runConfig';
+import { scaleDeltaMs, scaleDeltaSeconds } from './runTimeScale';
 import type { DissipationNode } from './types';
 
 interface DissipationNodesProps {
   nodesRef: RefObject<DissipationNode[]>;
   effectsRef: RefObject<GameEffect[]>;
   isPlaying: boolean;
-  playerRef: MutableRefObject<PlayerState>;
 }
 
-export function DissipationNodes({
-  nodesRef,
-  effectsRef,
-  isPlaying,
-  playerRef,
-}: DissipationNodesProps) {
+export function DissipationNodes({ nodesRef, effectsRef, isPlaying }: DissipationNodesProps) {
+  const { app } = useApplication();
   const graphicsRef = useRef<Graphics | null>(null);
   const containerRef = useRef<Container | null>(null);
 
@@ -49,25 +46,28 @@ export function DissipationNodes({
       if (!graphics || !nodes) return;
 
       if (isPlaying && useGameStore.getState().gameState === 'PLAYING') {
-        const target = getPlayerPosition(playerRef.current);
-        const config = getRunConfig(
-          useGameStore.getState().upgrades,
-          useGameStore.getState().runModuleLevels,
-        );
+        const bounds = getScreenBounds(app.screen.width, app.screen.height);
+        const config = getRunConfig(useGameStore.getState().upgrades);
+        const deltaMs = scaleDeltaMs(ticker.deltaMS);
 
-        tickEnemyMovement(nodes, target, ticker.deltaMS / 1000, (node) => {
+        tickEnemyMovement(nodes, bounds, scaleDeltaSeconds(ticker.deltaMS / 1000), (node) => {
+          if (isDevInvincible()) return;
           applyImpactOverload(config, node.tier);
-          pushKernelImpactFlash(effectsRef.current ?? [], target.x, target.y);
+          pushFlowEscapeFlash(effectsRef.current ?? [], node.x, node.y);
         });
-        tickCorruptProcessAnim(nodes, ticker.deltaMS);
+        tickCorruptProcessAnim(nodes, deltaMs);
       }
 
       graphics.clear();
+      const showHpBars = isDevShowEnemyHpBars();
       for (const node of nodes) {
         drawCorruptedProcess(graphics, node);
+        if (showHpBars) {
+          drawEnemyHpBar(graphics, node);
+        }
       }
     },
-    [effectsRef, isPlaying, nodesRef, playerRef],
+    [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef],
   );
 
   useTick(tick);

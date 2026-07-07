@@ -2,6 +2,7 @@ export interface WaveSpawnGroup {
   count: number;
   tier: number;
   intervalMs: number;
+  maxAlive: number;
 }
 
 export interface WaveDefinition {
@@ -17,36 +18,36 @@ export interface WaveDefinition {
 export const WAVE_DEFINITIONS: WaveDefinition[] = [
   {
     wave: 1,
-    spawns: [{ count: 4, tier: 0, intervalMs: 800 }],
-    interWaveMs: 2500,
+    spawns: [{ count: 7, tier: 0, intervalMs: 1400, maxAlive: 3 }],
+    interWaveMs: 900,
   },
   {
     wave: 2,
-    spawns: [{ count: 5, tier: 0, intervalMs: 700 }],
-    interWaveMs: 2500,
+    spawns: [{ count: 9, tier: 0, intervalMs: 1200, maxAlive: 5 }],
+    interWaveMs: 900,
   },
   {
     wave: 3,
-    spawns: [{ count: 4, tier: 1, intervalMs: 650 }],
-    interWaveMs: 2500,
+    spawns: [{ count: 11, tier: 1, intervalMs: 1100, maxAlive: 5 }],
+    interWaveMs: 900,
   },
   {
     wave: 4,
-    spawns: [{ count: 6, tier: 1, intervalMs: 600 }],
-    interWaveMs: 2500,
+    spawns: [{ count: 12, tier: 1, intervalMs: 1000, maxAlive: 6 }],
+    interWaveMs: 900,
   },
   {
     wave: 5,
-    spawns: [{ count: 5, tier: 2, intervalMs: 550 }],
-    interWaveMs: 3000,
+    spawns: [{ count: 14, tier: 2, intervalMs: 950, maxAlive: 6 }],
+    interWaveMs: 1000,
   },
   {
     wave: 6,
     isBoss: true,
     bossId: 'core_breach',
-    bossHpMult: 8,
-    bossSpeedMult: 0.6,
-    spawns: [{ count: 1, tier: 2, intervalMs: 0 }],
+    bossHpMult: 6,
+    bossSpeedMult: 0.65,
+    spawns: [{ count: 1, tier: 2, intervalMs: 0, maxAlive: 1 }],
     interWaveMs: 0,
   },
 ];
