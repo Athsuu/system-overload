@@ -50,3 +50,22 @@ export function devToggleSpeed2x(): boolean {
 export function devSetSpeed2x(enabled: boolean): void {
   devRunSpeedMultiplier = enabled ? DEV_RUN_SPEED_FAST : DEV_RUN_SPEED_NORMAL;
 }
+
+export const DEV_SKILL_TREE_HEX_GRID_EVENT = 'dev-skill-tree-hex-grid';
+
+let devShowSkillTreeHexGrid = false;
+
+export function isDevSkillTreeHexGridVisible(): boolean {
+  return devShowSkillTreeHexGrid;
+}
+
+export function devToggleSkillTreeHexGrid(): boolean {
+  devShowSkillTreeHexGrid = !devShowSkillTreeHexGrid;
+  window.dispatchEvent(new CustomEvent(DEV_SKILL_TREE_HEX_GRID_EVENT));
+  return devShowSkillTreeHexGrid;
+}
+
+export function devSetSkillTreeHexGridVisible(enabled: boolean): void {
+  devShowSkillTreeHexGrid = enabled;
+  window.dispatchEvent(new CustomEvent(DEV_SKILL_TREE_HEX_GRID_EVENT));
+}

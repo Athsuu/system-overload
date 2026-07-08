@@ -7,6 +7,7 @@ import { useProgressAutosave } from './store/useProgressAutosave';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useGameStore } from './store/useGameStore';
 import { ArenaHexOverlay } from './ui/ArenaHexOverlay';
+import { HexShardsBadgeLayer } from './ui/CurrencyBadge';
 import { HUD } from './ui/HUD';
 import { PauseScreen } from './ui/PauseScreen';
 import { RunEndScreen } from './ui/RunEndScreen';
@@ -33,6 +34,8 @@ function App() {
   const showHubSettings = isSettingsOpen && isHub;
   const showMainMenuSettings = isSettingsOpen && isMainMenu;
 
+  const showHexShardsBadge = isHub || isPlaying || isPaused;
+
   useHubAudio();
   useProgressAutosave();
 
@@ -47,6 +50,7 @@ function App() {
           <GameCanvas />
         </>
       )}
+      {showHexShardsBadge && <HexShardsBadgeLayer />}
       <div className="pointer-events-none absolute inset-0 z-10">
         {isPlaying && (
           <ScreenTransition screenKey="hud" className="absolute inset-0">

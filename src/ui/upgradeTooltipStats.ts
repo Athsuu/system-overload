@@ -1,13 +1,15 @@
-import { getRunConfig } from '../game/runConfig';
-import { getGameStrings } from '../i18n';
 import {
   getUpgradeDefinition,
+  MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL,
+  PURGE_CADENCE_PERCENT_PER_LEVEL,
+  PURGE_REACH_AOE_PERCENT_PER_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
-import { getKillBreachRelief } from '../game/runConfig';
+import { BASE_BREACH_CAP, getKillBreachRelief, getRunConfig } from '../game/runConfig';
+import { getGameStrings } from '../i18n';
 
 export interface TooltipStatLine {
   label: string;
@@ -53,6 +55,30 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     ];
   }
 
+  if (id === 'purgeCadence') {
+    const current = `+${level * PURGE_CADENCE_PERCENT_PER_LEVEL}%`;
+    const next =
+      nextLevel !== null ? `+${nextLevel * PURGE_CADENCE_PERCENT_PER_LEVEL}%` : null;
+    return [line(labels.purgeCadence, current, nextLevel, next)];
+  }
+
+  if (id === 'purgeReach') {
+    const currentRadius = getRunConfig(cur).purgeRadius;
+    const nextRadius = nxt ? getRunConfig(nxt).purgeRadius : null;
+    const currentBonus = level * PURGE_REACH_AOE_PERCENT_PER_LEVEL;
+    const nextBonus =
+      nextLevel !== null ? nextLevel * PURGE_REACH_AOE_PERCENT_PER_LEVEL : null;
+    return [
+      line(labels.purgeReach, String(currentRadius), nextLevel, nextRadius !== null ? String(nextRadius) : null),
+      line(
+        labels.purgeReachBonus,
+        `+${currentBonus}%`,
+        nextLevel,
+        nextBonus !== null ? `+${nextBonus}%` : null,
+      ),
+    ];
+  }
+
   if (id === 'threadCoolant') {
     const current = getRunConfig(cur).passiveHeatPerSec.toFixed(2);
     const next = nxt ? getRunConfig(nxt).passiveHeatPerSec.toFixed(2) : null;
@@ -81,6 +107,20 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
         `−${current}%`,
         nextLevel,
         next !== null ? `−${next}%` : null,
+      ),
+    ];
+  }
+
+  if (id === 'meltdownThreshold') {
+    const currentCap = BASE_BREACH_CAP + level * MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL;
+    const nextCap =
+      nextLevel !== null ? BASE_BREACH_CAP + nextLevel * MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL : null;
+    return [
+      line(
+        labels.meltdownThreshold,
+        `${currentCap}%`,
+        nextLevel,
+        nextCap !== null ? `${nextCap}%` : null,
       ),
     ];
   }

@@ -49,10 +49,23 @@ Jeu web **roguelite / incrémental / arena survivor** nerveux, à **démarrage i
 - Les composants glitch / typewriter (`ArchGlitchText`, `ArchTypewriterGlitchText`) ne doivent **pas** encadrer le texte avec des guillemets par défaut (`quote={false}`).
 - Exception : le PO le demande explicitement, ou le contexte l'exige (citation grammaticale d'un terme ou d'une expression dans la phrase elle-même).
 
+## Règle tiret cadratin (obligatoire)
+
+- **Interdit** le tiret cadratin `—` (U+2014) dans tout **texte lore ou dialogue visible par le joueur** : i18n (`src/i18n/locales/*.ts`), tutoriels ARCH, ambient, écrans de fin, tooltips narratifs, upgrades, et docs canon synchronisées (`docs/dialogues.md`, `docs/narrative.md`, `docs/lexique-jeu.md`, `docs/lore-screenplay.html`).
+- **Préférer** à la place : virgule ou point selon le rythme de la phrase. Ex. « Listen. We don't have much time. » plutôt que « Listen — we don't have much time. »
+- **Exception unique** : glitch volontaire du handshake (`tutorial.signalHandshake`, ex. `noi—se`, `br—uit`, `th—is`) : les tirets cadratin font partie de l'effet de corruption du signal.
+- Lors d'une modification de dialogue : vérifier qu'aucun nouveau `—` n'est introduit ; synchroniser `docs/dialogues.md` dans la même tâche.
+
+## Règle ponctuation dialogue (deux-points)
+
+- Dans les **dialogues lore ARCH**, tutoriels et textes narratifs joueur, **limiter les deux-points** `:` dans la prose. Préférer **virgules** et **points** pour enchaîner les idées.
+- Éviter le pattern « phrase : suite » quand une virgule ou un point suffit (ex. « our best shot. It integrates your modules… » plutôt que « our best shot: permanent modules »).
+- **Exceptions** : libellés UI type terminal (`NODE-0 STATUS: UNSTABLE`, `ARCH // ADVISORY CHANNEL`), formats techniques hors prose narrative.
+
 ## Règle lexique créateur (obligatoire)
 
 - Le document **`docs/lexique-jeu.md`** est le vocabulaire de référence pour traduire les demandes du product owner (écrans, mécaniques, tutoriels, DA).
-- Lors de toute feature **visible par le joueur** (nouvel écran, bouton, mécanique, branche skill tree, étape ARCH, terme UI, **dialogue**) : mettre à jour **`docs/lexique-jeu.md`** et/ou **`docs/dialogues.md`** dans la même tâche (voir règle Dialogues).
+- Lors de toute feature **visible par le joueur** (nouvel écran, bouton, mécanique, branche skill tree, étape ARCH, terme UI, **dialogue**) : mettre à jour **`docs/lexique-jeu.md`** et/ou **`docs/dialogues.md`** dans la même tâche — **toute modification de dialogue impose la mise à jour de `docs/dialogues.md`** (voir section Dialogues).
 - Quand l'utilisateur décrit une idée avec des mots flous, l'agent s'appuie sur ce lexique pour reformuler et confirmer le périmètre avant de coder.
 - Ne pas dupliquer tout le lexique dans `.cursorrules` — pointer vers le fichier.
 
@@ -107,7 +120,13 @@ Pour tout **nouveau texte UI** : utiliser **Node-0**, **ARCH**, **Zero Archive**
 
 ## Dialogues
 
-Tout nouveau dialogue ARCH ajouté au jeu (tutoriel, ambient, écran de fin, ou autre) **DOIT** être ajouté dans [`docs/dialogues.md`](docs/dialogues.md) dans la même tâche, avec sa clé i18n exacte, son texte EN/FR, son déclencheur et son contexte d'apparition. Ne jamais ajouter un dialogue au code sans mettre à jour `docs/dialogues.md` en parallèle.
+[`docs/dialogues.md`](docs/dialogues.md) est l'inventaire exhaustif des dialogues (EN/FR, clés i18n, déclencheurs). **Obligatoire dans la même tâche** que toute modification de texte joueur :
+
+- **Ajout** d'un nouveau dialogue ARCH (tutoriel, ambient, écran de fin, etc.)
+- **Modification** d'un dialogue existant (reformulation, correction, changement de ton ou de terme)
+- **Suppression** ou fusion de clés i18n liées à un dialogue
+
+Mettre à jour la ligne correspondante dans `docs/dialogues.md` avec la clé i18n exacte, les textes EN/FR à jour, le déclencheur et le contexte. **Ne jamais** modifier `src/i18n/locales/*.ts` (ou toute autre source de dialogue) sans synchroniser `docs/dialogues.md` en parallèle.
 
 ---
 
@@ -381,3 +400,5 @@ Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight p
 - Transition spotlight par **cut / fade complet** entre deux cibles au lieu du **glide 350 ms**.
 - Carte ARCH **hors écran**, **superposée à la cible HUD**, ou **trop loin** de l'élément expliqué (lecture « tuto → regard autour → élément » cassée).
 - Guillemets décoratifs autour des dialogues / tutos ARCH (sauf demande PO ou citation contextuelle).
+- Tiret cadratin `—` dans les textes lore ou dialogues joueur (sauf glitch `signalHandshake`).
+- Deux-points `:` en excès dans la prose des dialogues ARCH (préférer virgules et points).

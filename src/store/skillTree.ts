@@ -7,34 +7,11 @@ import {
 } from './upgradeCatalog';
 import { getGameStrings } from '../i18n';
 
-export type BranchId =
-  | 'attackSpeed'
-  | 'degats'
-  | 'thermique'
-  | 'purgeAoe'
-  | 'shards'
-  | 'enemies';
+export type BranchId = 'degats' | 'thermique';
 
 export type SkillIconBranch = BranchId | 'flux';
 
-export type PlaceholderId =
-  | 'placeholder_01'
-  | 'placeholder_02'
-  | 'placeholder_03'
-  | 'placeholder_04'
-  | 'placeholder_05'
-  | 'placeholder_06'
-  | 'placeholder_07'
-  | 'placeholder_08'
-  | 'placeholder_09'
-  | 'placeholder_10'
-  | 'placeholder_11'
-  | 'placeholder_12'
-  | 'placeholder_13'
-  | 'placeholder_14'
-  | 'placeholder_15';
-
-export type TreeNodeId = UpgradeId | PlaceholderId;
+export type TreeNodeId = UpgradeId;
 export type TreeParentId = 'root' | TreeNodeId;
 
 export const TREE_CANVAS = { width: 2000, height: 1200 };
@@ -45,24 +22,53 @@ export const NODE_SIZE = NODE_RADIUS * Math.sqrt(3);
 
 export const NODE0_HUB_POSITION = { x: 1000, y: 600 };
 
+/** Flat-edge hex directions — child centers are parent + offset (scale for 2×, 3×, …). */
+export const HEX_FLAT_DIRECTIONS = {
+  up: { dx: 0, dy: -200 },
+  upRight: { dx: 173, dy: -100 },
+  downRight: { dx: 173, dy: 100 },
+  down: { dx: 0, dy: 200 },
+  downLeft: { dx: -173, dy: 100 },
+  upLeft: { dx: -173, dy: -100 },
+} as const;
+
+export type HexFlatDirection = keyof typeof HEX_FLAT_DIRECTIONS;
+
+export function positionFromParent(
+  parent: { x: number; y: number },
+  direction: HexFlatDirection,
+  scale = 1,
+): { x: number; y: number } {
+  const offset = HEX_FLAT_DIRECTIONS[direction];
+  return {
+    x: parent.x + offset.dx * scale,
+    y: parent.y + offset.dy * scale,
+  };
+}
+
+export function positionFromAxial(
+  q: number,
+  r: number,
+  origin: { x: number; y: number } = NODE0_HUB_POSITION,
+): { x: number; y: number } {
+  const { dx: diagX, dy: diagY } = HEX_FLAT_DIRECTIONS.upRight;
+  const { dy: verticalStep } = HEX_FLAT_DIRECTIONS.up;
+  return {
+    x: origin.x + diagX * q,
+    y: origin.y + diagY * q + verticalStep * r,
+  };
+}
+
 const BRANCH_COLORS: Record<BranchId, string> = {
-  attackSpeed: '#e8b896',
   degats: '#ef4444',
   thermique: '#f97316',
-  purgeAoe: '#4ade80',
-  shards: '#c5a059',
-  enemies: '#9ca3af',
 };
 
 export function getBranchLabels(): Record<BranchId, { label: string; color: string }> {
   const labels = getGameStrings().branches;
   return {
-    attackSpeed: { label: labels.attackSpeed, color: BRANCH_COLORS.attackSpeed },
     degats: { label: labels.degats, color: BRANCH_COLORS.degats },
     thermique: { label: labels.thermique, color: BRANCH_COLORS.thermique },
-    purgeAoe: { label: labels.purgeAoe, color: BRANCH_COLORS.purgeAoe },
-    shards: { label: labels.shards, color: BRANCH_COLORS.shards },
-    enemies: { label: labels.enemies, color: BRANCH_COLORS.enemies },
   };
 }
 
@@ -77,15 +83,21 @@ export function getSkillIconBranchMeta(): Record<SkillIconBranch, { label: strin
 const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   node0Boot: 'thermique',
   purgeStrike: 'degats',
+  purgeCadence: 'degats',
+  purgeReach: 'degats',
   threadCoolant: 'thermique',
   killBreachRelief: 'thermique',
+  meltdownThreshold: 'thermique',
 };
 
 const NODE_ICONS: Record<UpgradeId, string> = {
   node0Boot: '0',
   purgeStrike: '↑',
+  purgeCadence: '»',
+  purgeReach: '◎',
   threadCoolant: '◌',
   killBreachRelief: '◇',
+  meltdownThreshold: '▲',
 };
 
 const SKILL_ICON_BRANCH: Partial<Record<UpgradeId, SkillIconBranch>> = {
@@ -97,8 +109,8 @@ export function getSkillIconBranch(id: UpgradeId, branch: BranchId): SkillIconBr
 }
 
 export interface SkillTreeGraphNode {
-  id: TreeNodeId;
-  kind: 'upgrade' | 'placeholder';
+  id: UpgradeId;
+  kind: 'upgrade';
   parentId: TreeParentId;
   position: { x: number; y: number };
   branch: BranchId;
@@ -122,15 +134,20 @@ export interface SkillNodeDef extends SkillNodeLayout {
 }
 
 export interface PlaceholderNodeDef {
-  id: PlaceholderId;
+  id: string;
   kind: 'placeholder';
   branch: BranchId;
   position: { x: number; y: number };
   parentId: TreeParentId;
 }
 
-const CX = NODE0_HUB_POSITION.x;
-const CY = NODE0_HUB_POSITION.y;
+const NODE0_BOOT_POS = NODE0_HUB_POSITION;
+const PURGE_STRIKE_POS = positionFromParent(NODE0_BOOT_POS, 'up');
+const THREAD_COOLANT_POS = positionFromParent(NODE0_BOOT_POS, 'downRight');
+const PURGE_CADENCE_POS = positionFromParent(PURGE_STRIKE_POS, 'upLeft');
+const PURGE_REACH_POS = positionFromAxial(1, 1);
+const MELTDOWN_THRESHOLD_POS = positionFromAxial(2, -1);
+const KILL_BREACH_RELIEF_POS = positionFromParent(THREAD_COOLANT_POS, 'downRight');
 
 /** Radial skill tree — Node-0 Boot root; branches rebuilt incrementally. */
 export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
@@ -138,45 +155,60 @@ export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
     id: 'node0Boot',
     kind: 'upgrade',
     parentId: 'root',
-    position: { x: CX, y: CY },
+    position: NODE0_BOOT_POS,
     branch: 'thermique',
   },
   {
     id: 'purgeStrike',
     kind: 'upgrade',
     parentId: 'node0Boot',
-    position: { x: CX, y: CY - 200 },
+    position: PURGE_STRIKE_POS,
     branch: 'degats',
     requires: requireLevel('node0Boot', 1),
+  },
+  {
+    id: 'purgeCadence',
+    kind: 'upgrade',
+    parentId: 'purgeStrike',
+    position: PURGE_CADENCE_POS,
+    branch: 'degats',
+    requires: requireLevel('purgeStrike', 1),
+  },
+  {
+    id: 'purgeReach',
+    kind: 'upgrade',
+    parentId: 'purgeStrike',
+    position: PURGE_REACH_POS,
+    branch: 'degats',
+    requires: requireLevel('purgeStrike', 1),
   },
   {
     id: 'threadCoolant',
     kind: 'upgrade',
     parentId: 'node0Boot',
-    position: { x: CX + 200, y: CY },
+    position: THREAD_COOLANT_POS,
     branch: 'thermique',
     requires: requireLevel('node0Boot', 1),
   },
   {
-    id: 'placeholder_01',
-    kind: 'placeholder',
+    id: 'meltdownThreshold',
+    kind: 'upgrade',
     parentId: 'threadCoolant',
-    position: { x: CX + 300, y: CY - 100 },
+    position: MELTDOWN_THRESHOLD_POS,
     branch: 'thermique',
+    requires: requireLevel('threadCoolant', 1),
   },
   {
     id: 'killBreachRelief',
     kind: 'upgrade',
     parentId: 'threadCoolant',
-    position: { x: CX + 300, y: CY + 100 },
+    position: KILL_BREACH_RELIEF_POS,
     branch: 'thermique',
     requires: requireLevel('threadCoolant', 1),
   },
 ];
 
-export const SKILL_TREE_NODES: SkillNodeLayout[] = SKILL_TREE_GRAPH.filter(
-  (node): node is SkillTreeGraphNode & { id: UpgradeId; kind: 'upgrade' } => node.kind === 'upgrade',
-).map((node) => {
+export const SKILL_TREE_NODES: SkillNodeLayout[] = SKILL_TREE_GRAPH.map((node) => {
   const definition = UPGRADE_CATALOG.find((entry) => entry.id === node.id);
   if (!definition) throw new Error(`Missing catalog entry: ${node.id}`);
   return {
@@ -189,23 +221,13 @@ export const SKILL_TREE_NODES: SkillNodeLayout[] = SKILL_TREE_GRAPH.filter(
   };
 });
 
-export const PLACEHOLDER_NODES: PlaceholderNodeDef[] = SKILL_TREE_GRAPH.filter(
-  (node): node is SkillTreeGraphNode & { id: PlaceholderId; kind: 'placeholder' } =>
-    node.kind === 'placeholder',
-).map((node) => ({
-  id: node.id,
-  kind: 'placeholder',
-  branch: node.branch,
-  position: node.position,
-  parentId: node.parentId,
-}));
+export const PLACEHOLDER_NODES: PlaceholderNodeDef[] = [];
 
 function getParentLevel(
   parentId: TreeParentId,
   upgrades: import('./upgradeCatalog').UpgradeLevels,
 ): number {
   if (parentId === 'root') return 1;
-  if (parentId.startsWith('placeholder_')) return 0;
   return upgrades[parentId as UpgradeId] ?? 0;
 }
 
@@ -223,8 +245,8 @@ export function getRevealedGraphNodes(
   return SKILL_TREE_GRAPH.filter((node) => isNodeRevealed(node, upgrades));
 }
 
-export function isPlaceholderId(id: TreeNodeId): id is PlaceholderId {
-  return id.startsWith('placeholder_');
+export function isPlaceholderId(_id: TreeNodeId): _id is never {
+  return false;
 }
 
 export function getSkillNode(id: UpgradeId): SkillNodeDef {
@@ -238,7 +260,7 @@ export function getSkillNode(id: UpgradeId): SkillNodeDef {
   };
 }
 
-export function getPlaceholderNode(id: PlaceholderId): PlaceholderNodeDef {
+export function getPlaceholderNode(id: string): PlaceholderNodeDef {
   const node = PLACEHOLDER_NODES.find((entry) => entry.id === id);
   if (!node) throw new Error(`Unknown placeholder: ${id}`);
   return node;

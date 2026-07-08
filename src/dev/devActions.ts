@@ -5,12 +5,20 @@ import {
   devToggleInvincible,
   devToggleShowEnemyHpBars,
   devToggleSpeed2x,
+  devToggleSkillTreeHexGrid,
   isDevInvincible,
   isDevShowEnemyHpBars,
+  isDevSkillTreeHexGridVisible,
   isDevSpeed2x,
 } from './devFlags';
 import { clearSave, saveGame } from '../store/persistence';
 import { clearAllPlayerData } from '../store/playerReset';
+import {
+  clampCycleIndex,
+  DEFAULT_CYCLE_PROGRESS,
+  MAX_CYCLES,
+  sanitizeCyclesCleared,
+} from '../store/cycleTypes';
 import { clearTutorialProgress } from '../tutorial/tutorialPersistence';
 import { clearArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 import { clearMeltdownArchRotation } from '../ui/meltdownArchRotation';
@@ -33,6 +41,9 @@ function persist(state: ReturnType<typeof useGameStore.getState>): void {
     upgrades: state.upgrades,
     prestigeUnlocked: state.prestigeUnlocked,
     prestigeLevel: state.prestigeLevel,
+    highestCycleUnlocked: state.highestCycleUnlocked,
+    selectedCycle: state.selectedCycle,
+    cyclesCleared: state.cyclesCleared,
   });
 }
 
@@ -46,6 +57,8 @@ export {
   devToggleSpeed2x,
   devSetSpeed2x,
   isDevSpeed2x,
+  devToggleSkillTreeHexGrid,
+  isDevSkillTreeHexGridVisible,
 };
 
 export function devAddBankShards(amount: number): void {
@@ -63,8 +76,7 @@ export function devSetBankShards(amount: number): void {
 }
 
 export function devAddRunShards(amount: number): void {
-  const state = useGameStore.getState();
-  useGameStore.setState({ runShards: state.runShards + amount });
+  useGameStore.getState().addRunShards(amount);
 }
 
 export function devSetBreachProgress(percent: number): void {
@@ -124,6 +136,33 @@ export function devSetUpgradeLevel(id: UpgradeId, level: number): void {
   useGameStore.setState({ upgrades });
 }
 
+export function devUnlockCycle(cycle: number): void {
+  const state = useGameStore.getState();
+  const target = clampCycleIndex(cycle);
+  const highestCycleUnlocked = Math.max(state.highestCycleUnlocked, target);
+  const selectedCycle = Math.min(state.selectedCycle, highestCycleUnlocked);
+  persist({ ...state, highestCycleUnlocked, selectedCycle });
+  useGameStore.setState({ highestCycleUnlocked, selectedCycle });
+}
+
+export function devClearCycleFlags(): void {
+  const state = useGameStore.getState();
+  const highestCycleUnlocked = DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked;
+  const selectedCycle = DEFAULT_CYCLE_PROGRESS.selectedCycle;
+  const cyclesCleared: number[] = [];
+  persist({ ...state, highestCycleUnlocked, selectedCycle, cyclesCleared });
+  useGameStore.setState({ highestCycleUnlocked, selectedCycle, cyclesCleared });
+}
+
+export function devMarkCycleCleared(cycle: number): void {
+  const state = useGameStore.getState();
+  const target = clampCycleIndex(cycle);
+  const cyclesCleared = sanitizeCyclesCleared([...state.cyclesCleared, target]);
+  const highestCycleUnlocked = Math.min(MAX_CYCLES, Math.max(state.highestCycleUnlocked, target + 1));
+  persist({ ...state, cyclesCleared, highestCycleUnlocked });
+  useGameStore.setState({ cyclesCleared, highestCycleUnlocked });
+}
+
 export function devWipeProgress(): void {
   clearSave();
   useGameStore.setState({
@@ -135,6 +174,10 @@ export function devWipeProgress(): void {
     upgrades: { ...DEFAULT_UPGRADES },
     prestigeUnlocked: DEFAULT_PRESTIGE.prestigeUnlocked,
     prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
+    highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,
+    selectedCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
+    cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
+    activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     runOutcome: null,
     prestigeUnlockedThisRun: false,
     waveIndex: 0,

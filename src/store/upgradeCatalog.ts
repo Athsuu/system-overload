@@ -2,15 +2,25 @@ import { getGameStrings } from '../i18n';
 
 export type UpgradeCurrency = 'shards' | 'anchor';
 
-export type UpgradeId = 'node0Boot' | 'purgeStrike' | 'threadCoolant' | 'killBreachRelief';
+export type UpgradeId =
+  | 'node0Boot'
+  | 'purgeStrike'
+  | 'purgeCadence'
+  | 'purgeReach'
+  | 'threadCoolant'
+  | 'killBreachRelief'
+  | 'meltdownThreshold';
 
 export type SkillState = 'locked' | 'available' | 'unaffordable' | 'maxed' | 'reserved';
 
 export interface UpgradeLevels {
   node0Boot: number;
   purgeStrike: number;
+  purgeCadence: number;
+  purgeReach: number;
   threadCoolant: number;
   killBreachRelief: number;
+  meltdownThreshold: number;
 }
 
 export interface UpgradeRequirement {
@@ -27,7 +37,7 @@ export interface UpgradeDefinition {
   currency: UpgradeCurrency;
 }
 
-/** Boss victory — Anchor Fragments credited in endRun. */
+/** Boss victory — Anchor Fragment on first cycle clear only (see endRun). */
 export const ANCHOR_FRAGMENTS_PER_BOSS = 1;
 
 /** Flat shard bonus on boss victory (in addition to run kills). */
@@ -51,6 +61,29 @@ export const COST_PURGE_STRIKE = buildShardCostCurve(
   PURGE_STRIKE_MAX_LEVEL,
 );
 
+export const PURGE_CADENCE_MAX_LEVEL = 10;
+export const PURGE_CADENCE_PERCENT_PER_LEVEL = 2.5;
+export const PURGE_CADENCE_INTERVAL_MS_PER_LEVEL = 25;
+
+export const PURGE_REACH_MAX_LEVEL = 10;
+export const PURGE_REACH_AOE_PERCENT_PER_LEVEL = 2.5;
+
+/** Shared cost curve for Purge Cadence & Purge Reach (base 10, ×1.22). */
+export const PURGE_SUPPORT_COST_BASE = 10;
+export const PURGE_SUPPORT_COST_GROWTH = 1.22;
+
+export const COST_PURGE_CADENCE = buildShardCostCurve(
+  PURGE_SUPPORT_COST_BASE,
+  PURGE_SUPPORT_COST_GROWTH,
+  PURGE_CADENCE_MAX_LEVEL,
+);
+
+export const COST_PURGE_REACH = buildShardCostCurve(
+  PURGE_SUPPORT_COST_BASE,
+  PURGE_SUPPORT_COST_GROWTH,
+  PURGE_REACH_MAX_LEVEL,
+);
+
 export const THREAD_COOLANT_MAX_LEVEL = 10;
 export const THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL = 0.14;
 export const COST_THREAD_COOLANT = COST_PURGE_STRIKE;
@@ -66,11 +99,25 @@ export const COST_KILL_BREACH_RELIEF = buildShardCostCurve(
   KILL_BREACH_RELIEF_MAX_LEVEL,
 );
 
+export const MELTDOWN_THRESHOLD_MAX_LEVEL = 10;
+export const MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL = 8;
+export const MELTDOWN_THRESHOLD_COST_BASE = 15;
+export const MELTDOWN_THRESHOLD_COST_GROWTH = 1.22;
+
+export const COST_MELTDOWN_THRESHOLD = buildShardCostCurve(
+  MELTDOWN_THRESHOLD_COST_BASE,
+  MELTDOWN_THRESHOLD_COST_GROWTH,
+  MELTDOWN_THRESHOLD_MAX_LEVEL,
+);
+
 export const DEFAULT_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
   purgeStrike: 0,
+  purgeCadence: 0,
+  purgeReach: 0,
   threadCoolant: 0,
   killBreachRelief: 0,
+  meltdownThreshold: 0,
 };
 
 interface UpgradeCatalogEntry {
@@ -94,6 +141,18 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     currency: 'shards',
   },
   {
+    id: 'purgeCadence',
+    maxLevel: PURGE_CADENCE_MAX_LEVEL,
+    costByLevel: COST_PURGE_CADENCE,
+    currency: 'shards',
+  },
+  {
+    id: 'purgeReach',
+    maxLevel: PURGE_REACH_MAX_LEVEL,
+    costByLevel: COST_PURGE_REACH,
+    currency: 'shards',
+  },
+  {
     id: 'threadCoolant',
     maxLevel: THREAD_COOLANT_MAX_LEVEL,
     costByLevel: COST_THREAD_COOLANT,
@@ -103,6 +162,12 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     id: 'killBreachRelief',
     maxLevel: KILL_BREACH_RELIEF_MAX_LEVEL,
     costByLevel: COST_KILL_BREACH_RELIEF,
+    currency: 'shards',
+  },
+  {
+    id: 'meltdownThreshold',
+    maxLevel: MELTDOWN_THRESHOLD_MAX_LEVEL,
+    costByLevel: COST_MELTDOWN_THRESHOLD,
     currency: 'shards',
   },
 ];

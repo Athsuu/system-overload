@@ -1,9 +1,8 @@
 import { create } from 'zustand';
-import { saveGame } from './persistence';
+import { saveGame, type SaveData } from './persistence';
 import { loadSettings } from './settingsPersistence';
 import { DEFAULT_PRESTIGE } from './prestigeTypes';
 import {
-  ANCHOR_FRAGMENTS_PER_BOSS,
   BOSS_VICTORY_SHARD_BONUS,
   DEFAULT_UPGRADES,
   getUpgradeCost,
@@ -13,6 +12,12 @@ import {
   type UpgradeId,
   type UpgradeLevels,
 } from './upgradeCatalog';
+import {
+  clampCycleIndex,
+  DEFAULT_CYCLE_PROGRESS,
+  isCycleCleared,
+  MAX_CYCLES,
+} from './cycleTypes';
 import { getBreachCap } from '../game/runConfig';
 import { getSkillNode } from './skillTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
@@ -41,6 +46,10 @@ interface GameStore {
   upgrades: UpgradeLevels;
   prestigeUnlocked: boolean;
   prestigeLevel: number;
+  highestCycleUnlocked: number;
+  selectedCycle: number;
+  cyclesCleared: number[];
+  activeCycle: number;
   runOutcome: RunOutcome | null;
   prestigeUnlockedThisRun: boolean;
   waveIndex: number;
@@ -57,7 +66,8 @@ interface GameStore {
   endRun: (outcome: RunOutcome) => void;
   openSkillTree: () => void;
   purchaseUpgrade: (id: UpgradeId) => boolean;
-  startRun: () => void;
+  startRun: (cycle?: number) => void;
+  setSelectedCycle: (cycle: number) => void;
   toggleFluxDriveEnabled: () => void;
   setWaveIndex: (waveIndex: number) => void;
   setWavePhase: (phase: WavePhase) => void;
@@ -66,14 +76,30 @@ interface GameStore {
   returnToMainMenu: () => void;
 }
 
-function persistProgress(
-  bankShards: number,
-  bankAnchorFragments: number,
-  upgrades: UpgradeLevels,
-  prestigeUnlocked: boolean,
-  prestigeLevel: number,
-): void {
-  saveGame({ bankShards, bankAnchorFragments, upgrades, prestigeUnlocked, prestigeLevel });
+function buildSaveSnapshot(state: {
+  bankShards: number;
+  bankAnchorFragments: number;
+  upgrades: UpgradeLevels;
+  prestigeUnlocked: boolean;
+  prestigeLevel: number;
+  highestCycleUnlocked: number;
+  selectedCycle: number;
+  cyclesCleared: number[];
+}): SaveData {
+  return {
+    bankShards: state.bankShards,
+    bankAnchorFragments: state.bankAnchorFragments,
+    upgrades: state.upgrades,
+    prestigeUnlocked: state.prestigeUnlocked,
+    prestigeLevel: state.prestigeLevel,
+    highestCycleUnlocked: state.highestCycleUnlocked,
+    selectedCycle: state.selectedCycle,
+    cyclesCleared: state.cyclesCleared,
+  };
+}
+
+function persistProgress(state: Parameters<typeof buildSaveSnapshot>[0]): void {
+  saveGame(buildSaveSnapshot(state));
 }
 
 const persistedSettings = loadSettings();
@@ -90,6 +116,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   upgrades: DEFAULT_UPGRADES,
   prestigeUnlocked: DEFAULT_PRESTIGE.prestigeUnlocked,
   prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
+  highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,
+  selectedCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
+  cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
+  activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
   runOutcome: null,
   prestigeUnlockedThisRun: false,
   waveIndex: 0,
@@ -117,24 +147,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   abortRun: () =>
     set((state) => {
-      const bankShards = state.bankShards + state.runShards;
-      persistProgress(
-        bankShards,
-        state.bankAnchorFragments,
-        state.upgrades,
-        state.prestigeUnlocked,
-        state.prestigeLevel,
-      );
+      persistProgress(state);
       return {
         gameState: 'UPGRADING',
         breachProgress: 0,
         runShards: 0,
-        bankShards,
         runOutcome: null,
         waveIndex: 0,
         wavePhase: 'idle',
         showWaveClear: false,
         anchorFragmentEarnedThisRun: false,
+        activeCycle: state.selectedCycle,
       };
     }),
   addBreachProgress: (delta) =>
@@ -145,40 +168,57 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
     }),
   addRunShards: (amount) =>
-    set((state) => ({
-      runShards: state.runShards + amount,
-    })),
+    set((state) => {
+      const bankShards = state.bankShards + amount;
+      const next = { ...state, bankShards, runShards: state.runShards + amount };
+      persistProgress(next);
+      return {
+        bankShards,
+        runShards: state.runShards + amount,
+      };
+    }),
   endRun: (outcome) =>
     set((state) => {
       const bossBonus = outcome === 'victory_boss' ? BOSS_VICTORY_SHARD_BONUS : 0;
-      const bankShards = state.bankShards + state.runShards + bossBonus;
+      const bankShards = state.bankShards + bossBonus;
       const lastRunShards = state.runShards + bossBonus;
-      const anchorGain = outcome === 'victory_boss' ? ANCHOR_FRAGMENTS_PER_BOSS : 0;
-      const bankAnchorFragments = state.bankAnchorFragments + anchorGain;
-      const prestigeUnlockedThisRun =
-        outcome === 'victory_boss' && !state.prestigeUnlocked;
-      const prestigeUnlocked =
-        state.prestigeUnlocked || outcome === 'victory_boss';
 
-      persistProgress(
+      const firstClearThisCycle =
+        outcome === 'victory_boss' && !isCycleCleared(state.cyclesCleared, state.activeCycle);
+      const anchorGain = firstClearThisCycle ? 1 : 0;
+      const bankAnchorFragments = state.bankAnchorFragments + anchorGain;
+
+      let cyclesCleared = state.cyclesCleared;
+      let highestCycleUnlocked = state.highestCycleUnlocked;
+      if (outcome === 'victory_boss' && firstClearThisCycle) {
+        cyclesCleared = [...cyclesCleared, state.activeCycle].sort((a, b) => a - b);
+        highestCycleUnlocked = Math.min(MAX_CYCLES, state.activeCycle + 1);
+      }
+
+      const selectedCycle = Math.min(state.selectedCycle, highestCycleUnlocked);
+
+      const next = {
+        ...state,
         bankShards,
         bankAnchorFragments,
-        state.upgrades,
-        prestigeUnlocked,
-        state.prestigeLevel,
-      );
+        cyclesCleared,
+        highestCycleUnlocked,
+        selectedCycle,
+      };
+      persistProgress(next);
 
       return {
         bankShards,
         bankAnchorFragments,
+        cyclesCleared,
+        highestCycleUnlocked,
+        selectedCycle,
         runShards: 0,
         lastRunShards,
         lastRunAnchorFragments: anchorGain,
         anchorFragmentEarnedThisRun: anchorGain > 0,
         runOutcome: outcome,
-        prestigeUnlocked,
-        prestigeUnlockedThisRun,
-        gameState: 'RUN_END',
+        gameState: 'RUN_END' as const,
       };
     }),
   openSkillTree: () => set({ gameState: 'UPGRADING' }),
@@ -198,13 +238,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (state.bankAnchorFragments < cost) return false;
       const bankAnchorFragments = state.bankAnchorFragments - cost;
       const upgrades = { ...state.upgrades, [id]: level + 1 };
-      persistProgress(
-        state.bankShards,
-        bankAnchorFragments,
-        upgrades,
-        state.prestigeUnlocked,
-        state.prestigeLevel,
-      );
+      persistProgress({ ...state, bankAnchorFragments, upgrades });
       markTutorialSignal('upgradePurchased');
       set({ bankAnchorFragments, upgrades });
       return true;
@@ -214,19 +248,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const upgrades = { ...state.upgrades, [id]: level + 1 };
     const bankShards = state.bankShards - cost;
-    persistProgress(
-      bankShards,
-      state.bankAnchorFragments,
-      upgrades,
-      state.prestigeUnlocked,
-      state.prestigeLevel,
-    );
+    persistProgress({ ...state, bankShards, upgrades });
     markTutorialSignal('upgradePurchased');
     set({ bankShards, upgrades });
     return true;
   },
-  startRun: () => {
+  setSelectedCycle: (cycle) =>
+    set((state) => {
+      const selectedCycle = clampCycleIndex(Math.min(cycle, state.highestCycleUnlocked));
+      persistProgress({ ...state, selectedCycle });
+      return { selectedCycle };
+    }),
+  startRun: (cycle) => {
     clearRunArchAmbientHeard();
+    const state = get();
+    const requested = cycle ?? state.selectedCycle;
+    const activeCycle = clampCycleIndex(Math.min(requested, state.highestCycleUnlocked));
+    const selectedCycle = activeCycle;
+    persistProgress({ ...state, selectedCycle });
     set({
       gameState: 'PLAYING',
       breachProgress: 0,
@@ -234,6 +273,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       runOutcome: null,
       prestigeUnlockedThisRun: false,
       anchorFragmentEarnedThisRun: false,
+      activeCycle,
+      selectedCycle,
       waveIndex: 1,
       wavePhase: 'spawning',
       showWaveClear: false,
@@ -244,31 +285,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setWavePhase: (wavePhase) => set({ wavePhase }),
   setShowWaveClear: (showWaveClear) => set({ showWaveClear }),
   persistProgressSnapshot: () => {
-    const state = get();
-    persistProgress(
-      state.bankShards,
-      state.bankAnchorFragments,
-      state.upgrades,
-      state.prestigeUnlocked,
-      state.prestigeLevel,
-    );
+    persistProgress(get());
   },
   returnToMainMenu: () => {
     const state = get();
-    const inRun = state.gameState === 'PLAYING' || state.gameState === 'PAUSED';
-    const bankShards = inRun ? state.bankShards + state.runShards : state.bankShards;
-
-    persistProgress(
-      bankShards,
-      state.bankAnchorFragments,
-      state.upgrades,
-      state.prestigeUnlocked,
-      state.prestigeLevel,
-    );
-
+    persistProgress(state);
     set({
       gameState: 'MAIN_MENU',
-      bankShards,
       breachProgress: 0,
       runShards: 0,
       lastRunShards: 0,
@@ -279,6 +302,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       waveIndex: 0,
       wavePhase: 'idle',
       showWaveClear: false,
+      activeCycle: state.selectedCycle,
     });
   },
 }));
@@ -297,6 +321,10 @@ export function resetToFreshPlayer(): void {
     upgrades: DEFAULT_UPGRADES,
     prestigeUnlocked: DEFAULT_PRESTIGE.prestigeUnlocked,
     prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
+    highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,
+    selectedCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
+    cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
+    activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     runOutcome: null,
     prestigeUnlockedThisRun: false,
     waveIndex: 0,

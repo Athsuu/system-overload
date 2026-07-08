@@ -13,6 +13,10 @@ if (save) {
     upgrades: save.upgrades,
     prestigeUnlocked: save.prestigeUnlocked,
     prestigeLevel: save.prestigeLevel,
+    highestCycleUnlocked: save.highestCycleUnlocked,
+    selectedCycle: save.selectedCycle,
+    cyclesCleared: save.cyclesCleared,
+    activeCycle: save.selectedCycle,
   });
 }
 

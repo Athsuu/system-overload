@@ -1,4 +1,7 @@
 import { DARK_HEX } from '../theme/darkHexTerminal';
+import { getScalingWaveIndex } from './cycleScaling';
+import { useGameStore } from '../store/useGameStore';
+import { getEnemyVisualBand } from './waveScaling';
 
 export const ENEMY_HEX_RADIUS_T0 = 42.25;
 export const ENEMY_HEX_RADIUS_T1 = 52;
@@ -18,11 +21,14 @@ export interface ScreenBounds {
   padding: number;
 }
 
-import { getEnemyVisualBand } from './waveScaling';
+function resolveScalingWaveIndex(localWaveIndex: number): number {
+  const cycle = useGameStore.getState().activeCycle || 1;
+  return getScalingWaveIndex(cycle, localWaveIndex);
+}
 
-export function getEnemyHexRadius(waveIndex: number, isBoss = false): number {
+export function getEnemyHexRadius(localWaveIndex: number, isBoss = false): number {
   if (isBoss) return ENEMY_HEX_RADIUS_BOSS;
-  const band = getEnemyVisualBand(waveIndex);
+  const band = getEnemyVisualBand(resolveScalingWaveIndex(localWaveIndex));
   if (band === 0) return ENEMY_HEX_RADIUS_T0;
   if (band === 1) return ENEMY_HEX_RADIUS_T1;
   return ENEMY_HEX_RADIUS_T1 * 1.08;

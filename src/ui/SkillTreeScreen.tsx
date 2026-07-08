@@ -4,9 +4,8 @@ import type { TreeNodeId } from '../store/skillTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { CurrencyBadge } from './CurrencyBadge';
-import { PlayRunButton } from './PlayRunButton';
-import { SettingsGearButton } from './SettingsGearButton';
+import { CycleRunLauncher } from './CycleRunLauncher';
+import { HubCornerControls } from './HubCornerControls';
 import { SkillTreeViewport } from './SkillTreeViewport';
 import { TerminalBackdrop } from './TerminalBackdrop';
 import { ArchGlitchLine } from './ArchGlitchText';
@@ -62,9 +61,6 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
 
       </div>
 
-      <div className="pointer-events-auto absolute top-8 right-8 z-10">
-        <CurrencyBadge containerRef={screenRef} />
-      </div>
 
       <SkillTreeViewport
         selectedId={selectedId}
@@ -73,11 +69,9 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
       />
 
       <div className="pointer-events-none absolute inset-0 z-10">
-        <div className="pointer-events-auto absolute top-8 left-8">
-          <SettingsGearButton />
-        </div>
+        <HubCornerControls />
         <div className="pointer-events-auto absolute bottom-8 left-1/2 -translate-x-1/2">
-          <PlayRunButton />
+          <CycleRunLauncher />
         </div>
       </div>
     </div>

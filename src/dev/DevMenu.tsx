@@ -3,8 +3,10 @@ import { useGameStore, type GameState } from '../store/useGameStore';
 import {
   devAddBankShards,
   devAddRunShards,
+  devClearCycleFlags,
   devForceEndBreach,
   devForceVictoryBoss,
+  devMarkCycleCleared,
   devMaxAllUpgrades,
   devResetToNewPlayer,
   devResetArchDialogues,
@@ -15,7 +17,9 @@ import {
   devToggleInvincible,
   devTogglePrestigeUnlocked,
   devToggleShowEnemyHpBars,
+  devToggleSkillTreeHexGrid,
   devToggleSpeed2x,
+  devUnlockCycle,
   devWipeProgress,
 } from './devActions';
 import { DevUpgradePanel } from './DevUpgradePanel';
@@ -51,11 +55,16 @@ export function DevMenu() {
   const [invincible, setInvincible] = useState(false);
   const [enemyHpBars, setEnemyHpBars] = useState(false);
   const [speed2x, setSpeed2x] = useState(false);
+  const [hexGrid, setHexGrid] = useState(false);
   const gameState = useGameStore((state) => state.gameState);
   const breachProgress = useGameStore((state) => state.breachProgress);
   const bankShards = useGameStore((state) => state.bankShards);
   const runShards = useGameStore((state) => state.runShards);
   const prestigeUnlocked = useGameStore((state) => state.prestigeUnlocked);
+  const highestCycleUnlocked = useGameStore((state) => state.highestCycleUnlocked);
+  const selectedCycle = useGameStore((state) => state.selectedCycle);
+  const activeCycle = useGameStore((state) => state.activeCycle);
+  const cyclesCleared = useGameStore((state) => state.cyclesCleared);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -103,9 +112,14 @@ export function DevMenu() {
             <p>Vault : {bankShards.toLocaleString()} Shards</p>
             <p>Run : {runShards.toLocaleString()} Shards</p>
             <p>Prestige : {prestigeUnlocked ? 'unlocked' : 'locked'}</p>
+            <p>
+              Cycles : {selectedCycle}/{highestCycleUnlocked} (run {activeCycle}) · cleared [
+              {cyclesCleared.join(', ') || '—'}]
+            </p>
             <p>Invincible : {invincible ? 'ON' : 'OFF'}</p>
             <p>Enemy HP : {enemyHpBars ? 'ON' : 'OFF'}</p>
             <p>Vitesse : {speed2x ? '×2' : '×1'}</p>
+            <p>Grille hex : {hexGrid ? 'ON' : 'OFF'}</p>
           </div>
 
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Run debug</p>
@@ -169,6 +183,14 @@ export function DevMenu() {
             <DevButton onClick={() => devResetArchDialogues()}>Reset dialogues run</DevButton>
           </div>
 
+          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Cycles</p>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <DevButton onClick={() => devUnlockCycle(2)}>Unlock C2</DevButton>
+            <DevButton onClick={() => devUnlockCycle(3)}>Unlock C3</DevButton>
+            <DevButton onClick={() => devMarkCycleCleared(selectedCycle)}>Mark cleared</DevButton>
+            <DevButton onClick={() => devClearCycleFlags()}>Clear cycle flags</DevButton>
+          </div>
+
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Progression</p>
           <p className="mb-2 text-[10px] text-white/30">
             « Reset nouveau joueur » efface tout (Shards, skill tree, audio 50 %, vue skill tree).
@@ -191,6 +213,15 @@ export function DevMenu() {
           </div>
 
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Skill Tree</p>
+          <p className="mb-2 text-[10px] text-white/30">
+            Grille hex alignée sur node0 — survole une case pour lire sa coordonnée et le chemin
+            (ex. threadCoolant → bas-droite).
+          </p>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <DevButton onClick={() => setHexGrid(devToggleSkillTreeHexGrid())}>
+              Grille hex {hexGrid ? 'ON' : 'OFF'}
+            </DevButton>
+          </div>
           <p className="mb-2 text-[10px] text-white/30">Permanent upgrades (Initial Relay, Bolt Power, etc.)</p>
           <div className="mb-4">
             <DevUpgradePanel />

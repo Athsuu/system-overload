@@ -1,9 +1,14 @@
-import type { UpgradeLevels } from '../store/upgradeCatalog';
 import {
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
+  PURGE_CADENCE_INTERVAL_MS_PER_LEVEL,
+  PURGE_REACH_AOE_PERCENT_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
   KILL_BREACH_RELIEF_PER_LEVEL,
+  MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL,
+  type UpgradeLevels,
 } from '../store/upgradeCatalog';
+import { getCycleEnemyHpMult, getCyclePressureMult, getScalingWaveIndex } from './cycleScaling';
+import { useGameStore } from '../store/useGameStore';
 import {
   getWaveHpMultiplier,
   getWaveLeakPenalty,
@@ -11,8 +16,10 @@ import {
   getWaveSpeedMultiplier,
 } from './waveScaling';
 
-export function getBreachCap(_upgrades: UpgradeLevels): number {
-  return 100;
+export const BASE_BREACH_CAP = 100;
+
+export function getBreachCap(upgrades: UpgradeLevels): number {
+  return BASE_BREACH_CAP + upgrades.meltdownThreshold * MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL;
 }
 
 export interface RunConfig {
@@ -63,42 +70,71 @@ export function getRunConfig(upgrades: UpgradeLevels): RunConfig {
         upgrades.threadCoolant * THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
     ),
     leakProgressPenalty: BASE_RUN_CONFIG.baseLeakProgressPenalty,
-    purgeRadius: BASE_RUN_CONFIG.basePurgeRadius,
+    purgeRadius: Math.round(
+      BASE_RUN_CONFIG.basePurgeRadius *
+        (1 + upgrades.purgeReach * (PURGE_REACH_AOE_PERCENT_PER_LEVEL / 100)),
+    ),
     purgeHitDamage:
       (upgrades.node0Boot >= 1 ? BASE_RUN_CONFIG.basePurgeHitDamage : 0) +
       upgrades.purgeStrike * PURGE_STRIKE_DAMAGE_PER_LEVEL,
-    purgeIntervalMs: BASE_RUN_CONFIG.basePurgeIntervalMs,
+    purgeIntervalMs: Math.max(
+      0,
+      BASE_RUN_CONFIG.basePurgeIntervalMs -
+        upgrades.purgeCadence * PURGE_CADENCE_INTERVAL_MS_PER_LEVEL,
+    ),
   };
+}
+
+export function resolveActiveCycle(): number {
+  return useGameStore.getState().activeCycle || 1;
+}
+
+export function resolveScalingWaveIndex(localWaveIndex: number): number {
+  return getScalingWaveIndex(resolveActiveCycle(), localWaveIndex);
+}
+
+export function getEffectivePassiveHeatPerSec(config: RunConfig): number {
+  return config.passiveHeatPerSec * getCyclePressureMult(resolveActiveCycle());
 }
 
 export function getEnemyMaxHp(
   config: RunConfig,
-  waveIndex: number,
+  localWaveIndex: number,
   isBoss = false,
 ): number {
-  return Math.round(config.baseEnemyHp * getWaveHpMultiplier(waveIndex, isBoss));
+  const cycle = resolveActiveCycle();
+  const scalingIndex = getScalingWaveIndex(cycle, localWaveIndex);
+  const hp =
+    config.baseEnemyHp *
+    getWaveHpMultiplier(scalingIndex, isBoss) *
+    getCycleEnemyHpMult(cycle);
+  return Math.round(hp);
 }
 
 export function getEnemySpeed(
   config: RunConfig,
-  waveIndex: number,
+  localWaveIndex: number,
   isBoss = false,
 ): number {
-  const speed = config.baseEnemySpeed * getWaveSpeedMultiplier(waveIndex, isBoss);
+  const scalingIndex = resolveScalingWaveIndex(localWaveIndex);
+  const speed = config.baseEnemySpeed * getWaveSpeedMultiplier(scalingIndex, isBoss);
   return Math.min(config.maxEnemySpeed, speed);
 }
 
 export function getShardReward(
   config: RunConfig,
-  waveIndex: number,
+  localWaveIndex: number,
   isBoss = false,
 ): number {
-  const base = getWaveShardReward(waveIndex, isBoss);
+  const scalingIndex = resolveScalingWaveIndex(localWaveIndex);
+  const base = getWaveShardReward(scalingIndex, isBoss);
   return Math.floor(base * config.shardsMultiplier) + config.killBonusShards;
 }
 
-export function getLeakProgressPenalty(_config: RunConfig, waveIndex: number): number {
-  return getWaveLeakPenalty(waveIndex);
+export function getLeakProgressPenalty(_config: RunConfig, localWaveIndex: number): number {
+  const cycle = resolveActiveCycle();
+  const scalingIndex = getScalingWaveIndex(cycle, localWaveIndex);
+  return Math.round(getWaveLeakPenalty(scalingIndex) * getCyclePressureMult(cycle));
 }
 
 export function getKillBreachRelief(upgrades: UpgradeLevels, _waveIndex: number): number {
@@ -112,4 +148,22 @@ export function getSpawnIntervalMs(baseIntervalMs: number, config: RunConfig): n
 
 export function getWaveMaxAlive(baseMaxAlive: number, config: RunConfig): number {
   return Math.max(1, baseMaxAlive - config.maxAliveReduction);
+}
+
+const MIN_SPAWN_INTERVAL_MS = 200;
+
+export function getCycleSpawnQuota(baseCount: number): number {
+  return Math.max(1, Math.ceil(baseCount * getCyclePressureMult(resolveActiveCycle())));
+}
+
+export function getCycleSpawnIntervalMs(baseIntervalMs: number, config: RunConfig): number {
+  const intervalMs = getSpawnIntervalMs(baseIntervalMs, config);
+  if (intervalMs <= 0) return intervalMs;
+  const cycleInterval = Math.floor(intervalMs / getCyclePressureMult(resolveActiveCycle()));
+  return Math.max(MIN_SPAWN_INTERVAL_MS, cycleInterval);
+}
+
+export function getCycleWaveMaxAlive(baseMaxAlive: number, config: RunConfig): number {
+  const maxAlive = getWaveMaxAlive(baseMaxAlive, config);
+  return Math.max(1, Math.ceil(maxAlive * getCyclePressureMult(resolveActiveCycle())));
 }

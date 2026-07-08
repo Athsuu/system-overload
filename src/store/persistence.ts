@@ -1,4 +1,9 @@
 import { DEFAULT_PRESTIGE } from './prestigeTypes';
+import {
+  DEFAULT_CYCLE_PROGRESS,
+  sanitizeCyclesCleared,
+  clampCycleIndex,
+} from './cycleTypes';
 import { DEFAULT_UPGRADES, UPGRADE_CATALOG, type UpgradeLevels } from './upgradeCatalog';
 
 const SAVE_KEY = 'system-overload-save';
@@ -9,6 +14,9 @@ export interface SaveData {
   upgrades: UpgradeLevels;
   prestigeUnlocked: boolean;
   prestigeLevel: number;
+  highestCycleUnlocked: number;
+  selectedCycle: number;
+  cyclesCleared: number[];
   economyV2?: boolean;
   skillTreeV3?: boolean;
   economyV4?: boolean;
@@ -19,15 +27,12 @@ interface LegacySaveData {
   bankShards?: number;
   bankAnchorFragments?: number;
   bankTflops?: number;
-  upgrades?: Partial<UpgradeLevels> & {
-    autoAim?: number;
-    accelControl?: number;
-    nodeCapacity?: number;
-    emissionDampener?: number;
-    nodeSpawnRate?: number;
-  };
+  upgrades?: Partial<UpgradeLevels>;
   prestigeUnlocked?: boolean;
   prestigeLevel?: number;
+  highestCycleUnlocked?: number;
+  selectedCycle?: number;
+  cyclesCleared?: unknown;
   economyV2?: boolean;
   skillTreeV3?: boolean;
   economyV4?: boolean;
@@ -122,12 +127,25 @@ export function loadSave(): SaveData | null {
         ? Math.max(0, parsed.bankAnchorFragments)
         : 0;
 
+    const highestCycleUnlocked =
+      typeof parsed.highestCycleUnlocked === 'number'
+        ? clampCycleIndex(parsed.highestCycleUnlocked)
+        : DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked;
+    const selectedCycle =
+      typeof parsed.selectedCycle === 'number'
+        ? clampCycleIndex(Math.min(parsed.selectedCycle, highestCycleUnlocked))
+        : Math.min(DEFAULT_CYCLE_PROGRESS.selectedCycle, highestCycleUnlocked);
+    const cyclesCleared = sanitizeCyclesCleared(parsed.cyclesCleared);
+
     const saveData: SaveData = {
       bankShards,
       bankAnchorFragments,
       upgrades,
       prestigeUnlocked: parsed.prestigeUnlocked ?? DEFAULT_PRESTIGE.prestigeUnlocked,
       prestigeLevel: Math.max(0, parsed.prestigeLevel ?? DEFAULT_PRESTIGE.prestigeLevel),
+      highestCycleUnlocked,
+      selectedCycle,
+      cyclesCleared,
       economyV2: true,
       skillTreeV3: true,
       economyV4: true,
@@ -172,6 +190,8 @@ export function hasProgressToErase(): boolean {
   if (save.bankShards > 0) return true;
   if (save.bankAnchorFragments > 0) return true;
   if (save.prestigeUnlocked || save.prestigeLevel > 0) return true;
+  if (save.highestCycleUnlocked > 1) return true;
+  if (save.cyclesCleared.length > 0) return true;
   const earnedUpgrades = { ...save.upgrades };
   delete (earnedUpgrades as Partial<UpgradeLevels>).node0Boot;
   return Object.values(earnedUpgrades).some((level) => (level as number) > 0);

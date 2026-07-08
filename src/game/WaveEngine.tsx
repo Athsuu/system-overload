@@ -4,7 +4,7 @@ import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
 import { spawnEnemyOnEdge } from './enemyMovement';
 import { pushSpawnFlash, type GameEffect } from './effects';
-import { getRunConfig, getSpawnIntervalMs, getWaveMaxAlive } from './runConfig';
+import { getRunConfig, getCycleSpawnIntervalMs, getCycleSpawnQuota, getCycleWaveMaxAlive, getSpawnIntervalMs, getWaveMaxAlive } from './runConfig';
 import { scaleDeltaMs } from './runTimeScale';
 import type { DissipationNode } from './types';
 import { getWaveDefinition, REGULAR_WAVE_COUNT } from './waveConfig';
@@ -47,13 +47,14 @@ function trySpawnFromGroup(
   bounds: ReturnType<typeof getScreenBounds>,
   config: ReturnType<typeof getRunConfig>,
   waveDef: NonNullable<ReturnType<typeof getWaveDefinition>>,
-  spawnGroup: (typeof waveDef.spawns)[number],
+  _spawnGroup: (typeof waveDef.spawns)[number],
   runtime: WaveRuntime,
   effects: GameEffect[],
   waveSpawnQuota: number,
+  waveMaxAlive: number,
 ): void {
   if (runtime.spawnedInGroup >= waveSpawnQuota) return;
-  if (nodes.length >= getWaveMaxAlive(spawnGroup.maxAlive, config)) return;
+  if (nodes.length >= waveMaxAlive) return;
 
   const spawned = spawnEnemyOnEdge(bounds, config, {
     waveIndex: runtime.waveIndex,
@@ -91,10 +92,16 @@ export function WaveEngine({
       const effects = effectsRef.current ?? [];
 
       const spawnGroup = waveDef.spawns[runtime.spawnGroupIndex];
+      const scaleSpawns = !waveDef.isBoss;
       const waveSpawnQuota =
         spawnGroup && runtime.waveIndex === 1
-          ? spawnGroup.count + config.starterNodes
-          : (spawnGroup?.count ?? 0);
+          ? (scaleSpawns ? getCycleSpawnQuota(spawnGroup.count) : spawnGroup.count) +
+            config.starterNodes
+          : spawnGroup
+            ? scaleSpawns
+              ? getCycleSpawnQuota(spawnGroup.count)
+              : spawnGroup.count
+            : 0;
 
       if (runtime.state === 'intermission') {
         runtime.intermissionMs -= scaleDeltaMs(ticker.deltaMS);
@@ -115,8 +122,12 @@ export function WaveEngine({
 
       if (spawnGroup) {
         const quotaMet = runtime.spawnedInGroup >= waveSpawnQuota;
-        const waveMaxAlive = getWaveMaxAlive(spawnGroup.maxAlive, config);
-        const spawnIntervalMs = getSpawnIntervalMs(spawnGroup.intervalMs, config);
+        const waveMaxAlive = scaleSpawns
+          ? getCycleWaveMaxAlive(spawnGroup.maxAlive, config)
+          : getWaveMaxAlive(spawnGroup.maxAlive, config);
+        const spawnIntervalMs = scaleSpawns
+          ? getCycleSpawnIntervalMs(spawnGroup.intervalMs, config)
+          : getSpawnIntervalMs(spawnGroup.intervalMs, config);
 
         if (!quotaMet) {
           const spawnDelta = Math.min(scaleDeltaMs(ticker.deltaMS), spawnIntervalMs);
@@ -132,6 +143,7 @@ export function WaveEngine({
                 runtime,
                 effects,
                 waveSpawnQuota,
+                waveMaxAlive,
               );
             }
           } else {
@@ -151,6 +163,7 @@ export function WaveEngine({
                 runtime,
                 effects,
                 waveSpawnQuota,
+                waveMaxAlive,
               );
             }
           }

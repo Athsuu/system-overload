@@ -1,6 +1,6 @@
 import { isDevInvincible } from '../dev/devFlags';
 import { useGameStore } from '../store/useGameStore';
-import { getLeakProgressPenalty, type RunConfig } from './runConfig';
+import { getEffectivePassiveHeatPerSec, getLeakProgressPenalty, type RunConfig } from './runConfig';
 
 export type OverloadSource = 'impact' | 'time';
 
@@ -24,7 +24,7 @@ export function applyTimeOverload(
   deltaSeconds: number,
   overclockHeatMult = 1,
 ): void {
-  addOverload(config.passiveHeatPerSec * deltaSeconds * overclockHeatMult, 'time');
+  addOverload(getEffectivePassiveHeatPerSec(config) * deltaSeconds * overclockHeatMult, 'time');
 }
 
 export function applyImpactOverload(config: RunConfig, waveIndex: number): void {

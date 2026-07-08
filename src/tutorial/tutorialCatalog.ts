@@ -27,6 +27,7 @@ export type TutorialAnchor =
   | 'purge-zone'
   | 'overload-bar'
   | 'run-shards'
+  | 'hex-shards'
   | 'overclock'
   | 'skill-tree'
   | 'vault-shards'
@@ -203,12 +204,12 @@ export function buildTutorialSteps(): TutorialStep[] {
       order: 7,
       groupId: 'run_intro',
       storyBeat: 'reward',
-      display: 'featured',
+      display: 'spotlight',
       screens: ['PLAYING'],
-      anchor: 'featured-center',
+      anchor: 'run-shards',
       speaker: 'arch',
       label: ARCH_LABEL,
-      title: strings.currency.availableShardsLabel,
+      title: strings.currency.runShardsLabel,
       body: T.hexShardsUnified,
       unlockWhen: (s) => s.signals.runsStarted >= 1,
       completeWhen: SKIP_ONLY,

@@ -4,7 +4,6 @@ import { useGameStore } from '../store/useGameStore';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { useGameStrings } from '../i18n/useGameStrings';
-import { ArchGlitchText } from './ArchGlitchText';
 import { ArchRunEndRelay } from './ArchRunEndRelay';
 import { HexActionButton } from './HexActionButton';
 import { pickMeltdownArchVariantIndex } from './meltdownArchRotation';
@@ -14,12 +13,12 @@ export function RunEndScreen() {
   const lastRunShards = useGameStore((state) => state.lastRunShards);
   const lastRunAnchorFragments = useGameStore((state) => state.lastRunAnchorFragments);
   const anchorFragmentEarnedThisRun = useGameStore((state) => state.anchorFragmentEarnedThisRun);
-  const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
   const runOutcome = useGameStore((state) => state.runOutcome);
+  const activeCycle = useGameStore((state) => state.activeCycle);
   const waveIndex = useGameStore((state) => state.waveIndex);
-  const prestigeUnlockedThisRun = useGameStore((state) => state.prestigeUnlockedThisRun);
   const openSkillTree = useGameStore((state) => state.openSkillTree);
   const startRun = useGameStore((state) => state.startRun);
+  const selectedCycle = useGameStore((state) => state.selectedCycle);
 
   const strings = useGameStrings();
   const [meltdownArchText, setMeltdownArchText] = useState<string | null>(null);
@@ -31,13 +30,15 @@ export function RunEndScreen() {
     : strings.runEnd.meltdownSubtitle;
   const isBossWave = waveIndex > REGULAR_WAVE_COUNT;
   const waveLine = isBossWave
-    ? strings.ui.boss
-    : `${strings.ui.wave} ${waveIndex}/${REGULAR_WAVE_COUNT}`;
+    ? strings.ui.cycleBossFormat.replace('{cycle}', String(activeCycle))
+    : strings.ui.cycleWaveFormat
+        .replace('{cycle}', String(activeCycle))
+        .replace('{wave}', String(Math.min(waveIndex, REGULAR_WAVE_COUNT)))
+        .replace('{max}', String(REGULAR_WAVE_COUNT));
   const displayShards = useCountUp(lastRunShards, 600);
   const displayAnchors = useCountUp(lastRunAnchorFragments, 600);
   const showRewards = lastRunShards > 0 || lastRunAnchorFragments > 0;
-  const showFirstAnchorArch =
-    anchorFragmentEarnedThisRun && bankAnchorFragments === lastRunAnchorFragments;
+  const showFirstAnchorArch = anchorFragmentEarnedThisRun;
 
   const accentColor = isVictory ? DARK_HEX.gold : DARK_HEX.breach;
   const accentGlow = isVictory ? DARK_HEX.goldMuted : 'rgba(255, 77, 0, 0.22)';
@@ -53,7 +54,7 @@ export function RunEndScreen() {
 
   const handleStartRun = () => {
     markTutorialSignal('runsStarted');
-    startRun();
+    startRun(selectedCycle);
   };
 
   return (
@@ -147,22 +148,6 @@ export function RunEndScreen() {
               text={strings.runEnd.firstAnchorArch}
               compact
             />
-          </div>
-        )}
-
-        {prestigeUnlockedThisRun && (
-          <div className="so-animate-reveal-step-2 mt-4 border-t border-white/[0.05] pt-4">
-            <p
-              className="text-[10px] tracking-[0.25em] uppercase"
-              style={{ color: DARK_HEX.goldMuted }}
-            >
-              {strings.runEnd.prestigeUnlocked}
-            </p>
-            <div className="mx-auto mt-3 max-w-sm text-left">
-              <p className="text-[13px] leading-relaxed text-white/55">
-                <ArchGlitchText text={strings.runEnd.prestigeArch} />
-              </p>
-            </div>
           </div>
         )}
 

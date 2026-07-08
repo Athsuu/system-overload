@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getBreachCap } from '../game/runConfig';
+import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
 import { DARK_HEX } from '../theme/darkHexTerminal';
@@ -9,7 +10,9 @@ import { SettingsPanel } from './SettingsPanel';
 
 export function PauseScreen() {
   const breachProgress = useGameStore((state) => state.breachProgress);
+  const activeCycle = useGameStore((state) => state.activeCycle);
   const waveIndex = useGameStore((state) => state.waveIndex);
+  const wavePhase = useGameStore((state) => state.wavePhase);
   const upgrades = useGameStore((state) => state.upgrades);
   const resumeRun = useGameStore((state) => state.resumeRun);
   const abortRun = useGameStore((state) => state.abortRun);
@@ -21,6 +24,10 @@ export function PauseScreen() {
   const breachPercent = Math.round((breachProgress / breachCap) * 100);
 
   const strings = useGameStrings();
+  const isBoss = wavePhase === 'boss' || waveIndex > REGULAR_WAVE_COUNT;
+  const waveDisplay = isBoss
+    ? strings.ui.boss
+    : `${Math.min(waveIndex, REGULAR_WAVE_COUNT)}/${REGULAR_WAVE_COUNT}`;
 
   return (
     <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center">
@@ -71,8 +78,12 @@ export function PauseScreen() {
               <span className="text-sm text-white/70">{breachPercent}%</span>
             </div>
             <div className="flex flex-col gap-1">
+              <span className="text-[9px] text-white/30">{strings.pause.statCycle}</span>
+              <span className="text-sm text-white/70">{activeCycle}</span>
+            </div>
+            <div className="flex flex-col gap-1">
               <span className="text-[9px] text-white/30">{strings.pause.statWave}</span>
-              <span className="text-sm text-white/70">{waveIndex}</span>
+              <span className="text-sm text-white/70">{waveDisplay}</span>
             </div>
           </div>
 

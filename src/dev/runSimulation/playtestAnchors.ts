@@ -5,8 +5,11 @@ import type { PlaytestMeltdownAnchor } from './types';
 export const PLAYTEST_FULL_MAX_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
   purgeStrike: 10,
+  purgeCadence: 10,
+  purgeReach: 10,
   threadCoolant: 10,
   killBreachRelief: 10,
+  meltdownThreshold: 10,
 };
 
 /**

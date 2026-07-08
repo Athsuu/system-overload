@@ -96,7 +96,14 @@ const SPOTLIGHT_SPECS: Partial<Record<TutorialAnchor, SpotlightSpecWithFeather>>
   },
   'run-shards': {
     mode: 'element',
-    selector: '[data-tutorial-anchor="run-shards"]',
+    selector: '[data-tutorial-anchor="hex-shards"]',
+    padding: 6,
+    borderRadius: 0,
+    feather: 2.2,
+  },
+  'hex-shards': {
+    mode: 'element',
+    selector: '[data-tutorial-anchor="hex-shards"]',
     padding: 6,
     borderRadius: 0,
     feather: 2.2,
@@ -494,6 +501,8 @@ const ANCHORED_CARD_WIDTH: Partial<Record<TutorialAnchor, number>> = {
   'featured-skill-tree': 340,
   'skill-tree': 280,
   'vault-shards': 300,
+  'hex-shards': 300,
+  'run-shards': 300,
   'flux-drive': 260,
 };
 
@@ -523,6 +532,8 @@ export function measureAnchoredCardPlacement(
     case 'skill-tree':
       return fitCardInViewport(32, (viewportH - cardHeight) / 2, maxWidth, cardHeight, viewportW, viewportH);
     case 'vault-shards':
+    case 'hex-shards':
+    case 'run-shards':
       return fitCardInViewport(
         Math.max(SPOTLIGHT_VIEWPORT_MARGIN, viewportW - maxWidth - 200),
         32,

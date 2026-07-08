@@ -140,7 +140,7 @@ export function CurrencyBadge({ containerRef }: CurrencyBadgeProps) {
             onHoverStart={() => showCurrency('shards')}
             onHoverEnd={scheduleDismiss}
             ariaLabel={`${strings.currency.availableShardsLabel}: ${bankShards}`}
-            tutorialAnchor="vault-shards"
+            tutorialAnchor="hex-shards"
           />
         )}
         {showAnchors && (
@@ -181,5 +181,18 @@ export function CurrencyBadge({ containerRef }: CurrencyBadgeProps) {
           containerRef.current,
         )}
     </>
+  );
+}
+
+/** Shared top-right badge shell (hub + run). */
+export function HexShardsBadgeLayer() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <div ref={containerRef} className="pointer-events-none absolute inset-0 z-30">
+      <div className="pointer-events-auto absolute top-8 right-8">
+        <CurrencyBadge containerRef={containerRef} />
+      </div>
+    </div>
   );
 }

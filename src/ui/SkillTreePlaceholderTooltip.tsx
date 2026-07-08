@@ -1,9 +1,9 @@
 import { useGameStrings } from '../i18n/useGameStrings';
-import { getPlaceholderNode, type PlaceholderId } from '../store/skillTree';
+import { getPlaceholderNode } from '../store/skillTree';
 import { SKILL_TREE_VISUAL } from './skillTreeTheme';
 
 interface SkillTreePlaceholderTooltipProps {
-  placeholderId: PlaceholderId;
+  placeholderId: string;
 }
 
 export const PLACEHOLDER_TOOLTIP_TITLE_ID = 'skill-tree-placeholder-title';

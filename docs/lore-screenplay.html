@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Zero Archive — Lore Screenplay</title>
+  <title>Zero Archive, Lore Screenplay</title>
   <style>
     @page {
       size: A4;
@@ -23,7 +23,7 @@
 
     .page-break { page-break-before: always; }
 
-    /* —— Title page —— */
+    /* Title page */
     .title-page {
       min-height: 90vh;
       display: flex;
@@ -67,7 +67,7 @@
       margin-top: 40px;
     }
 
-    /* —— Section headers —— */
+    /* Section headers */
     .act-header {
       text-align: center;
       margin: 36px 0 28px;
@@ -92,7 +92,7 @@
       font-family: Georgia, "Times New Roman", serif;
     }
 
-    /* —— Scene block —— */
+    /* Scene block */
     .scene {
       margin-bottom: 32px;
       page-break-inside: avoid;
@@ -141,7 +141,7 @@
     .scene-meta .block { display: block; margin-top: 4px; }
     .scene-meta .block dd { display: block; margin: 2px 0 0 0; }
 
-    /* —— Screenplay dialogue —— */
+    /* Screenplay dialogue */
     .channel {
       text-align: center;
       font-size: 9pt;
@@ -181,7 +181,7 @@
       letter-spacing: 0.1em;
     }
 
-    /* —— Director's note —— */
+    /* Director's note */
     .intent {
       font-family: Georgia, "Times New Roman", serif;
       font-size: 9.5pt;
@@ -229,13 +229,13 @@
 <section class="title-page">
   <h1>Zero Archive</h1>
   <p class="subtitle">Lore &amp; Dialogue Screenplay</p>
-  <p class="doc-type">Document scénario — voix &amp; intentions design</p>
+  <p class="doc-type">Document scénario, voix &amp; intentions design</p>
   <p class="meta">
   Version narrative v0.6 · Méta progression v4<br />
   Textes in-game : <strong>anglais</strong> (FR i18n miroir)<br />
-  Voix principale : <strong>ARCH</strong> — Triage &amp; Recovery Advisory Core Entity<br />
-  Joueur : <strong>Node-0</strong> (pas de lignes parlées — exécution seulement)<br />
-  Généré pour le product owner — usage interne créatif
+  Voix principale : <strong>ARCH</strong>, Triage &amp; Recovery Advisory Core Entity<br />
+  Joueur : <strong>Node-0</strong> (pas de lignes parlées, exécution seulement)<br />
+  Généré pour le product owner, usage interne créatif
   </p>
 </section>
 
@@ -245,54 +245,54 @@
     <h2>Sommaire</h2>
   </div>
   <ol class="toc">
-    <li>Acte I — Première connexion (hub, tutoriel menu)</li>
-    <li>Acte II — Thread quarantaine (premier run, combat)</li>
-    <li>Acte III — Boucle méta (hub, vault, skill tree)</li>
-    <li>Acte IV — Clôture de thread (fin de run)</li>
-    <li>Acte V — Pings ARCH (ambient, contextuels)</li>
-    <li>Annexe — Voix système (UI lore, non parlée)</li>
+    <li>Acte I, Première connexion (hub, tutoriel menu)</li>
+    <li>Acte II, Thread quarantaine (premier run, combat)</li>
+    <li>Acte III, Boucle méta (hub, vault, skill tree)</li>
+    <li>Acte IV, Clôture de thread (fin de run)</li>
+    <li>Acte V, Pings ARCH (ambient, contextuels)</li>
+    <li>Annexe, Voix système (UI lore, non parlée)</li>
   </ol>
   <p class="footer-note">Format : chaque scène = déclencheur jeu + réplique exacte + note « Pourquoi » (intention narrative).</p>
 </section>
 
 <!-- ═══════════════════ ACTE I ═══════════════════ -->
 <section class="act-header page-break">
-  <h2>Acte I — Première connexion</h2>
+  <h2>Acte I, Première connexion</h2>
   <p>Le joueur arrive sur le hub. ARCH établit le contrat : elle conseille, Node-0 exécute.</p>
 </section>
 
 <article class="scene" id="welcome">
   <p class="scene-id">TUTO · welcome · order 0 · beat: hook</p>
-  <h3 class="scene-heading">Scène 01 — Ouverture du canal RELAY</h3>
+  <h3 class="scene-heading">Scène 01, Ouverture du canal RELAY</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>MENU (hub)</dd>
     <dt>Affichage :</dt><dd>Carte centrée (featured)</dd>
-    <dt>Déclencheur :</dt><dd>Première visite hub — toujours actif</dd>
+    <dt>Déclencheur :</dt><dd>Première visite hub, toujours actif</dd>
     <dt>Groupe :</dt><dd>menu_intro</dd>
   </dl>
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">ARCH</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">I'm ARCH — Triage &amp; Recovery Advisory Core Entity. I kept your thread isolated. Listen — we don't have much time.</p>
+  <p class="dialogue">I'm ARCH, Triage &amp; Recovery Advisory Core Entity. I kept your thread isolated. Listen. we don't have much time.</p>
   <p class="speaker">ARCH <span style="font-weight:normal;font-size:9pt;">(suite)</span></p>
-  <p class="dialogue">Corrupted processes are flooding the system. The Breach is rising. I isolated Node-0 in a quarantined execution thread — the last bubble still stable inside a dying machine.</p>
+  <p class="dialogue">Corrupted processes are flooding the system. The Breach is rising. I isolated Node-0 in a quarantined execution thread, the last bubble still stable inside a dying machine.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Poser ARCH en une phrase : nom, rôle, urgence. Annoncer la quarantaine sans cinématique. Le joueur comprend qu'il est <em>dans</em> le système, pas devant un menu abstrait. Le ton est professionnel, pas mascotte — on installe la relation advisory / exécution dès la première carte.
+    Poser ARCH en une phrase : nom, rôle, urgence. Annoncer la quarantaine sans cinématique. Le joueur comprend qu'il est <em>dans</em> le système, pas devant un menu abstrait. Le ton est professionnel, pas mascotte, on installe la relation advisory / exécution dès la première carte.
   </div>
 </article>
 
 <article class="scene" id="node0_role">
   <p class="scene-id">TUTO · node0_role · order 1 · beat: identity</p>
-  <h3 class="scene-heading">Scène 02 — Identité du joueur</h3>
+  <h3 class="scene-heading">Scène 02, Identité du joueur</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>MENU</dd>
     <dt>Déclencheur :</dt><dd>Carte « welcome » fermée (Skip ou Got it)</dd>
   </dl>
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
-  <p class="card-title">Quarantined Thread</p>
+  <p class="card-title">NODE-0</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">You are Node-0 — the last stable core, locked in quarantine. This thread is all that remains. Corrupted processes hammer the quarantine wall. Every impact and every second feeds the Breach closer to Meltdown.</p>
+  <p class="dialogue">You are Node-0, the last stable core, locked in quarantine. This thread is all that remains. Corrupted processes hammer the quarantine wall. Every impact and every second feeds the Breach closer to Meltdown.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
     Verrouiller le canon : le joueur <em>est</em> Node-0, pas un opérateur externe. Introduire Meltdown comme conséquence narrative de l'inaction et des impacts. Prépare la jauge Overload sans encore montrer le HUD combat.
@@ -301,7 +301,7 @@
 
 <article class="scene" id="mission_loop">
   <p class="scene-id">TUTO · mission_loop · order 2 · beat: mission</p>
-  <h3 class="scene-heading">Scène 03 — Boucle de mission</h3>
+  <h3 class="scene-heading">Scène 03, Boucle de mission</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>MENU</dd>
     <dt>Affichage :</dt><dd>Spotlight sur bouton Start Run</dd>
@@ -310,16 +310,16 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Contain the Breach</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Stop corrupted processes before they break quarantine. Launch a Run — purge in the arena, salvage Shards from every kill. When the thread ends, spend them on the Skill Tree. I advise. You execute. Each upgrade buys us time.</p>
+  <p class="dialogue">Stop corrupted processes before they break quarantine. Launch a run. Purge the arena and extract Hex Shards from every kill. When the thread ends, spend them on the Skill Tree. I advise. You execute. Each reinforcement buys us time toward the Uplink.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Expliquer la boucle roguelite entière en un bloc : run → shards → skill tree. La phrase « I advise. You execute. » est le pilier de tout le dialogue ARCH — elle justifie pourquoi elle parle mais ne joue pas. Le spotlight sur Start Run convertit la lore en action immédiate.
+    Expliquer la boucle roguelite entière en un bloc : run → shards → skill tree. La phrase « I advise. You execute. » est le pilier de tout le dialogue ARCH, elle justifie pourquoi elle parle mais ne joue pas. Le spotlight sur Start Run convertit la lore en action immédiate.
   </div>
 </article>
 
 <article class="scene" id="skill_tree_intro">
   <p class="scene-id">TUTO · skill_tree_intro · order 3 · beat: growth</p>
-  <h3 class="scene-heading">Scène 04 — Arbre de réparation</h3>
+  <h3 class="scene-heading">Scène 04, Arbre de réparation</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>MENU</dd>
     <dt>Affichage :</dt><dd>Spotlight sur le skill tree</dd>
@@ -329,22 +329,22 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Skill Tree</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">This hex grid is our best shot — permanent modules between runs. I can't install them. Select a node and you execute the repair. I don't have a clean repair map. I'm routing recovery protocols I've never run before — we improvise, or we lose the system.</p>
+  <p class="dialogue">This hex grid is our best shot. It integrates your permanent modules between runs. I cannot install them directly. Select a node to execute the reinforcement. I have no clean blueprint and I am routing untested protocols. We improvise, or we lose the Seed.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Justifier l'arbre radial v4 : ARCH n'a pas de plan propre — d'où l'improvisation et les placeholders futurs. « I can't install them » explique pourquoi le joueur clique Purchase : agency totale sur Node-0. Lie méta-progression et désespoir contrôlé (protocoles jamais testés).
+    Justifier l'arbre radial v4 : ARCH n'a pas de plan propre, d'où l'improvisation et les placeholders futurs. « I can't install them » explique pourquoi le joueur clique Purchase : agency totale sur Node-0. Lie méta-progression et désespoir contrôlé (protocoles jamais testés).
   </div>
 </article>
 
 <!-- ═══════════════════ ACTE II ═══════════════════ -->
 <section class="act-header page-break">
-  <h2>Acte II — Thread quarantaine</h2>
+  <h2>Acte II, Thread quarantaine</h2>
   <p>Premier run. ARCH commente le combat pendant que le joueur apprend purge, surcharge et récompense.</p>
 </section>
 
 <article class="scene" id="purge_zone">
   <p class="scene-id">TUTO · purge_zone · order 4 · beat: action</p>
-  <h3 class="scene-heading">Scène 05 — Zone de purge</h3>
+  <h3 class="scene-heading">Scène 05, Zone de purge</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING (arène)</dd>
     <dt>Affichage :</dt><dd>Spotlight zone souris / purge</dd>
@@ -357,13 +357,13 @@
   <p class="dialogue">You're live. Your purge zone is the only weapon inside quarantine. Hold it over corrupted processes to destroy them. Every purge hit and every passing second feeds Overload.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Transition menu → action. « You're live » marque le basculement. Lie l'arme unique (purge) au coût (Overload) pour que le joueur comprenne le trade-off dès le premier contact — pas de tutoriel projectile classique.
+    Transition menu → action. « You're live » marque le basculement. Lie l'arme unique (purge) au coût (Overload) pour que le joueur comprenne le trade-off dès le premier contact, pas de tutoriel projectile classique.
   </div>
 </article>
 
 <article class="scene" id="overload">
   <p class="scene-id">TUTO · overload · order 5 · beat: stakes</p>
-  <h3 class="scene-heading">Scène 06 — Enjeu Overload</h3>
+  <h3 class="scene-heading">Scène 06, Enjeu Overload</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING</dd>
     <dt>Affichage :</dt><dd>Spotlight jauge Overload (bas)</dd>
@@ -372,16 +372,16 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Overload</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Overload is the live Breach meter on your thread. Keep it under control. At 100% Overload — Meltdown. The quarantine fails. Contain the threat before quarantine breaks.</p>
+  <p class="dialogue">Overload is the live Breach meter on your thread. Keep it under control. At 100% Overload: Meltdown. The quarantine fails. Contain the threat before quarantine breaks.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Nommer la jauge HUD avec le lore Breach. Donner une condition de défaite claire (100 %). « Contain the threat » répète la fantasy victoire sans encore nommer le boss — le joueur sait pourquoi il doit agir vite (runs courtes, pression passive).
+    Nommer la jauge HUD avec le lore Breach. Donner une condition de défaite claire (100 %). « Contain the threat » répète la fantasy victoire sans encore nommer le boss, le joueur sait pourquoi il doit agir vite (runs courtes, pression passive).
   </div>
 </article>
 
 <article class="scene" id="run_shards">
   <p class="scene-id">TUTO · run_shards · order 6 · beat: reward</p>
-  <h3 class="scene-heading">Scène 07 — Récompense immédiate</h3>
+  <h3 class="scene-heading">Scène 07, Récompense immédiate</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING</dd>
     <dt>Affichage :</dt><dd>Spotlight badge Run Shards (haut droite)</dd>
@@ -390,7 +390,7 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Run Shards</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Run Shards are stable data fragments salvaged from corrupted processes during a run. When a run ends, Shards transfer to your vault — currency for repairs between threads.</p>
+  <p class="dialogue">Hex Shards are stable data fragments salvaged from corrupted processes during a run. When the thread ends, they join your vault. Spend them on the Skill Tree to reinforce yourself.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
     Connecter chaque kill à la progression permanente. Le mot « salvaged » renforce le fantasy terminal / récupération de données, pas or fantasy. Prépare le retour hub sans parler encore d'Anchor Fragments (réservés au boss).
@@ -399,7 +399,7 @@
 
 <article class="scene" id="overclock">
   <p class="scene-id">TUTO · overclock · order 7 · beat: risk</p>
-  <h3 class="scene-heading">Scène 08 — Overclock (risque volontaire)</h3>
+  <h3 class="scene-heading">Scène 08, Overclock (risque volontaire)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING</dd>
     <dt>Affichage :</dt><dd>Spotlight bouton Overclock</dd>
@@ -408,22 +408,22 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Overclock</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Overclock surges purge output — but Overload builds faster while active. Press Space when you can handle the pressure.</p>
+  <p class="dialogue">Overclock surges purge output, but Overload builds faster while active. Press Space when you can handle the pressure.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    N'apparaît qu'après achat du module — le tuto suit la progression méta, pas un ordre fixe arbitraire. Enseigne le skill actif comme pari conscient : puissance vs surcharge. Ton directif (« when you can handle ») = ARCH ne moralise pas, elle avertit.
+    N'apparaît qu'après achat du module, le tuto suit la progression méta, pas un ordre fixe arbitraire. Enseigne le skill actif comme pari conscient : puissance vs surcharge. Ton directif (« when you can handle ») = ARCH ne moralise pas, elle avertit.
   </div>
 </article>
 
 <!-- ═══════════════════ ACTE III ═══════════════════ -->
 <section class="act-header page-break">
-  <h2>Acte III — Boucle méta</h2>
+  <h2>Acte III, Boucle méta</h2>
   <p>Après une run. ARCH explique le vault, les achats permanents, et les modules avancés.</p>
 </section>
 
 <article class="scene" id="skill_tree">
   <p class="scene-id">TUTO · skill_tree · order 8 · beat: growth</p>
-  <h3 class="scene-heading">Scène 09 — Skill Enhancements (post-run)</h3>
+  <h3 class="scene-heading">Scène 09, Skill Enhancements (post-run)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>UPGRADING</dd>
     <dt>Affichage :</dt><dd>Carte ancrée sur l'arbre</dd>
@@ -436,13 +436,13 @@
   <p class="dialogue">Between runs, spend Available Shards on hex nodes. Every upgrade hardens the quarantine before the next breach.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Renforcer le titre d'écran UPGRADING avec une justification émotionnelle : chaque nœud = temps gagné sur la prochaine Breach. Court, répétitif volontairement — le joueur est déjà converti, on cimente l'habitude d'acheter avant de relancer.
+    Renforcer le titre d'écran UPGRADING avec une justification émotionnelle : chaque nœud = temps gagné sur la prochaine Breach. Court, répétitif volontairement, le joueur est déjà converti, on cimente l'habitude d'acheter avant de relancer.
   </div>
 </article>
 
 <article class="scene" id="vault">
   <p class="scene-id">TUTO · vault · order 9 · beat: legacy</p>
-  <h3 class="scene-heading">Scène 10 — Vault (éclats disponibles)</h3>
+  <h3 class="scene-heading">Scène 10, Vault (éclats disponibles)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>MENU</dd>
     <dt>Affichage :</dt><dd>Carte ancrée badge Available Shards</dd>
@@ -452,16 +452,16 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Available Shards</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Hex Shards fund permanent Node-0 reconfiguration between runs. When a run ends, Shards transfer to your vault — currency for repairs between threads.</p>
+  <p class="dialogue">Hex Shards fund permanent Node-0 reconfiguration between runs. When a run ends, Shards transfer to your vault, currency for repairs between threads.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Clarifier la différence Run Shards / Available Shards pour les joueurs incrémentaux débutants. « Reconfiguration » = fantasy skill tree, pas « shop ». Se déclenche quand le joueur a vraiment des shards à dépenser — moment d'apprentissage pertinent.
+    Clarifier la différence Run Shards / Available Shards pour les joueurs incrémentaux débutants. « Reconfiguration » = fantasy skill tree, pas « shop ». Se déclenche quand le joueur a vraiment des shards à dépenser, moment d'apprentissage pertinent.
   </div>
 </article>
 
 <article class="scene" id="flux_drive">
   <p class="scene-id">TUTO · flux_drive · order 11 · beat: mastery</p>
-  <h3 class="scene-heading">Scène 11 — Flux Drive (maîtrise)</h3>
+  <h3 class="scene-heading">Scène 11, Flux Drive (maîtrise)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING ou MENU</dd>
     <dt>Affichage :</dt><dd>Carte ancrée toggle Flux Drive</dd>
@@ -471,7 +471,7 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Flux Drive</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Flux Drive doubles simulation speed inside quarantine — faster combat, faster timers, faster Overload. Toggle only if you can handle the pressure.</p>
+  <p class="dialogue">Flux Drive doubles simulation speed inside quarantine: faster combat, faster timers, faster Overload. Toggle only if you can handle the pressure.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
     Récompense de fin de méta : le joueur qui débloque Flux Drive est prêt pour un défi opt-in. Même structure rhétorique qu'Overclock (pression / your call). ARCH traite le joueur comme un pair qui assume ses choix, pas comme un débutant.
@@ -480,7 +480,7 @@
 
 <article class="scene" id="prestige">
   <p class="scene-id">TUTO · prestige · order 10 · beat: revelation</p>
-  <h3 class="scene-heading">Scène 12 — Prestige (révélation)</h3>
+  <h3 class="scene-heading">Scène 12, Prestige (révélation)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>RUN_END ou MENU</dd>
     <dt>Affichage :</dt><dd>Carte centrée featured</dd>
@@ -489,57 +489,57 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Breach Contained</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Breach Anchor down. I'm opening a deeper reconfiguration layer — Prestige. Partial reset, permanent gains. I don't know where it leads. We take it anyway.</p>
+  <p class="dialogue">Breach Anchor down. I'm opening a deeper reconfiguration layer: Prestige. Partial reset, permanent gains. I don't know where it leads. We take it anyway.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Moment de bascule narrative majeur : première preuve que la quarantaine peut gagner. ARCH admet l'inconnu (« I don't know where it leads ») — honnêteté qui renforce la confiance, pas le mystère cheap. Prépare une couche méta future sans l'expliquer en détail.
+    Moment de bascule narrative majeur : première preuve que la quarantaine peut gagner. ARCH admet l'inconnu (« I don't know where it leads »), honnêteté qui renforce la confiance, pas le mystère cheap. Prépare une couche méta future sans l'expliquer en détail.
   </div>
 </article>
 
 <!-- ═══════════════════ ACTE IV ═══════════════════ -->
 <section class="act-header page-break">
-  <h2>Acte IV — Clôture de thread</h2>
+  <h2>Acte IV, Clôture de thread</h2>
   <p>Écran de fin de run. ARCH serre le récit : victoire utilitaire, défaite fragmentée, premier fragment d'ancre.</p>
 </section>
 
 <article class="scene" id="run_end_victory">
   <p class="scene-id">RUN_END · victory_boss</p>
-  <h3 class="scene-heading">Scène 13 — Victoire (Breach Contained)</h3>
+  <h3 class="scene-heading">Scène 13, Victoire (Breach Contained)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>RUN_END</dd>
     <dt>Déclencheur :</dt><dd>Breach Anchor détruit</dd>
     <dt class="block">Système (titres) :</dt>
-    <dd class="block"><strong>Breach Contained</strong> — Threat contained — Node-0 holds.</dd>
+    <dd class="block"><strong>Breach Contained</strong>, Threat contained. Node-0 holds.</dd>
   </dl>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Anchor down. Shards to vault. We bought time — don't waste it.</p>
+  <p class="dialogue">Anchor down. Shards to vault. We bought time. don't waste it.</p>
   <p class="speaker system">SYSTÈME (UI)</p>
   <p class="dialogue">+N Shards · Transferred to vault<br />+N Anchor Fragments <em>(si boss tué)</em></p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Pas de fanfare héroïque — victoire = gain de temps, cohérent avec runs ≤4 min et retour hub rapide. « Don't waste it » pousse à enchaîner (skill tree / relance). Les fragments anchor sont montrés en UI, pas forcément commentés par ARCH à chaque fois — évite la répétition.
+    Pas de fanfare héroïque, victoire = gain de temps, cohérent avec runs ≤4 min et retour hub rapide. « Don't waste it » pousse à enchaîner (skill tree / relance). Les fragments anchor sont montrés en UI, pas forcément commentés par ARCH à chaque fois, évite la répétition.
   </div>
 </article>
 
 <article class="scene" id="first_anchor">
   <p class="scene-id">RUN_END · first_anchor_fragment · une seule fois</p>
-  <h3 class="scene-heading">Scène 14 — Premier Anchor Fragment</h3>
+  <h3 class="scene-heading">Scène 14, Premier Anchor Fragment</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>RUN_END (victoire boss)</dd>
-    <dt>Déclencheur :</dt><dd>Premier fragment gagné — total vault fragments == gain de cette run</dd>
+    <dt>Déclencheur :</dt><dd>Premier fragment gagné, total vault fragments == gain de cette run</dd>
   </dl>
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Anchor data secured. Capstone modules are online — spend fragments on the marked nodes.</p>
+  <p class="dialogue">Anchor data secured. Capstone modules are online. spend fragments on the marked nodes.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Tutoriel implicite de la 2e monnaie — sans écran conversion dédié. « Capstone » signale que les modules anchor ne sont pas du grind ordinaire. Une seule fois : respect du joueur, pas de spam. Ouvre la fantasy « données extraites du Breach Anchor ».
+    Tutoriel implicite de la 2e monnaie, sans écran conversion dédié. « Capstone » signale que les modules anchor ne sont pas du grind ordinaire. Une seule fois : respect du joueur, pas de spam. Ouvre la fantasy « données extraites du Breach Anchor ».
   </div>
 </article>
 
 <article class="scene" id="prestige_run_end">
   <p class="scene-id">RUN_END · prestige_unlock_this_run</p>
-  <h3 class="scene-heading">Scène 15 — Prestige (écran de fin)</h3>
+  <h3 class="scene-heading">Scène 15, Prestige (écran de fin)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>RUN_END (victoire, première fois)</dd>
     <dt>Système :</dt><dd>Prestige system unlocked</dd>
@@ -548,51 +548,51 @@
   <p class="dialogue">Deeper layer unlocked. You can rewrite more of the system than I can reach now.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Double le beat prestige (tuto + fin de run) pour ancrer l'émotion au moment de la récompense. ARCH se met volontairement en retrait — Node-0 dépasse son advisory. Setup long terme sans gameplay prestige complet encore.
+    Double le beat prestige (tuto + fin de run) pour ancrer l'émotion au moment de la récompense. ARCH se met volontairement en retrait, Node-0 dépasse son advisory. Setup long terme sans gameplay prestige complet encore.
   </div>
 </article>
 
 <article class="scene" id="run_end_meltdown">
   <p class="scene-id">RUN_END · defeat_breach</p>
-  <h3 class="scene-heading">Scène 16 — Défaite (Meltdown)</h3>
+  <h3 class="scene-heading">Scène 16, Défaite (Meltdown)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>RUN_END</dd>
     <dt>Déclencheur :</dt><dd>Overload 100 %</dd>
     <dt class="block">Système :</dt>
-    <dd class="block"><strong>Meltdown</strong> — Node-0 overloaded — the last stable core has failed.</dd>
+    <dd class="block"><strong>Meltdown</strong>, Node-0 overloaded, the last stable core has failed.</dd>
   </dl>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">…thread lost. Signal—</p>
+  <p class="dialogue">…thread lost. Signal…</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Défaite = coupure de communication, pas sermon. Le glitch et la phrase tronquée vendent la corruption du canal ARCH. Le joueur garde ses shards vault — la narration ne punît pas doublement. Contraste volontaire avec la victoire sèche et utilitaire.
+    Défaite = coupure de communication, pas sermon. Le glitch et la phrase tronquée vendent la corruption du canal ARCH. Le joueur garde ses shards vault, la narration ne punît pas doublement. Contraste volontaire avec la victoire sèche et utilitaire.
   </div>
 </article>
 
 <!-- ═══════════════════ ACTE V ═══════════════════ -->
 <section class="act-header page-break">
-  <h2>Acte V — Pings ARCH (ambient)</h2>
+  <h2>Acte V, Pings ARCH (ambient)</h2>
   <p>Répliques courtes, non bloquantes. Une fois chacune. Renforcent le moment sans pause forcée.</p>
 </section>
 
 <article class="scene" id="ambient_first_run">
   <p class="scene-id">AMBIENT · first_run</p>
-  <h3 class="scene-heading">Scène 17 — Premier run actif</h3>
+  <h3 class="scene-heading">Scène 17, Premier run actif</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING</dd>
-    <dt>Déclencheur :</dt><dd>runsStarted 1, vague 1 — après intro ARCH dismissée</dd>
+    <dt>Déclencheur :</dt><dd>runsStarted 1, vague 1, après intro ARCH dismissée</dd>
   </dl>
   <p class="speaker">ARCH</p>
   <p class="dialogue">Quarantine thread active. Purge what breaks through.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Rappel ultra-court au moment où le joueur est seul dans l'arène. Complète le tuto spotlight sans ouvrir une carte — maintient la présence ARCH pendant l'action.
+    Rappel ultra-court au moment où le joueur est seul dans l'arène. Complète le tuto spotlight sans ouvrir une carte, maintient la présence ARCH pendant l'action.
   </div>
 </article>
 
 <article class="scene" id="ambient_overload">
   <p class="scene-id">AMBIENT · overload_critical</p>
-  <h3 class="scene-heading">Scène 18 — Surcharge critique</h3>
+  <h3 class="scene-heading">Scène 18, Surcharge critique</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING</dd>
     <dt>Déclencheur :</dt><dd>breachProgress ≥ 80 %</dd>
@@ -607,13 +607,13 @@
 
 <article class="scene" id="ambient_boss">
   <p class="scene-id">AMBIENT · boss_incoming</p>
-  <h3 class="scene-heading">Scène 19 — Breach Anchor</h3>
+  <h3 class="scene-heading">Scène 19, Breach Anchor</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING</dd>
     <dt>Déclencheur :</dt><dd>waveIndex ≥ 6 ou phase boss</dd>
   </dl>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">That's the Breach Anchor — the rupture point. End it.</p>
+  <p class="dialogue">That's the Breach Anchor, the rupture point. End it.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
     Nommer le boss in-run pour ceux qui n'ont pas lu le tuto bossHint. « End it » = impératif sec, cohérent avec le rythme court. Lie victoire narrative et source des Anchor Fragments.
@@ -622,22 +622,22 @@
 
 <article class="scene" id="ambient_flux">
   <p class="scene-id">AMBIENT · flux_drive_ready</p>
-  <h3 class="scene-heading">Scène 20 — Flux Drive online</h3>
+  <h3 class="scene-heading">Scène 20, Flux Drive online</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>PLAYING ou MENU</dd>
-    <dt>Déclencheur :</dt><dd>fluxDrive acheté — première fois</dd>
+    <dt>Déclencheur :</dt><dd>fluxDrive acheté, première fois</dd>
   </dl>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Flux Drive online. Double speed — double risk. Your call.</p>
+  <p class="dialogue">Flux Drive online. Double speed, double risk. Your call.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Version ping du tuto flux_drive — pour joueurs qui ont acheté hors séquence ou ont skip le tuto long. « Your call » = signature ARCH : responsabilité du Node-0.
+    Version ping du tuto flux_drive, pour joueurs qui ont acheté hors séquence ou ont skip le tuto long. « Your call » = signature ARCH : responsabilité du Node-0.
   </div>
 </article>
 
 <!-- ═══════════════════ ANNEXE ═══════════════════ -->
 <section class="act-header page-break">
-  <h2>Annexe — Voix système (non ARCH)</h2>
+  <h2>Annexe, Voix système (non ARCH)</h2>
   <p>Textes UI qui portent le lore sans être des répliques. Utiles pour cohérence VO / localisation future.</p>
 </section>
 
@@ -645,10 +645,10 @@
   <p class="scene-id">UI · MAIN_MENU</p>
   <h3 class="scene-heading">Menu titre</h3>
   <p class="speaker system">SYSTÈME</p>
-  <p class="dialogue">Zero Archive<br />The Zero Archive collapses under a wave of corrupted processes.<br />NODE-0 STATUS: UNSTABLE<br />You are Node-0 — a child process in quarantine.</p>
+  <p class="dialogue">Zero Archive<br />The Zero Archive collapses under a wave of corrupted processes.<br />NODE-0 STATUS: UNSTABLE<br />You are Node-0, a child process in quarantine.</p>
   <div class="intent">
     <strong>Pourquoi c'est là</strong>
-    Annonce le fantasy avant ARCH. « UNSTABLE » prépare le ton terminal. Pas de dialogue — pure UI diegetic.
+    Annonce le fantasy avant ARCH. « UNSTABLE » prépare le ton terminal. Pas de dialogue, pure UI diegetic.
   </div>
 </article>
 
@@ -656,7 +656,7 @@
   <p class="scene-id">UI · PAUSE</p>
   <h3 class="scene-heading">Pause combat</h3>
   <p class="speaker system">SYSTÈME</p>
-  <p class="dialogue">SYSTEM HALT — Node-0 execution suspended</p>
+  <p class="dialogue">SYSTEM HALT, Node-0 execution suspended</p>
   <div class="intent">
     <strong>Pourquoi c'est là</strong>
     Pause = arrêt d'exécution du thread, pas « menu pause » générique. Renforce l'identité Node-0.
@@ -665,12 +665,12 @@
 
 <article class="scene">
   <p class="scene-id">UI · NODE0_BOOT · upgrade copy</p>
-  <h3 class="scene-heading">Nœud racine — Node-0 Boot</h3>
+  <h3 class="scene-heading">Nœud racine, Node-0 Boot</h3>
   <p class="speaker system">SYSTÈME (tooltip)</p>
-  <p class="dialogue">Node-0 Boot — Initialize the quarantine thread — +1 purge hit damage</p>
+  <p class="dialogue">Node-0 Boot, Initialize the quarantine thread, +1 purge hit damage</p>
   <div class="intent">
     <strong>Pourquoi c'est là</strong>
-    Seul module visible au départ (v4). Le texte fait double duty : lore (boot du thread) + feedback gameplay immédiat. Pas de voix ARCH — le joueur <em>est</em> l'acte d'initialisation.
+    Seul module visible au départ (v4). Le texte fait double duty : lore (boot du thread) + feedback gameplay immédiat. Pas de voix ARCH, le joueur <em>est</em> l'acte d'initialisation.
   </div>
 </article>
 
@@ -678,7 +678,7 @@
   <p class="scene-id">UI · PLACEHOLDER</p>
   <h3 class="scene-heading">Modules réservés</h3>
   <p class="speaker system">SYSTÈME (tooltip)</p>
-  <p class="dialogue">Reserved module — Design slot — replace this node in a future update.<br /><em>Module pending (placeholder_XX)</em></p>
+  <p class="dialogue">Reserved module, Design slot. replace this node in a future update.<br /><em>Module pending (placeholder_XX)</em></p>
   <div class="intent">
     <strong>Pourquoi c'est là</strong>
     Honnête avec le joueur early access : slots visibles mais vides. Évite la frustration « bug » sur nœuds gris. ID visible pour communication PO / agent.
@@ -686,20 +686,20 @@
 </article>
 
 <article class="scene">
-  <p class="scene-id">LORE · ARCH · role (non affiché seul — référence écrivain)</p>
+  <p class="scene-id">LORE · ARCH · role (non affiché seul, référence écrivain)</p>
   <h3 class="scene-heading">Fiche personnage ARCH (référence)</h3>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Containment advisory module — trapped inside the same collapse as you. I can guide. I cannot execute.</p>
+  <p class="dialogue">Containment advisory module, trapped inside the same collapse as you. I can guide. I cannot execute.</p>
   <div class="intent">
     <strong>Pourquoi c'est là</strong>
-    Ligne de bible non montrée telle quelle en jeu — filtre pour tout nouveau dialogue : ARCH ne prend jamais les contrôles, ne donne jamais d'ordres sans laisser le choix au Node-0. Toute future réplique doit passer ce test.
+    Ligne de bible non montrée telle quelle en jeu, filtre pour tout nouveau dialogue : ARCH ne prend jamais les contrôles, ne donne jamais d'ordres sans laisser le choix au Node-0. Toute future réplique doit passer ce test.
   </div>
 </article>
 
 <p class="footer-note page-break" style="page-break-before: always;">
-  Zero Archive — Lore Screenplay · v0.7 · 2026-07-07<br />
+  Zero Archive, Lore Screenplay · v0.7 · 2026-07-07<br />
   Source vérité textes : src/i18n/locales/en.ts · tutorialCatalog.ts · ARCHAmbientCatalog.ts<br />
-  Document interne — ne pas confondre avec textes localisés FR in-game.
+  Document interne, ne pas confondre avec textes localisés FR in-game.
 </p>
 
 </body>

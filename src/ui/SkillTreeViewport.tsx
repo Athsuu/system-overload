@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import {
   getPlaceholderNode,
@@ -26,6 +26,9 @@ import {
   SKILL_POPOVER_WIDTH,
 } from './skillTreePopoverPlacement';
 import { useSkillTreePan } from './useSkillTreePan';
+import { useDevSkillTreeHexGrid } from '../dev/useDevSkillTreeHexGrid';
+import type { HexGridHoverInfo } from '../store/skillTreeHexGrid';
+import { SkillTreeHexGridTooltip } from './SkillTreeHexGridTooltip';
 
 interface SkillTreeViewportProps {
   selectedId: TreeNodeId | null;
@@ -61,6 +64,12 @@ export function SkillTreeViewport({
 }: SkillTreeViewportProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const upgrades = useGameStore((state) => state.upgrades);
+  const showHexGrid = useDevSkillTreeHexGrid();
+  const [hexHover, setHexHover] = useState<{
+    info: HexGridHoverInfo;
+    x: number;
+    y: number;
+  } | null>(null);
   const { transform, isGrabbing, onPointerDown, onPointerMove, onPointerUp, zoomIn, zoomOut, resetView } =
     useSkillTreePan(viewportRef);
 
@@ -75,6 +84,11 @@ export function SkillTreeViewport({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClearSelection, selectedId]);
+
+  useEffect(() => {
+    if (showHexGrid) return;
+    setHexHover(null);
+  }, [showHexGrid]);
 
   const popoverConfig = (() => {
     if (!selectedId) return null;
@@ -134,6 +148,10 @@ export function SkillTreeViewport({
             selectedId={selectedId}
             onSelectSkill={onSelectSkill}
             onClearSelection={onClearSelection}
+            showHexGrid={showHexGrid}
+            onHexGridHover={(info, clientX, clientY) => {
+              setHexHover(info ? { info, x: clientX, y: clientY } : null);
+            }}
           />
         </div>
 
@@ -170,6 +188,10 @@ export function SkillTreeViewport({
         </button>
         <ZoomButton label="+" onClick={zoomIn} title="Zoom in" />
       </div>
+
+      {showHexGrid && hexHover && (
+        <SkillTreeHexGridTooltip info={hexHover.info} x={hexHover.x} y={hexHover.y} />
+      )}
     </>
   );
 }

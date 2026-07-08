@@ -15,12 +15,16 @@ import {
   getNodeHexStartAngle,
 } from './skillTreeGeometry';
 import { SkillTreeNode } from './SkillTreeNode';
+import { SkillTreeHexGridOverlay } from './SkillTreeHexGridOverlay';
 import { getEdgeVisual } from './skillTreeTheme';
+import type { HexGridHoverInfo } from '../store/skillTreeHexGrid';
 
 interface SkillTreeProps {
   selectedId: TreeNodeId | null;
   onSelectSkill: (id: TreeNodeId) => void;
   onClearSelection: () => void;
+  showHexGrid?: boolean;
+  onHexGridHover?: (info: HexGridHoverInfo | null, clientX: number, clientY: number) => void;
 }
 
 function resolveEdgeParentId(parentId: TreeNodeId | 'root'): TreeNodeId | 'core' {
@@ -28,14 +32,19 @@ function resolveEdgeParentId(parentId: TreeNodeId | 'root'): TreeNodeId | 'core'
   return parentId;
 }
 
-export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: SkillTreeProps) {
+export function SkillTree({
+  selectedId,
+  onSelectSkill,
+  onClearSelection,
+  showHexGrid = false,
+  onHexGridHover,
+}: SkillTreeProps) {
   const bankShards = useGameStore((state) => state.bankShards);
   const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
   const upgrades = useGameStore((state) => state.upgrades);
 
   const revealedNodes = getRevealedGraphNodes(upgrades);
   const upgradeNodes = revealedNodes.filter((node) => node.kind === 'upgrade');
-  const placeholderNodes = revealedNodes.filter((node) => node.kind === 'placeholder');
 
   return (
     <svg
@@ -80,6 +89,10 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
         ry={420}
         fill="url(#ambientHub)"
       />
+
+      {showHexGrid && onHexGridHover && (
+        <SkillTreeHexGridOverlay onHoverChange={onHexGridHover} />
+      )}
 
       {revealedNodes.map((node) => {
         if (node.parentId === 'root') return null;
@@ -157,19 +170,6 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
           />
         );
       })}
-
-      {placeholderNodes.map((node) => (
-        <SkillTreeNode
-          key={node.id}
-          x={node.position.x}
-          y={node.position.y}
-          branch={node.branch}
-          level={0}
-          state="reserved"
-          isSelected={selectedId === node.id}
-          onSelect={() => onSelectSkill(node.id)}
-        />
-      ))}
 
     </svg>
   );

@@ -1,4 +1,4 @@
-/** Wave-indexed scaling tables (regular waves 1–10, boss wave 11). */
+/** Wave-indexed scaling (local wave 1–10 per cycle, effective index via cycleScaling). */
 
 export const BOSS_WAVE_INDEX = 11;
 export const BOSS_HP_MULT = 6.5;
@@ -13,35 +13,58 @@ const WAVE_SPEED_MULTIPLIER: readonly number[] = [
   1.0, 1.04, 1.08, 1.12, 1.16, 1.2, 1.24, 1.28, 1.32, 1.35,
 ];
 
-function clampWaveIndex(waveIndex: number): number {
-  return Math.max(1, Math.min(10, Math.floor(waveIndex)));
+const HP_GROWTH_BEYOND_TABLE = 1.08;
+const SPEED_GROWTH_BEYOND_TABLE = 1.04;
+const LEAK_GROWTH_BEYOND_TABLE = 1.06;
+
+function resolveScalingIndex(scalingWaveIndex: number): number {
+  return Math.max(1, Math.floor(scalingWaveIndex));
 }
 
-export function getWaveHpMultiplier(waveIndex: number, isBoss = false): number {
-  const mult = WAVE_HP_MULTIPLIER[clampWaveIndex(waveIndex) - 1] ?? 1;
+function extrapolateTable(
+  table: readonly number[],
+  scalingIndex: number,
+  growth: number,
+): number {
+  const wave = resolveScalingIndex(scalingIndex);
+  if (wave <= table.length) return table[wave - 1] ?? 1;
+  const last = table[table.length - 1] ?? 1;
+  const stepsBeyond = wave - table.length;
+  return last * growth ** stepsBeyond;
+}
+
+export function getWaveHpMultiplier(scalingWaveIndex: number, isBoss = false): number {
+  const mult = extrapolateTable(WAVE_HP_MULTIPLIER, scalingWaveIndex, HP_GROWTH_BEYOND_TABLE);
   if (!isBoss) return mult;
   return mult * BOSS_HP_MULT;
 }
 
-export function getWaveSpeedMultiplier(waveIndex: number, isBoss = false): number {
-  const mult = WAVE_SPEED_MULTIPLIER[clampWaveIndex(waveIndex) - 1] ?? 1;
+export function getWaveSpeedMultiplier(scalingWaveIndex: number, isBoss = false): number {
+  const mult = extrapolateTable(WAVE_SPEED_MULTIPLIER, scalingWaveIndex, SPEED_GROWTH_BEYOND_TABLE);
   if (!isBoss) return mult;
   return mult * BOSS_SPEED_MULT;
 }
 
-export function getWaveShardReward(waveIndex: number, isBoss = false): number {
+export function getWaveShardReward(scalingWaveIndex: number, isBoss = false): number {
   if (isBoss) return BOSS_SHARD_REWARD;
-  return 1 + Math.floor((clampWaveIndex(waveIndex) - 1) / 4);
+  const wave = resolveScalingIndex(scalingWaveIndex);
+  const localInCycle = ((wave - 1) % 10) + 1;
+  return 1 + Math.floor((localInCycle - 1) / 4);
 }
 
-export function getWaveLeakPenalty(waveIndex: number): number {
-  return 18 + clampWaveIndex(waveIndex) * 2;
+export function getWaveLeakPenalty(scalingWaveIndex: number): number {
+  const wave = resolveScalingIndex(scalingWaveIndex);
+  if (wave <= 10) return 18 + wave * 2;
+  const baseAt10 = 18 + 10 * 2;
+  const stepsBeyond = wave - 10;
+  return Math.round(baseAt10 * LEAK_GROWTH_BEYOND_TABLE ** stepsBeyond);
 }
 
-/** Visual size band: 0 = small (waves 1–4), 1 = medium (5–8), 2 = large (9–10). */
-export function getEnemyVisualBand(waveIndex: number): 0 | 1 | 2 {
-  const wave = clampWaveIndex(waveIndex);
-  if (wave <= 4) return 0;
-  if (wave <= 8) return 1;
+/** Visual size band from effective scaling index (repeats pattern within each cycle). */
+export function getEnemyVisualBand(scalingWaveIndex: number): 0 | 1 | 2 {
+  const wave = resolveScalingIndex(scalingWaveIndex);
+  const localInCycle = ((wave - 1) % 10) + 1;
+  if (localInCycle <= 4) return 0;
+  if (localInCycle <= 8) return 1;
   return 2;
 }

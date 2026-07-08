@@ -16,6 +16,7 @@ function FluxDriveToggle() {
 }
 
 function WaveCounter() {
+  const activeCycle = useGameStore((state) => state.activeCycle);
   const waveIndex = useGameStore((state) => state.waveIndex);
   const wavePhase = useGameStore((state) => state.wavePhase);
   const showWaveClear = useGameStore((state) => state.showWaveClear);
@@ -24,8 +25,11 @@ function WaveCounter() {
   const isBoss = wavePhase === 'boss' || waveIndex > REGULAR_WAVE_COUNT;
   const currentWave = Math.min(waveIndex, REGULAR_WAVE_COUNT);
   const label = isBoss
-    ? strings.ui.boss
-    : `${strings.ui.wave} ${currentWave}/${REGULAR_WAVE_COUNT}`;
+    ? strings.ui.cycleBossFormat.replace('{cycle}', String(activeCycle))
+    : strings.ui.cycleWaveFormat
+        .replace('{cycle}', String(activeCycle))
+        .replace('{wave}', String(currentWave))
+        .replace('{max}', String(REGULAR_WAVE_COUNT));
 
   return (
     <div className="pointer-events-none absolute top-6 left-1/2 z-20 -translate-x-1/2 text-center">
