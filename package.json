@@ -1,11 +1,14 @@
 {
   "name": "zero-archive",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:win-portable": "npm run build && node scripts/build-portable.mjs",
+    "electron:dev": "electron .",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -22,6 +25,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
     "oxlint": "^1.71.0",
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.2",
@@ -29,5 +34,29 @@
   },
   "allowScripts": {
     "puppeteer@25.3.0": true
+  },
+  "build": {
+    "appId": "com.zeroarchive.game",
+    "productName": "Zero Archive",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "ZeroArchive-${version}-portable.${ext}"
+    }
   }
 }
