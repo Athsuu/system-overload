@@ -27,13 +27,13 @@ export function applyTimeOverload(
   addOverload(config.passiveHeatPerSec * deltaSeconds * overclockHeatMult, 'time');
 }
 
-export function applyImpactOverload(config: RunConfig, tier: number): void {
+export function applyImpactOverload(config: RunConfig, waveIndex: number): void {
   const now = performance.now();
   recentImpactTimes = recentImpactTimes.filter((t) => now - t < LEAK_BURST_WINDOW_MS);
   const burstIndex = recentImpactTimes.length;
   recentImpactTimes.push(now);
 
-  let penalty = getLeakProgressPenalty(config, tier);
+  let penalty = getLeakProgressPenalty(config, waveIndex);
   if (burstIndex >= 1) {
     penalty *= LEAK_BURST_MULT;
   }

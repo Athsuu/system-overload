@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { ArchChannelLabel, ArchChannelPanel } from './ArchChannelPanel';
 import { ArchGlitchLine, ArchGlitchText } from './ArchGlitchText';
 import { useArchAmbient } from '../tutorial/useArchAmbient';
+import { markArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
 import { isTutorialCoachVisible } from '../tutorial/tutorialCoachVisibility';
@@ -8,13 +10,15 @@ import { useTutorialCoach } from '../tutorial/useTutorialCoach';
 import { useGameStrings } from '../i18n/useGameStrings';
 
 const ARCH_CYAN = '#38bdf8';
+const HUB_AMBIENT_MS = 5000;
 
-function shouldShowAmbient(gameState: string, isSettingsOpen: boolean): boolean {
+function shouldShowHubAmbient(gameState: string, isSettingsOpen: boolean): boolean {
   if (isSettingsOpen) return false;
-  if (gameState === 'PAUSED' || gameState === 'MAIN_MENU') return false;
-  return gameState === 'PLAYING' || gameState === 'MENU';
+  if (gameState === 'PAUSED' || gameState === 'MAIN_MENU' || gameState === 'PLAYING') return false;
+  return gameState === 'MENU';
 }
 
+/** ARCH ambient lines on hub screens — still uses the advisory panel. Run uses {@link ArchRunDialogue}. */
 export function ArchAmbient() {
   const gameState = useGameStore((state) => state.gameState);
   const isSettingsOpen = useSettingsStore((state) => state.isOpen);
@@ -22,8 +26,23 @@ export function ArchAmbient() {
   const { activeStep } = useTutorialCoach(tutorialEnabled);
   const strings = useGameStrings();
 
-  const ambientEnabled = shouldShowAmbient(gameState, isSettingsOpen) && !activeStep;
-  const { activeLine, dismissActive } = useArchAmbient(ambientEnabled);
+  const ambientEnabled = shouldShowHubAmbient(gameState, isSettingsOpen) && !activeStep;
+  const { activeLine } = useArchAmbient(ambientEnabled);
+
+  useEffect(() => {
+    if (!ambientEnabled || !activeLine) return;
+    const lineId = activeLine.id;
+    const scope = activeLine.persistScope;
+    const timeoutId = window.setTimeout(() => {
+      markArchAmbientHeard(lineId, scope);
+    }, HUB_AMBIENT_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeLine?.id, activeLine?.persistScope, ambientEnabled]);
+
+  const dismissActive = () => {
+    if (!activeLine) return;
+    markArchAmbientHeard(activeLine.id, activeLine.persistScope);
+  };
 
   if (!ambientEnabled || !activeLine) return null;
 

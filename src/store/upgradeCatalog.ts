@@ -2,45 +2,15 @@ import { getGameStrings } from '../i18n';
 
 export type UpgradeCurrency = 'shards' | 'anchor';
 
-export type UpgradeId =
-  | 'node0Boot'
-  | 'starterNodes'
-  | 'nodeReach'
-  | 'coolingPower'
-  | 'heatShield'
-  | 'criticalThreshold'
-  | 'fluxThrottle'
-  | 'purgeReach'
-  | 'boltDamage'
-  | 'damageAmp'
-  | 'fireRate'
-  | 'killBonus'
-  | 'shardYield'
-  | 'spawnThrottle'
-  | 'containment'
-  | 'fluxDrive'
-  | 'overclock';
+export type UpgradeId = 'node0Boot' | 'purgeStrike' | 'threadCoolant' | 'killBreachRelief';
 
 export type SkillState = 'locked' | 'available' | 'unaffordable' | 'maxed' | 'reserved';
 
 export interface UpgradeLevels {
   node0Boot: number;
-  starterNodes: number;
-  nodeReach: number;
-  coolingPower: number;
-  heatShield: number;
-  criticalThreshold: number;
-  fluxThrottle: number;
-  purgeReach: number;
-  boltDamage: number;
-  damageAmp: number;
-  fireRate: number;
-  killBonus: number;
-  shardYield: number;
-  spawnThrottle: number;
-  containment: number;
-  fluxDrive: number;
-  overclock: number;
+  purgeStrike: number;
+  threadCoolant: number;
+  killBreachRelief: number;
 }
 
 export interface UpgradeRequirement {
@@ -64,36 +34,43 @@ export const ANCHOR_FRAGMENTS_PER_BOSS = 1;
 export const BOSS_VICTORY_SHARD_BONUS = 25;
 
 export const COST_NODE0_BOOT = [5] as const;
-export const COST_STARTER_5 = [8, 15, 25, 40, 60] as const;
-export const COST_STARTER_3 = [10, 25, 50] as const;
-export const COST_STANDARD_3 = [20, 45, 90] as const;
-export const COST_STANDARD_2 = [25, 55] as const;
-export const COST_PREMIUM_3 = [80, 180, 350] as const;
-export const COST_PREMIUM_2 = [120, 280] as const;
-export const COST_PREMIUM_LONG_3 = [100, 220, 400] as const;
-export const COST_CAPSTONE_SHARD = [300] as const;
-export const COST_CAPSTONE_ANCHOR = [1] as const;
-export const COST_CAPSTONE_ANCHOR_2 = [2] as const;
-export const COST_OVERCLOCK = [1] as const;
+
+/** prix(n) = ceil(5 × 1.18^(n−1)) for n = 1…10 */
+export const PURGE_STRIKE_DAMAGE_PER_LEVEL = 3;
+export const PURGE_STRIKE_MAX_LEVEL = 10;
+export const PURGE_STRIKE_COST_GROWTH = 1.18;
+export const PURGE_STRIKE_COST_BASE = 5;
+
+function buildShardCostCurve(base: number, growth: number, levels: number): readonly number[] {
+  return Array.from({ length: levels }, (_, index) => Math.ceil(base * growth ** index));
+}
+
+export const COST_PURGE_STRIKE = buildShardCostCurve(
+  PURGE_STRIKE_COST_BASE,
+  PURGE_STRIKE_COST_GROWTH,
+  PURGE_STRIKE_MAX_LEVEL,
+);
+
+export const THREAD_COOLANT_MAX_LEVEL = 10;
+export const THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL = 0.14;
+export const COST_THREAD_COOLANT = COST_PURGE_STRIKE;
+
+export const KILL_BREACH_RELIEF_MAX_LEVEL = 10;
+export const KILL_BREACH_RELIEF_PER_LEVEL = 0.1;
+export const KILL_BREACH_RELIEF_COST_BASE = 10;
+export const KILL_BREACH_RELIEF_COST_GROWTH = 1.18;
+
+export const COST_KILL_BREACH_RELIEF = buildShardCostCurve(
+  KILL_BREACH_RELIEF_COST_BASE,
+  KILL_BREACH_RELIEF_COST_GROWTH,
+  KILL_BREACH_RELIEF_MAX_LEVEL,
+);
 
 export const DEFAULT_UPGRADES: UpgradeLevels = {
-  node0Boot: 0,
-  starterNodes: 0,
-  nodeReach: 0,
-  coolingPower: 0,
-  heatShield: 0,
-  criticalThreshold: 0,
-  fluxThrottle: 0,
-  purgeReach: 0,
-  boltDamage: 0,
-  damageAmp: 0,
-  fireRate: 0,
-  killBonus: 0,
-  shardYield: 0,
-  spawnThrottle: 0,
-  containment: 0,
-  fluxDrive: 0,
-  overclock: 0,
+  node0Boot: 1,
+  purgeStrike: 0,
+  threadCoolant: 0,
+  killBreachRelief: 0,
 };
 
 interface UpgradeCatalogEntry {
@@ -111,105 +88,27 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     currency: 'shards',
   },
   {
-    id: 'fireRate',
-    maxLevel: 5,
-    costByLevel: COST_STARTER_5,
+    id: 'purgeStrike',
+    maxLevel: PURGE_STRIKE_MAX_LEVEL,
+    costByLevel: COST_PURGE_STRIKE,
     currency: 'shards',
   },
   {
-    id: 'boltDamage',
-    maxLevel: 5,
-    costByLevel: COST_STARTER_5,
+    id: 'threadCoolant',
+    maxLevel: THREAD_COOLANT_MAX_LEVEL,
+    costByLevel: COST_THREAD_COOLANT,
     currency: 'shards',
   },
   {
-    id: 'damageAmp',
-    maxLevel: 3,
-    costByLevel: COST_STANDARD_3,
+    id: 'killBreachRelief',
+    maxLevel: KILL_BREACH_RELIEF_MAX_LEVEL,
+    costByLevel: COST_KILL_BREACH_RELIEF,
     currency: 'shards',
-  },
-  {
-    id: 'coolingPower',
-    maxLevel: 5,
-    costByLevel: COST_STARTER_5,
-    currency: 'shards',
-  },
-  {
-    id: 'heatShield',
-    maxLevel: 2,
-    costByLevel: COST_STANDARD_2,
-    currency: 'shards',
-  },
-  {
-    id: 'fluxThrottle',
-    maxLevel: 5,
-    costByLevel: COST_STARTER_5,
-    currency: 'shards',
-  },
-  {
-    id: 'criticalThreshold',
-    maxLevel: 1,
-    costByLevel: COST_CAPSTONE_ANCHOR_2,
-    currency: 'anchor',
-  },
-  {
-    id: 'overclock',
-    maxLevel: 1,
-    costByLevel: COST_OVERCLOCK,
-    currency: 'anchor',
-  },
-  {
-    id: 'nodeReach',
-    maxLevel: 3,
-    costByLevel: COST_STARTER_3,
-    currency: 'shards',
-  },
-  {
-    id: 'purgeReach',
-    maxLevel: 1,
-    costByLevel: COST_CAPSTONE_ANCHOR,
-    currency: 'anchor',
-  },
-  {
-    id: 'fluxDrive',
-    maxLevel: 1,
-    costByLevel: COST_CAPSTONE_ANCHOR_2,
-    currency: 'anchor',
-  },
-  {
-    id: 'killBonus',
-    maxLevel: 3,
-    costByLevel: COST_PREMIUM_3,
-    currency: 'shards',
-  },
-  {
-    id: 'shardYield',
-    maxLevel: 3,
-    costByLevel: COST_PREMIUM_3,
-    currency: 'shards',
-  },
-  {
-    id: 'starterNodes',
-    maxLevel: 2,
-    costByLevel: COST_PREMIUM_2,
-    currency: 'shards',
-  },
-  {
-    id: 'spawnThrottle',
-    maxLevel: 3,
-    costByLevel: COST_PREMIUM_LONG_3,
-    currency: 'shards',
-  },
-  {
-    id: 'containment',
-    maxLevel: 1,
-    costByLevel: COST_CAPSTONE_ANCHOR,
-    currency: 'anchor',
   },
 ];
 
-export function isOverclockUnlocked(upgrades: UpgradeLevels): boolean {
-  return upgrades.overclock >= 1;
+export function isOverclockUnlocked(_upgrades: UpgradeLevels): boolean {
+  return false;
 }
 
 export function getUpgradeDefinition(id: UpgradeId): UpgradeDefinition {

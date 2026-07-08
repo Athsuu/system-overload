@@ -497,7 +497,7 @@ const ANCHORED_CARD_WIDTH: Partial<Record<TutorialAnchor, number>> = {
   'flux-drive': 260,
 };
 
-/** Fixed placement for featured / anchored TRACE cards (matches legacy Tailwind anchors). */
+/** Fixed placement for featured / anchored ARCH cards (matches legacy Tailwind anchors). */
 export function measureAnchoredCardPlacement(
   anchor: TutorialAnchor,
   cardHeight = SPOTLIGHT_CARD_ESTIMATED_HEIGHT,
@@ -524,8 +524,8 @@ export function measureAnchoredCardPlacement(
       return fitCardInViewport(32, (viewportH - cardHeight) / 2, maxWidth, cardHeight, viewportW, viewportH);
     case 'vault-shards':
       return fitCardInViewport(
-        (viewportW - maxWidth) / 2,
-        128,
+        Math.max(SPOTLIGHT_VIEWPORT_MARGIN, viewportW - maxWidth - 200),
+        32,
         maxWidth,
         cardHeight,
         viewportW,

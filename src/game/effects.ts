@@ -4,7 +4,7 @@ export interface GameEffect {
   kind: GameEffectKind;
   x: number;
   y: number;
-  tier: number;
+  waveIndex: number;
   isBoss: boolean;
   elapsedMs: number;
   durationMs: number;
@@ -27,7 +27,7 @@ export function pushPurgeHit(
   effects: GameEffect[],
   x: number,
   y: number,
-  tier: number,
+  waveIndex: number,
   isBoss: boolean,
 ): void {
   effects.push(
@@ -35,7 +35,7 @@ export function pushPurgeHit(
       kind: 'purgeHit',
       x,
       y,
-      tier,
+      waveIndex,
       isBoss,
       elapsedMs: 0,
       durationMs: PURGE_HIT_DURATION_MS,
@@ -48,7 +48,7 @@ export function pushDeathEffect(
   effects: GameEffect[],
   x: number,
   y: number,
-  tier: number,
+  waveIndex: number,
   isBoss: boolean,
 ): void {
   effects.push(
@@ -56,7 +56,7 @@ export function pushDeathEffect(
       kind: 'death',
       x,
       y,
-      tier,
+      waveIndex,
       isBoss,
       elapsedMs: 0,
       durationMs: isBoss ? BOSS_DEATH_DURATION_MS : DEATH_DURATION_MS,
@@ -68,7 +68,7 @@ export function pushSpawnFlash(
   effects: GameEffect[],
   x: number,
   y: number,
-  tier: number,
+  waveIndex: number,
   isBoss: boolean,
 ): void {
   effects.push(
@@ -76,7 +76,7 @@ export function pushSpawnFlash(
       kind: 'spawn',
       x,
       y,
-      tier,
+      waveIndex,
       isBoss,
       elapsedMs: 0,
       durationMs: SPAWN_FLASH_DURATION_MS,
@@ -84,13 +84,18 @@ export function pushSpawnFlash(
   );
 }
 
-export function pushFlowEscapeFlash(effects: GameEffect[], x: number, y: number): void {
+export function pushFlowEscapeFlash(
+  effects: GameEffect[],
+  x: number,
+  y: number,
+  waveIndex: number,
+): void {
   effects.push(
     createEffect({
       kind: 'flowEscape',
       x,
       y,
-      tier: 0,
+      waveIndex,
       isBoss: false,
       elapsedMs: 0,
       durationMs: FLOW_ESCAPE_FLASH_MS,

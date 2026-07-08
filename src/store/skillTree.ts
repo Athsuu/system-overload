@@ -1,6 +1,6 @@
 import {
   getUpgradeDefinition,
-  requireMax,
+  requireLevel,
   UPGRADE_CATALOG,
   type UpgradeId,
   type UpgradeRequirement,
@@ -39,8 +39,8 @@ export type TreeParentId = 'root' | TreeNodeId;
 
 export const TREE_CANVAS = { width: 2000, height: 1200 };
 export const HEX_CELL = 90;
-export const NODE_RADIUS = 34;
-export const NODE0_HUB_RADIUS = 56;
+export const NODE_RADIUS = 51;
+export const NODE0_HUB_RADIUS = 84;
 export const NODE_SIZE = NODE_RADIUS * Math.sqrt(3);
 
 export const NODE0_HUB_POSITION = { x: 1000, y: 600 };
@@ -76,46 +76,19 @@ export function getSkillIconBranchMeta(): Record<SkillIconBranch, { label: strin
 
 const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   node0Boot: 'thermique',
-  fireRate: 'attackSpeed',
-  boltDamage: 'degats',
-  damageAmp: 'degats',
-  coolingPower: 'thermique',
-  heatShield: 'thermique',
-  fluxThrottle: 'thermique',
-  criticalThreshold: 'thermique',
-  overclock: 'purgeAoe',
-  purgeReach: 'purgeAoe',
-  fluxDrive: 'purgeAoe',
-  nodeReach: 'purgeAoe',
-  killBonus: 'shards',
-  shardYield: 'shards',
-  starterNodes: 'enemies',
-  spawnThrottle: 'enemies',
-  containment: 'enemies',
+  purgeStrike: 'degats',
+  threadCoolant: 'thermique',
+  killBreachRelief: 'thermique',
 };
 
 const NODE_ICONS: Record<UpgradeId, string> = {
   node0Boot: '0',
-  fireRate: 'S',
-  boltDamage: 'D',
-  damageAmp: '+',
-  coolingPower: 'T',
-  heatShield: 'B',
-  fluxThrottle: 'F',
-  criticalThreshold: 'H',
-  nodeReach: 'P',
-  purgeReach: 'V',
-  fluxDrive: 'F',
-  killBonus: 'K',
-  shardYield: 'Y',
-  starterNodes: 'R',
-  spawnThrottle: 'W',
-  containment: 'C',
-  overclock: 'OC',
+  purgeStrike: '↑',
+  threadCoolant: '◌',
+  killBreachRelief: '◇',
 };
 
 const SKILL_ICON_BRANCH: Partial<Record<UpgradeId, SkillIconBranch>> = {
-  fluxDrive: 'flux',
   node0Boot: 'flux',
 };
 
@@ -158,16 +131,8 @@ export interface PlaceholderNodeDef {
 
 const CX = NODE0_HUB_POSITION.x;
 const CY = NODE0_HUB_POSITION.y;
-const R1 = 118;
-const R2 = 228;
-const R3 = 338;
-const R4 = 448;
 
-function polar(dx: number, dy: number): { x: number; y: number } {
-  return { x: CX + dx, y: CY + dy };
-}
-
-/** Radial skill tree v4 — single root `node0Boot`, children revealed at parent level >= 1. */
+/** Radial skill tree — Node-0 Boot root; branches rebuilt incrementally. */
 export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
   {
     id: 'node0Boot',
@@ -177,237 +142,35 @@ export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
     branch: 'thermique',
   },
   {
-    id: 'fireRate',
+    id: 'purgeStrike',
     kind: 'upgrade',
     parentId: 'node0Boot',
-    position: polar(0, -R1),
-    branch: 'attackSpeed',
-    requires: requireMax('node0Boot'),
-  },
-  {
-    id: 'boltDamage',
-    kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: polar(R1 * 0.87, -R1 * 0.5),
+    position: { x: CX, y: CY - 200 },
     branch: 'degats',
-    requires: requireMax('node0Boot'),
+    requires: requireLevel('node0Boot', 1),
   },
   {
-    id: 'coolingPower',
+    id: 'threadCoolant',
     kind: 'upgrade',
     parentId: 'node0Boot',
-    position: polar(R1 * 0.87, R1 * 0.5),
+    position: { x: CX + 200, y: CY },
     branch: 'thermique',
-    requires: requireMax('node0Boot'),
-  },
-  {
-    id: 'overclock',
-    kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: polar(-R1 * 0.87, -R1 * 0.5),
-    branch: 'purgeAoe',
-    requires: requireMax('node0Boot'),
-  },
-  {
-    id: 'killBonus',
-    kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: polar(-R1 * 0.87, R1 * 0.5),
-    branch: 'shards',
-    requires: requireMax('node0Boot'),
-  },
-  {
-    id: 'starterNodes',
-    kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: polar(0, R1),
-    branch: 'enemies',
-    requires: requireMax('node0Boot'),
-  },
-  {
-    id: 'damageAmp',
-    kind: 'upgrade',
-    parentId: 'fireRate',
-    position: polar(0, -R2),
-    branch: 'degats',
-    requires: requireMax('fireRate'),
-  },
-  {
-    id: 'nodeReach',
-    kind: 'upgrade',
-    parentId: 'boltDamage',
-    position: polar(R2 * 0.87, -R2 * 0.5),
-    branch: 'purgeAoe',
-    requires: requireMax('boltDamage'),
-  },
-  {
-    id: 'heatShield',
-    kind: 'upgrade',
-    parentId: 'coolingPower',
-    position: polar(R2 * 0.87, R2 * 0.5),
-    branch: 'thermique',
-    requires: requireMax('coolingPower'),
-  },
-  {
-    id: 'purgeReach',
-    kind: 'upgrade',
-    parentId: 'overclock',
-    position: polar(-R2 * 0.87, -R2 * 0.5),
-    branch: 'purgeAoe',
-    requires: requireMax('overclock'),
-  },
-  {
-    id: 'shardYield',
-    kind: 'upgrade',
-    parentId: 'killBonus',
-    position: polar(-R2 * 0.87, R2 * 0.5),
-    branch: 'shards',
-    requires: requireMax('killBonus'),
-  },
-  {
-    id: 'spawnThrottle',
-    kind: 'upgrade',
-    parentId: 'starterNodes',
-    position: polar(0, R2),
-    branch: 'enemies',
-    requires: requireMax('starterNodes'),
+    requires: requireLevel('node0Boot', 1),
   },
   {
     id: 'placeholder_01',
     kind: 'placeholder',
-    parentId: 'damageAmp',
-    position: polar(60, -R3),
-    branch: 'degats',
-  },
-  {
-    id: 'placeholder_02',
-    kind: 'placeholder',
-    parentId: 'nodeReach',
-    position: polar(R3 * 0.87, -R3 * 0.5),
-    branch: 'purgeAoe',
-  },
-  {
-    id: 'fluxThrottle',
-    kind: 'upgrade',
-    parentId: 'heatShield',
-    position: polar(R3 * 0.5, R3 * 0.87),
-    branch: 'thermique',
-    requires: requireMax('heatShield'),
-  },
-  {
-    id: 'fluxDrive',
-    kind: 'upgrade',
-    parentId: 'purgeReach',
-    position: polar(-R3 * 0.87, -R3 * 0.5),
-    branch: 'purgeAoe',
-    requires: requireMax('purgeReach'),
-  },
-  {
-    id: 'placeholder_03',
-    kind: 'placeholder',
-    parentId: 'shardYield',
-    position: polar(-R3, R3 * 0.3),
-    branch: 'shards',
-  },
-  {
-    id: 'containment',
-    kind: 'upgrade',
-    parentId: 'spawnThrottle',
-    position: polar(0, R3),
-    branch: 'enemies',
-    requires: requireMax('spawnThrottle'),
-  },
-  {
-    id: 'placeholder_04',
-    kind: 'placeholder',
-    parentId: 'damageAmp',
-    position: polar(-50, -R3 + 20),
-    branch: 'attackSpeed',
-  },
-  {
-    id: 'placeholder_05',
-    kind: 'placeholder',
-    parentId: 'fluxThrottle',
-    position: polar(R3 * 0.9, R3 * 0.45),
+    parentId: 'threadCoolant',
+    position: { x: CX + 300, y: CY - 100 },
     branch: 'thermique',
   },
   {
-    id: 'criticalThreshold',
+    id: 'killBreachRelief',
     kind: 'upgrade',
-    parentId: 'fluxThrottle',
-    position: polar(R3 * 0.55, R3 * 0.95),
+    parentId: 'threadCoolant',
+    position: { x: CX + 300, y: CY + 100 },
     branch: 'thermique',
-    requires: requireMax('fluxThrottle'),
-  },
-  {
-    id: 'placeholder_06',
-    kind: 'placeholder',
-    parentId: 'fluxDrive',
-    position: polar(-R3, -R3 * 0.35),
-    branch: 'purgeAoe',
-  },
-  {
-    id: 'placeholder_07',
-    kind: 'placeholder',
-    parentId: 'containment',
-    position: polar(70, R3 + 40),
-    branch: 'enemies',
-  },
-  {
-    id: 'placeholder_08',
-    kind: 'placeholder',
-    parentId: 'containment',
-    position: polar(-70, R3 + 40),
-    branch: 'enemies',
-  },
-  {
-    id: 'placeholder_09',
-    kind: 'placeholder',
-    parentId: 'placeholder_01',
-    position: polar(120, -R4),
-    branch: 'degats',
-  },
-  {
-    id: 'placeholder_10',
-    kind: 'placeholder',
-    parentId: 'placeholder_02',
-    position: polar(R4 * 0.87, -R4 * 0.5),
-    branch: 'purgeAoe',
-  },
-  {
-    id: 'placeholder_11',
-    kind: 'placeholder',
-    parentId: 'placeholder_03',
-    position: polar(-R4, R4 * 0.35),
-    branch: 'shards',
-  },
-  {
-    id: 'placeholder_12',
-    kind: 'placeholder',
-    parentId: 'criticalThreshold',
-    position: polar(R4 * 0.6, R4 * 0.9),
-    branch: 'thermique',
-  },
-  {
-    id: 'placeholder_13',
-    kind: 'placeholder',
-    parentId: 'placeholder_06',
-    position: polar(-R4, -R4 * 0.4),
-    branch: 'purgeAoe',
-  },
-  {
-    id: 'placeholder_14',
-    kind: 'placeholder',
-    parentId: 'placeholder_07',
-    position: polar(130, R4),
-    branch: 'enemies',
-  },
-  {
-    id: 'placeholder_15',
-    kind: 'placeholder',
-    parentId: 'placeholder_08',
-    position: polar(-130, R4),
-    branch: 'enemies',
+    requires: requireLevel('threadCoolant', 1),
   },
 ];
 

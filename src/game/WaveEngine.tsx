@@ -56,13 +56,10 @@ function trySpawnFromGroup(
   if (nodes.length >= getWaveMaxAlive(spawnGroup.maxAlive, config)) return;
 
   const spawned = spawnEnemyOnEdge(bounds, config, {
-    tier: spawnGroup.tier,
     waveIndex: runtime.waveIndex,
     isBoss: waveDef.isBoss,
-    bossHpMult: waveDef.bossHpMult ?? 1,
-    bossSpeedMult: waveDef.bossSpeedMult ?? 1,
   });
-  pushSpawnFlash(effects, spawned.x, spawned.y, spawned.tier, spawned.isBoss ?? false);
+  pushSpawnFlash(effects, spawned.x, spawned.y, spawned.waveIndex, spawned.isBoss ?? false);
   nodes.push(spawned);
   runtime.spawnedInGroup += 1;
 }

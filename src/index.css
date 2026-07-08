@@ -270,33 +270,31 @@ body {
 
 .so-arch-word {
   position: relative;
-  display: inline-block;
+  display: inline-grid;
   max-width: 100%;
-  overflow: hidden;
-  vertical-align: top;
+  vertical-align: baseline;
 }
 
 .so-arch-word-ghost {
   visibility: hidden;
-  display: block;
+  grid-area: 1 / 1;
   white-space: nowrap;
   text-shadow: none;
   animation: none;
 }
 
 .so-arch-word-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
+  grid-area: 1 / 1;
   white-space: nowrap;
-}
-
-.so-arch-heavy .so-arch-glitch-inner {
-  animation: so-arch-split-heavy 4.5s steps(1, end) infinite;
 }
 
 .so-arch-dialogue {
   font-style: italic;
+  line-height: 1.55;
+}
+
+.so-arch-heavy .so-arch-glitch-inner {
+  animation: so-arch-split-heavy 4.5s steps(1, end) infinite;
 }
 
 .so-arch-title {
@@ -308,7 +306,7 @@ body {
   animation: so-arch-label-flicker 6.5s ease-in-out infinite;
 }
 
-/* TRACE advisory channel — panel shell */
+/* ARCH advisory channel — panel shell */
 @keyframes so-arch-frame-glow {
   0%,
   100% {
@@ -403,7 +401,8 @@ body {
 .so-arch-panel-body {
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .so-arch-panel-fx {
@@ -451,6 +450,119 @@ body {
 .so-arch-relay-readout {
   position: relative;
   text-align: left;
+}
+
+/* ARCH in-run relay — no panel, bottom HUD slot (distinct from ARCH tutorial cards) */
+.so-arch-run-dialogue {
+  position: relative;
+  padding: 0 0.5rem 0.25rem;
+  filter: drop-shadow(0 2px 18px rgba(0, 0, 0, 0.72));
+}
+
+.so-arch-run-dialogue-label {
+  animation: so-arch-label-flicker 6.5s ease-in-out infinite;
+}
+
+.so-arch-run-dialogue-body {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.so-arch-run-dialogue-body .so-arch-dialogue {
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.so-arch-run-dialogue-body .so-arch-glitch-inner {
+  color: inherit;
+  text-shadow:
+    -1px 0 rgba(56, 189, 248, 0.38),
+    1px 0 rgba(147, 211, 253, 0.28);
+  animation: so-arch-split-idle 7s steps(1, end) infinite;
+}
+
+.so-arch-typewriter-cursor {
+  display: inline-block;
+  margin-left: 1px;
+  color: rgba(56, 189, 248, 0.75);
+  animation: so-arch-typewriter-blink 0.85s step-end infinite;
+}
+
+@keyframes so-arch-typewriter-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes so-arch-run-dialogue-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  82% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.so-animate-arch-run-dialogue {
+  animation: so-arch-run-dialogue-cycle 5s ease-in-out forwards;
+}
+
+/* Run end — premium panel (victory + meltdown) */
+.so-run-end-panel {
+  position: relative;
+  border-width: 1px;
+  overflow: hidden;
+}
+
+.so-run-end-panel-scanlines {
+  opacity: 0.035;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 255, 255, 0.14) 2px,
+    rgba(255, 255, 255, 0.14) 3px
+  );
+}
+
+.so-run-end-panel--meltdown .so-run-end-panel-scanlines {
+  opacity: 0.05;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 77, 0, 0.18) 2px,
+    rgba(255, 77, 0, 0.18) 3px
+  );
+}
+
+.so-arch-run-end-relay {
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 22rem;
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.45));
+}
+
+.so-arch-panel-tutorial .so-arch-panel-frame {
+  border-color: rgba(197, 160, 89, 0.28);
+}
+
+.so-arch-panel-tutorial .so-arch-channel-label {
+  color: rgba(125, 211, 252, 0.55);
 }
 
 /* Skill tree hub — terminal glitch (CSS only, no per-frame canvas) */
@@ -682,12 +794,13 @@ g.so-skill-tree-node--active {
   will-change: left, top;
 }
 
-/* Main menu — discreet system distress ambiance */
+/* Menu / hub — archive or + chaleur légère (unité avec l'arène) */
 .so-terminal-vignette,
 .so-main-menu-vignette {
   background: radial-gradient(
     ellipse 75% 65% at 50% 45%,
-    rgba(255, 77, 0, 0.09) 0%,
+    rgba(197, 160, 89, 0.05) 0%,
+    rgba(255, 77, 0, 0.03) 45%,
     transparent 65%
   );
   animation: so-terminal-vignette-pulse 4.5s ease-in-out infinite;
@@ -696,7 +809,7 @@ g.so-skill-tree-node--active {
 .so-terminal-vignette--arena {
   background: radial-gradient(
     ellipse 80% 70% at 50% 50%,
-    rgba(255, 77, 0, 0.06) 0%,
+    rgba(255, 77, 0, 0.11) 0%,
     transparent 68%
   );
   animation-duration: 5.5s;

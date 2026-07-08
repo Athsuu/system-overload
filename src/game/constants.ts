@@ -1,9 +1,8 @@
 import { DARK_HEX } from '../theme/darkHexTerminal';
 
-export const PLAYER_RADIUS = 52;
-export const ENEMY_HEX_RADIUS_T0 = 32.5;
-export const ENEMY_HEX_RADIUS_T1 = 40;
-export const ENEMY_HEX_RADIUS_BOSS = 55;
+export const ENEMY_HEX_RADIUS_T0 = 42.25;
+export const ENEMY_HEX_RADIUS_T1 = 52;
+export const ENEMY_HEX_RADIUS_BOSS = 71.5;
 
 export const ARENA_PADDING = 40;
 export const FLASH_DURATION_MS = 200;
@@ -19,9 +18,14 @@ export interface ScreenBounds {
   padding: number;
 }
 
-export function getEnemyHexRadius(tier: number, isBoss = false): number {
+import { getEnemyVisualBand } from './waveScaling';
+
+export function getEnemyHexRadius(waveIndex: number, isBoss = false): number {
   if (isBoss) return ENEMY_HEX_RADIUS_BOSS;
-  return tier === 0 ? ENEMY_HEX_RADIUS_T0 : ENEMY_HEX_RADIUS_T1;
+  const band = getEnemyVisualBand(waveIndex);
+  if (band === 0) return ENEMY_HEX_RADIUS_T0;
+  if (band === 1) return ENEMY_HEX_RADIUS_T1;
+  return ENEMY_HEX_RADIUS_T1 * 1.08;
 }
 
 export function getArenaCenter(screenWidth: number, screenHeight: number): Vec2 {

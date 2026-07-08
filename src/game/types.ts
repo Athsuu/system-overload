@@ -1,11 +1,13 @@
 export interface DissipationNode {
   x: number;
   y: number;
-  flowTargetX: number;
-  flowTargetY: number;
+  vx: number;
+  vy: number;
+  flowDistance: number;
+  distanceTraveled: number;
   hp: number;
   maxHp: number;
-  tier: number;
+  waveIndex: number;
   flashTimer: number;
   satelliteAngle: number;
   hexAngle: number;

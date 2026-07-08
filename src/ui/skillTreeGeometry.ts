@@ -15,7 +15,7 @@ export interface AxialCoord {
 
 export function getNodeHexRadius(id: TreeNodeId | 'core' | 'root'): number {
   if (id === 'core' || id === 'root') return NODE0_HUB_RADIUS * 0.65;
-  if (id === 'node0Boot') return NODE0_HUB_RADIUS * 0.72;
+  if (id === 'node0Boot') return NODE_RADIUS * 1.2;
   return NODE_RADIUS;
 }
 

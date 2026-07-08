@@ -9,7 +9,7 @@ const BAR_GAP = 7;
 export function drawEnemyHpBar(graphics: Graphics, node: DissipationNode): void {
   if (node.maxHp <= 0) return;
 
-  const radius = getEnemyHexRadius(node.tier, node.isBoss ?? false);
+  const radius = getEnemyHexRadius(node.waveIndex, node.isBoss ?? false);
   const barWidth = radius * 1.7;
   const ratio = Math.max(0, Math.min(1, node.hp / node.maxHp));
   const left = node.x - barWidth / 2;

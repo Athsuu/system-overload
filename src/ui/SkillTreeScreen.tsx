@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { GameState } from '../store/useGameStore';
 import type { TreeNodeId } from '../store/skillTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
@@ -16,6 +16,7 @@ interface SkillTreeScreenProps {
 }
 
 export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
+  const screenRef = useRef<HTMLDivElement>(null);
   const [selectedId, setSelectedId] = useState<TreeNodeId | null>(null);
   const strings = useGameStrings();
   const isMenu = mode === 'MENU';
@@ -31,6 +32,7 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
 
   return (
     <div
+      ref={screenRef}
       className="pointer-events-auto absolute inset-0 overflow-hidden"
       style={{ backgroundColor: DARK_HEX.canvasBg }}
     >
@@ -58,9 +60,10 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
           </p>
         )}
 
-        <div className="pointer-events-auto mt-5">
-          <CurrencyBadge />
-        </div>
+      </div>
+
+      <div className="pointer-events-auto absolute top-8 right-8 z-10">
+        <CurrencyBadge containerRef={screenRef} />
       </div>
 
       <SkillTreeViewport
@@ -73,7 +76,7 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
         <div className="pointer-events-auto absolute top-8 left-8">
           <SettingsGearButton />
         </div>
-        <div className="pointer-events-auto absolute right-8 bottom-8">
+        <div className="pointer-events-auto absolute bottom-8 left-1/2 -translate-x-1/2">
           <PlayRunButton />
         </div>
       </div>

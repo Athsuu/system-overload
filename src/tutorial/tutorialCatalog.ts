@@ -6,6 +6,7 @@ import type { TutorialSignals } from './tutorialSignals';
 export type TutorialGroupId = 'menu_intro' | 'run_intro';
 
 export type TutorialStepId =
+  | 'signal_handshake'
   | 'welcome'
   | 'node0_role'
   | 'mission_loop'
@@ -73,6 +74,9 @@ export interface TutorialStep {
   title: string;
   body: string;
   footnote?: string;
+  glitchIntensity?: 'normal' | 'heavy';
+  bodyGlitchChance?: number;
+  titleGlitchChance?: number;
   unlockWhen: (snapshot: TutorialSnapshot) => boolean;
   completeWhen: (snapshot: TutorialSnapshot) => boolean;
 }
@@ -87,8 +91,26 @@ export function buildTutorialSteps(): TutorialStep[] {
 
   return [
     {
-      id: 'welcome',
+      id: 'signal_handshake',
       order: 0,
+      groupId: 'menu_intro',
+      storyBeat: 'hook',
+      display: 'featured',
+      screens: ['MENU'],
+      anchor: 'featured-center',
+      speaker: 'arch',
+      label: strings.arch.signalBufferLabel,
+      title: steps.signalHandshakeTitle,
+      body: T.signalHandshake,
+      glitchIntensity: 'heavy',
+      bodyGlitchChance: 0,
+      titleGlitchChance: 0.08,
+      unlockWhen: () => true,
+      completeWhen: SKIP_ONLY,
+    },
+    {
+      id: 'welcome',
+      order: 1,
       groupId: 'menu_intro',
       storyBeat: 'hook',
       display: 'featured',
@@ -98,12 +120,12 @@ export function buildTutorialSteps(): TutorialStep[] {
       label: ARCH_LABEL,
       title: strings.arch.name,
       body: `${T.archIntro} ${T.welcomeContext}`,
-      unlockWhen: () => true,
+      unlockWhen: (s) => s.dismissedIds.has('signal_handshake'),
       completeWhen: SKIP_ONLY,
     },
     {
       id: 'node0_role',
-      order: 1,
+      order: 2,
       groupId: 'menu_intro',
       storyBeat: 'identity',
       display: 'featured',
@@ -118,7 +140,7 @@ export function buildTutorialSteps(): TutorialStep[] {
     },
     {
       id: 'mission_loop',
-      order: 2,
+      order: 3,
       groupId: 'menu_intro',
       storyBeat: 'mission',
       display: 'spotlight',
@@ -133,7 +155,7 @@ export function buildTutorialSteps(): TutorialStep[] {
     },
     {
       id: 'skill_tree_intro',
-      order: 3,
+      order: 4,
       groupId: 'menu_intro',
       storyBeat: 'growth',
       display: 'spotlight',
@@ -148,12 +170,12 @@ export function buildTutorialSteps(): TutorialStep[] {
     },
     {
       id: 'purge_zone',
-      order: 4,
+      order: 5,
       groupId: 'run_intro',
       storyBeat: 'action',
-      display: 'spotlight',
+      display: 'anchored',
       screens: ['PLAYING'],
-      anchor: 'purge-zone',
+      anchor: 'featured-center',
       speaker: 'arch',
       label: ARCH_LABEL,
       title: steps.purgeZoneTitle,
@@ -163,7 +185,7 @@ export function buildTutorialSteps(): TutorialStep[] {
     },
     {
       id: 'overload',
-      order: 5,
+      order: 6,
       groupId: 'run_intro',
       storyBeat: 'stakes',
       display: 'spotlight',
@@ -178,22 +200,22 @@ export function buildTutorialSteps(): TutorialStep[] {
     },
     {
       id: 'run_shards',
-      order: 6,
+      order: 7,
       groupId: 'run_intro',
       storyBeat: 'reward',
-      display: 'spotlight',
+      display: 'featured',
       screens: ['PLAYING'],
-      anchor: 'run-shards',
+      anchor: 'featured-center',
       speaker: 'arch',
       label: ARCH_LABEL,
-      title: strings.currency.runShardsLabel,
-      body: `${T.shardsWhy} ${T.shardsLoop}`,
+      title: strings.currency.availableShardsLabel,
+      body: T.hexShardsUnified,
       unlockWhen: (s) => s.signals.runsStarted >= 1,
       completeWhen: SKIP_ONLY,
     },
     {
       id: 'overclock',
-      order: 7,
+      order: 8,
       storyBeat: 'risk',
       display: 'spotlight',
       screens: ['PLAYING'],
@@ -202,12 +224,12 @@ export function buildTutorialSteps(): TutorialStep[] {
       label: ARCH_LABEL,
       title: steps.overclockTitle,
       body: T.overclockRisk,
-      unlockWhen: (s) => s.upgrades.overclock >= 1 && s.signals.runsStarted >= 1,
+      unlockWhen: () => false,
       completeWhen: SKIP_ONLY,
     },
     {
       id: 'skill_tree',
-      order: 8,
+      order: 9,
       storyBeat: 'growth',
       display: 'anchored',
       screens: ['UPGRADING'],
@@ -218,20 +240,6 @@ export function buildTutorialSteps(): TutorialStep[] {
       body: T.skillTreeLore,
       unlockWhen: (s) => s.gameState === 'UPGRADING',
       completeWhen: (s) => s.signals.upgradePurchased,
-    },
-    {
-      id: 'vault',
-      order: 9,
-      storyBeat: 'legacy',
-      display: 'anchored',
-      screens: ['MENU'],
-      anchor: 'vault-shards',
-      speaker: 'arch',
-      label: ARCH_LABEL,
-      title: strings.currency.availableShardsLabel,
-      body: T.vaultLore,
-      unlockWhen: (s) => s.bankShards > 0,
-      completeWhen: (s) => s.signals.skillNodeSelected,
     },
     {
       id: 'prestige',
@@ -258,7 +266,7 @@ export function buildTutorialSteps(): TutorialStep[] {
       label: ARCH_LABEL,
       title: strings.hud.fluxDriveLabel,
       body: T.fluxDriveLore,
-      unlockWhen: (s) => s.upgrades.fluxDrive > 0,
+      unlockWhen: () => false,
       completeWhen: (s) => s.signals.fluxDriveToggled,
     },
   ];

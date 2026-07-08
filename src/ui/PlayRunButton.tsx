@@ -21,7 +21,7 @@ export function PlayRunButton() {
       <HexActionButton
         label={strings.ui.startRun}
         onClick={handleStartRun}
-        size="lg"
+        size="hubRun"
         variant="primary"
         className="hover:scale-[1.03]"
       />

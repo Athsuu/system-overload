@@ -21,18 +21,25 @@ export function TerminalBackdrop({ patternId, variant = 'hub' }: TerminalBackdro
   }, []);
 
   const isArena = variant === 'arena';
+  const isHubLike = variant === 'hub' || variant === 'menu';
   const centerY = isArena ? '50%' : '42%';
   const edgeFadeStart = isArena ? '32%' : '40%';
 
   return (
     <div className="pointer-events-none absolute inset-0">
-      <HexGridBackdrop patternId={patternId} width={size.width} height={size.height} showVignette={false} />
+      <HexGridBackdrop
+        patternId={patternId}
+        width={size.width}
+        height={size.height}
+        showVignette={false}
+        gridTone={isArena ? 'arena' : 'hub'}
+      />
       <div
         className={`so-terminal-vignette absolute inset-0 ${isArena ? 'so-terminal-vignette--arena' : ''}`}
         aria-hidden
       />
       <div className="so-terminal-scanlines absolute inset-0" aria-hidden />
-      {!isArena && (
+      {isHubLike && (
         <div
           className="absolute inset-0"
           style={{

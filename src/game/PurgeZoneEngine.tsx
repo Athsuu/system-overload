@@ -88,13 +88,13 @@ export function PurgeZoneEngine({
 
         node.hp -= damage;
         node.flashTimer = FLASH_DURATION_MS;
-        pushPurgeHit(effects, node.x, node.y, node.tier, node.isBoss ?? false);
+        pushPurgeHit(effects, node.x, node.y, node.waveIndex, node.isBoss ?? false);
 
         if (node.hp > 0) continue;
 
         kills += 1;
         handleEnemyKill(node);
-        pushDeathEffect(effects, node.x, node.y, node.tier, node.isBoss ?? false);
+        pushDeathEffect(effects, node.x, node.y, node.waveIndex, node.isBoss ?? false);
         nodes.splice(index, 1);
       }
 

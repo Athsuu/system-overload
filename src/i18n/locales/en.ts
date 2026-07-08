@@ -4,6 +4,8 @@ const ARCH = {
   name: 'ARCH',
   fullName: 'Archive Recovery & Containment Heuristic',
   channelLabel: 'ARCH // ADVISORY CHANNEL',
+  runRelayLabel: 'ARCH // RELAY',
+  signalBufferLabel: 'SIGNAL // RETRYING BUFFER...',
   intro:
     "I'm ARCH — Archive Recovery & Containment Heuristic. I compiled you into quarantine. Listen — we don't have much time.",
   role:
@@ -42,16 +44,20 @@ const LORE = {
   },
   economy: {
     runShards:
-      'Run Shards are stable data fragments salvaged from corrupted processes during a run.',
+      'Hex Shards are stable data fragments salvaged from corrupted processes during a run.',
     vault:
-      'When a run ends, Shards transfer to your vault — currency for repairs between threads.',
+      "When the thread ends, they bank in your vault — spend them on the Skill Tree, ARCH's ongoing model for reinforcing Node-0.",
     hexShards: 'Hex Shards fund permanent Node-0 reconfiguration between runs.',
+    vaultShardsTooltip:
+      'Hex Shards are stable data fragments salvaged from corrupted processes during runs — banked here when each thread ends.',
+    anchorFragments:
+      'Anchoring data torn from the Breach Anchor — only earned when you destroy the boss.',
   },
   skillTree: {
     intro:
       "This hex grid is our best shot — permanent modules between runs. I can't install them. Select a node and you execute the repair.",
     betweenRuns:
-      'Between runs, spend Available Shards on hex nodes. Every upgrade hardens the quarantine before the next breach.',
+      'Between runs, spend Hex Shards on hex nodes. Every upgrade hardens the quarantine before the next breach.',
   },
   fluxDrive: {
     name: 'Flux Drive',
@@ -65,7 +71,7 @@ const LORE = {
   },
   loop: {
     mission:
-      'Stop corrupted processes before they break quarantine. Launch a Run — purge in the arena, salvage Shards from every kill. When the thread ends, spend them on the Skill Tree. I advise. You execute. Each upgrade buys us time toward the Uplink.',
+      'Stop corrupted processes before they break quarantine. Launch a Run — purge in the arena, salvage Hex Shards from every kill. When the thread ends, spend them on the Skill Tree. I advise. You execute. Each upgrade buys us time toward the Uplink.',
   },
   enemies: {
     boss:
@@ -82,10 +88,14 @@ export const EN_STRINGS: GameStrings = {
   runEnd: {
     victoryTitle: 'Breach Contained',
     victorySubtitle: 'Threat contained — Node-0 holds.',
-    victoryArch: "Anchor down. Shards to vault. We bought time — don't waste it.",
+    victoryArch: "Anchor down. Hex Shards to vault. We bought time — don't waste it.",
     meltdownTitle: 'Meltdown',
     meltdownSubtitle: 'Node-0 overloaded — the quarantine thread has failed.',
-    meltdownArch: '…thread lost. Signal—',
+    meltdownArchVariants: [
+      "I caught you in time. Margin was thinner than last time — reinforcing now.",
+      "Still here. Almost lost the thread — I'm not letting that happen again.",
+      "Got you. That was close — closer than I'd like. Reinforcing.",
+    ],
     prestigeUnlocked: LORE.prestige.banner,
     prestigeArch:
       'Deeper layer unlocked. You can rewrite more of the archive than I can reach now.',
@@ -123,12 +133,14 @@ export const EN_STRINGS: GameStrings = {
     fluxDriveOff: '×1 OFF',
   },
   currency: {
-    runShardsLabel: 'Run Shards',
-    availableShardsLabel: 'Available Shards',
+    runShardsLabel: 'Hex Shards',
+    availableShardsLabel: 'Hex Shards',
     anchorFragmentsLabel: 'Anchor Fragments',
-    shardsEarnedSuffix: 'Shards',
+    shardsEarnedSuffix: 'Hex Shards',
     anchorEarnedSuffix: 'Anchor Fragments',
     transferredToVault: 'Transferred to vault',
+    shardsLoreTooltip: LORE.economy.vaultShardsTooltip,
+    anchorLoreTooltip: LORE.economy.anchorFragments,
   },
   pause: {
     title: 'SYSTEM HALT',
@@ -136,12 +148,12 @@ export const EN_STRINGS: GameStrings = {
     resumeLabel: 'Resume',
     abortLabel: 'Abort\nRun',
     settingsLabel: 'Settings',
-    confirmPrompt: 'Abort this run? Shards will transfer to vault.',
+    confirmPrompt: 'Abort this run? Hex Shards will transfer to vault.',
     confirmYes: 'Yes',
     confirmNo: 'No',
     statBreach: 'Breach',
     statWave: 'Wave',
-    statShards: 'Run Shards',
+    statShards: 'Hex Shards',
     escHint: 'Esc · Resume',
   },
   settings: {
@@ -164,6 +176,8 @@ export const EN_STRINGS: GameStrings = {
     },
   },
   tutorial: {
+    signalHandshake:
+      '...noi—se... [ERR_702] Node-0, parse th—is! Send a re—turn code, wak—e up... pl--ea--se... Connection stable. Do not drop.',
     archIntro: ARCH.intro,
     welcomeContext: `${LORE.pitch.hook} ${LORE.world.quarantine} ${LORE.world.seed}`,
     node0Role: `${LORE.node0.identity} ${LORE.node0.threat}`,
@@ -174,6 +188,8 @@ export const EN_STRINGS: GameStrings = {
     overloadGoal: 'Contain the threat before quarantine breaks.',
     shardsWhy: LORE.economy.runShards,
     shardsLoop: LORE.economy.vault,
+    hexShardsUnified:
+      "Hex Shards are stable data fragments salvaged from corrupted processes during a run. When the thread ends, they bank in your vault — spend them on the Skill Tree, ARCH's ongoing model for reinforcing Node-0.",
     overclockRisk: LORE.combat.overclock,
     skillTreeLore: LORE.skillTree.betweenRuns,
     vaultLore: `${LORE.economy.hexShards} ${LORE.economy.vault}`,
@@ -186,9 +202,11 @@ export const EN_STRINGS: GameStrings = {
     bossIncoming: "That's the Breach Anchor — the rupture point. End it.",
     overloadCritical: "Thread pressure critical. I'm losing the channel.",
     firstRun: 'Quarantine thread active. Purge what breaks through.',
+    waveMidpoint: 'Midpoint confirmed. The Archive isn\'t stable yet — keep purging.',
     fluxDrive: 'Flux Drive online. Double speed — double risk. Your call.',
   },
   tutorialSteps: {
+    signalHandshakeTitle: 'INCOMING SIGNAL',
     node0RoleTitle: 'Quarantined Thread',
     missionLoopTitle: 'Contain the Breach',
     skillTreeTitle: 'Skill Tree',
@@ -199,33 +217,20 @@ export const EN_STRINGS: GameStrings = {
   upgrades: {
     node0Boot: {
       name: 'Node-0 Boot',
-      description: 'Initialize the quarantine thread — +1 purge hit damage',
+      description: 'Initialize the quarantine thread — baseline 5 purge hit damage',
     },
-    fireRate: { name: 'Purge Rate', description: '+10% attack speed per level' },
-    boltDamage: { name: 'Purge Power', description: '+5 purge hit damage per level' },
-    damageAmp: { name: 'Damage Amplifier', description: '+10% purge hit damage per level' },
-    coolingPower: { name: 'Coolant', description: '-10% passive Breach per level' },
-    heatShield: { name: 'Heat Shield', description: '-10% impact Breach per level' },
-    fluxThrottle: {
-      name: 'Breach Vent',
-      description: '-0.08% Breach per kill per level (more on higher tiers)',
+    purgeStrike: {
+      name: 'Purge Strike',
+      description: '+3 purge hit damage per rank',
     },
-    criticalThreshold: { name: 'Heat Capacity', description: '+10% meltdown threshold' },
-    nodeReach: { name: 'Purge Radius', description: '+25% purge zone radius per level' },
-    overclock: {
-      name: 'Overclock',
-      description: 'Unlock Overclock in run — Space to surge purge output (Overload builds faster while active)',
+    threadCoolant: {
+      name: 'Thread Coolant',
+      description: '−0.14 passive Overload / sec per rank',
     },
-    purgeReach: { name: 'Purge Reach', description: '+20% purge zone radius' },
-    fluxDrive: {
-      name: 'Flux Drive',
-      description: '×2 simulation speed — purge, enemies, timers, and Breach buildup',
+    killBreachRelief: {
+      name: 'Kill Vent',
+      description: '−0.1% Breach per kill per rank',
     },
-    killBonus: { name: 'Kill Bonus', description: '+1 shard per kill per level' },
-    shardYield: { name: 'Shard Yield', description: '+15% shards per kill per level' },
-    starterNodes: { name: 'Initial Relay', description: '+1 enemy at wave 1 start per level' },
-    spawnThrottle: { name: 'Spawn Throttle', description: '+10% spawn interval per level' },
-    containment: { name: 'Containment', description: '-1 max alive enemies per wave' },
   },
   branches: {
     attackSpeed: 'Attack Speed',

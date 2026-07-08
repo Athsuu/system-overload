@@ -39,6 +39,7 @@ export interface TooltipStatLabels {
 }
 
 export interface TutorialStepText {
+  signalHandshakeTitle: string;
   node0RoleTitle: string;
   missionLoopTitle: string;
   skillTreeTitle: string;
@@ -81,6 +82,8 @@ export interface GameStrings {
     name: string;
     fullName: string;
     channelLabel: string;
+    runRelayLabel: string;
+    signalBufferLabel: string;
     intro: string;
     role: string;
     improvises: string;
@@ -91,7 +94,7 @@ export interface GameStrings {
     victoryArch: string;
     meltdownTitle: string;
     meltdownSubtitle: string;
-    meltdownArch: string;
+    meltdownArchVariants: readonly [string, string, string];
     prestigeUnlocked: string;
     prestigeArch: string;
     anchorFragmentsEarned: string;
@@ -133,6 +136,8 @@ export interface GameStrings {
     shardsEarnedSuffix: string;
     anchorEarnedSuffix: string;
     transferredToVault: string;
+    shardsLoreTooltip: string;
+    anchorLoreTooltip: string;
   };
   pause: {
     title: string;
@@ -168,6 +173,7 @@ export interface GameStrings {
     };
   };
   tutorial: {
+    signalHandshake: string;
     archIntro: string;
     welcomeContext: string;
     node0Role: string;
@@ -178,6 +184,7 @@ export interface GameStrings {
     overloadGoal: string;
     shardsWhy: string;
     shardsLoop: string;
+    hexShardsUnified: string;
     overclockRisk: string;
     skillTreeLore: string;
     vaultLore: string;
@@ -190,6 +197,7 @@ export interface GameStrings {
     bossIncoming: string;
     overloadCritical: string;
     firstRun: string;
+    waveMidpoint: string;
     fluxDrive: string;
   };
   tutorialSteps: TutorialStepText;

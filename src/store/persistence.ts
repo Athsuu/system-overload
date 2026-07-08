@@ -70,11 +70,11 @@ function migrateSkillTreeV3(parsed: LegacySaveData): UpgradeLevels {
   return { ...DEFAULT_UPGRADES };
 }
 
-function migrateLoreV07Upgrades(upgrades: UpgradeLevels, raw: LegacySaveData['upgrades']): UpgradeLevels {
+function migrateLegacyNode0Boot(upgrades: UpgradeLevels, raw: LegacySaveData['upgrades']): UpgradeLevels {
   if (!raw) return upgrades;
-  const legacy = raw as { kernelBoot?: number };
-  if (typeof legacy.kernelBoot !== 'number') return upgrades;
-  const migrated = Math.max(0, Math.min(1, Math.floor(legacy.kernelBoot)));
+  const legacyBoot = (raw as { kernelBoot?: number }).kernelBoot;
+  if (typeof legacyBoot !== 'number') return upgrades;
+  const migrated = Math.max(0, Math.min(1, Math.floor(legacyBoot)));
   if (migrated > upgrades.node0Boot) {
     return { ...upgrades, node0Boot: migrated };
   }
@@ -87,6 +87,12 @@ function migrateSkillTreeV4(upgrades: UpgradeLevels): UpgradeLevels {
     return { ...upgrades, node0Boot: 1 };
   }
   return upgrades;
+}
+
+/** Node-0 Boot is a free baseline — always granted at level 1. */
+function ensureNode0BootBaseline(upgrades: UpgradeLevels): UpgradeLevels {
+  if (upgrades.node0Boot >= 1) return upgrades;
+  return { ...upgrades, node0Boot: 1 };
 }
 
 export function loadSave(): SaveData | null {
@@ -104,10 +110,12 @@ export function loadSave(): SaveData | null {
 
     let bankShards = migrateEconomyV2(rawBankShards, parsed);
     let upgrades = migrateSkillTreeV3(parsed);
-    upgrades = migrateLoreV07Upgrades(upgrades, parsed.upgrades);
+    upgrades = migrateLegacyNode0Boot(upgrades, parsed.upgrades);
     if (needsV4Migration) {
       upgrades = migrateSkillTreeV4(upgrades);
     }
+    const upgradesBeforeBaseline = upgrades;
+    upgrades = ensureNode0BootBaseline(upgrades);
 
     const bankAnchorFragments =
       typeof parsed.bankAnchorFragments === 'number'
@@ -126,7 +134,12 @@ export function loadSave(): SaveData | null {
       skillTreeV4: true,
     };
 
-    if (needsEconomyMigration || needsSkillTreeMigration || needsV4Migration) {
+    if (
+      needsEconomyMigration ||
+      needsSkillTreeMigration ||
+      needsV4Migration ||
+      upgradesBeforeBaseline !== upgrades
+    ) {
       saveGame(saveData);
     }
 
@@ -159,7 +172,9 @@ export function hasProgressToErase(): boolean {
   if (save.bankShards > 0) return true;
   if (save.bankAnchorFragments > 0) return true;
   if (save.prestigeUnlocked || save.prestigeLevel > 0) return true;
-  return Object.values(save.upgrades).some((level) => level > 0);
+  const earnedUpgrades = { ...save.upgrades };
+  delete (earnedUpgrades as Partial<UpgradeLevels>).node0Boot;
+  return Object.values(earnedUpgrades).some((level) => (level as number) > 0);
 }
 
 export function clearSave(): void {

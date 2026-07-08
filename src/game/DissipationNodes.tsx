@@ -52,8 +52,8 @@ export function DissipationNodes({ nodesRef, effectsRef, isPlaying }: Dissipatio
 
         tickEnemyMovement(nodes, bounds, scaleDeltaSeconds(ticker.deltaMS / 1000), (node) => {
           if (isDevInvincible()) return;
-          applyImpactOverload(config, node.tier);
-          pushFlowEscapeFlash(effectsRef.current ?? [], node.x, node.y);
+          applyImpactOverload(config, node.waveIndex);
+          pushFlowEscapeFlash(effectsRef.current ?? [], node.x, node.y, node.waveIndex);
         });
         tickCorruptProcessAnim(nodes, deltaMs);
       }

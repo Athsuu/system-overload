@@ -6,8 +6,6 @@ import {
   getRevealedGraphNodes,
   getSkillIconBranch,
   getUpgradeBranch,
-  isPlaceholderId,
-  type PlaceholderId,
   type TreeNodeId,
   TREE_CANVAS,
 } from '../store/skillTree';
@@ -17,8 +15,6 @@ import {
   getNodeHexStartAngle,
 } from './skillTreeGeometry';
 import { SkillTreeNode } from './SkillTreeNode';
-import { SkillTreePlaceholderTooltip } from './SkillTreePlaceholderTooltip';
-import { SkillTreeTooltip } from './SkillTreeTooltip';
 import { getEdgeVisual } from './skillTreeTheme';
 
 interface SkillTreeProps {
@@ -54,8 +50,9 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
       }}
     >
       <defs>
-        <radialGradient id="ambientRed" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ff4d00" stopOpacity={0.16} />
+        <radialGradient id="ambientHub" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#c5a059" stopOpacity={0.08} />
+          <stop offset="55%" stopColor="#ff4d00" stopOpacity={0.04} />
           <stop offset="100%" stopColor="#ff4d00" stopOpacity={0} />
         </radialGradient>
 
@@ -81,7 +78,7 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
         cy={NODE0_HUB_POSITION.y}
         rx={480}
         ry={420}
-        fill="url(#ambientRed)"
+        fill="url(#ambientHub)"
       />
 
       {revealedNodes.map((node) => {
@@ -147,6 +144,7 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
             y={node.position.y}
             branch={getSkillIconBranch(upgradeId, branch)}
             level={upgrades[upgradeId]}
+            isRoot={upgradeId === 'node0Boot'}
             state={getSkillState(
               upgradeId,
               bankShards,
@@ -173,13 +171,6 @@ export function SkillTree({ selectedId, onSelectSkill, onClearSelection }: Skill
         />
       ))}
 
-      {selectedId && !isPlaceholderId(selectedId) && (
-        <SkillTreeTooltip selectedId={selectedId} />
-      )}
-
-      {selectedId && isPlaceholderId(selectedId) && (
-        <SkillTreePlaceholderTooltip placeholderId={selectedId as PlaceholderId} />
-      )}
     </svg>
   );
 }

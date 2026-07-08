@@ -27,6 +27,7 @@ interface HexGridBackdropProps {
   width: number;
   height: number;
   showVignette?: boolean;
+  gridTone?: 'hub' | 'arena';
 }
 
 export function HexGridBackdrop({
@@ -34,8 +35,10 @@ export function HexGridBackdrop({
   width,
   height,
   showVignette = true,
+  gridTone = 'arena',
 }: HexGridBackdropProps) {
   const paths = buildHexGridPaths(width, height);
+  const gridStroke = gridTone === 'hub' ? DARK_HEX.hexGridHub : DARK_HEX.hexGrid;
 
   return (
     <>
@@ -43,7 +46,7 @@ export function HexGridBackdrop({
         <defs>
           <pattern id={patternId} width="100%" height="100%" patternUnits="userSpaceOnUse">
             <rect width="100%" height="100%" fill={DARK_HEX.canvasBg} />
-            <g fill="none" stroke={DARK_HEX.hexGrid} strokeWidth={1}>
+            <g fill="none" stroke={gridStroke} strokeWidth={1}>
               {paths.map((d, index) => (
                 <path key={index} d={d} />
               ))}

@@ -1,4 +1,7 @@
 import { getGameStrings } from '../i18n';
+import { BOSS_WAVE_INDEX } from '../game/waveScaling';
+import type { ArchAmbientPersistScope } from './archAmbientPersistence';
+import { isArchAmbientHeard } from './archAmbientPersistence';
 import type { TutorialSnapshot } from './tutorialCatalog';
 
 export interface ArchAmbientLine {
@@ -8,6 +11,8 @@ export interface ArchAmbientLine {
   unlockWhen: (snapshot: TutorialSnapshot) => boolean;
   /** Only show after ARCH intro tutorial step is dismissed. */
   requiresArchMet: boolean;
+  /** run = once per run · profile = once per save (hub / legacy). */
+  persistScope: ArchAmbientPersistScope;
 }
 
 export function getArchAmbientLines(): ArchAmbientLine[] {
@@ -19,13 +24,23 @@ export function getArchAmbientLines(): ArchAmbientLine[] {
       text: A.firstRun,
       screens: ['PLAYING'],
       requiresArchMet: true,
-      unlockWhen: (s) => s.signals.runsStarted >= 1 && s.signals.runsStarted <= 1 && s.waveIndex === 1,
+      persistScope: 'run',
+      unlockWhen: (s) => s.signals.runsStarted >= 1 && s.waveIndex === 1 && s.wavePhase !== 'intermission',
+    },
+    {
+      id: 'wave_midpoint',
+      text: A.waveMidpoint,
+      screens: ['PLAYING'],
+      requiresArchMet: true,
+      persistScope: 'run',
+      unlockWhen: (s) => s.waveIndex === 5 && s.wavePhase !== 'intermission',
     },
     {
       id: 'overload_critical',
       text: A.overloadCritical,
       screens: ['PLAYING'],
       requiresArchMet: true,
+      persistScope: 'run',
       unlockWhen: (s) => s.breachProgress >= 80,
     },
     {
@@ -33,25 +48,26 @@ export function getArchAmbientLines(): ArchAmbientLine[] {
       text: A.bossIncoming,
       screens: ['PLAYING'],
       requiresArchMet: true,
-      unlockWhen: (s) => s.waveIndex >= 6 || s.wavePhase === 'boss',
+      persistScope: 'run',
+      unlockWhen: (s) => s.waveIndex >= BOSS_WAVE_INDEX || s.wavePhase === 'boss',
     },
     {
       id: 'flux_drive_ready',
       text: A.fluxDrive,
       screens: ['PLAYING', 'MENU'],
       requiresArchMet: true,
-      unlockWhen: (s) => s.upgrades.fluxDrive > 0,
+      persistScope: 'profile',
+      unlockWhen: () => false,
     },
   ];
 }
 
 export function getActiveArchAmbient(
   snapshot: TutorialSnapshot,
-  heardIds: ReadonlySet<string>,
   archIntroDismissed: boolean,
 ): ArchAmbientLine | null {
   for (const line of getArchAmbientLines()) {
-    if (heardIds.has(line.id)) continue;
+    if (isArchAmbientHeard(line.id, line.persistScope)) continue;
     if (line.requiresArchMet && !archIntroDismissed) continue;
     if (!line.screens.includes(snapshot.gameState)) continue;
     if (!line.unlockWhen(snapshot)) continue;

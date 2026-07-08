@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { isDevInvincible } from '../dev/devFlags';
+import { getBreachCap } from '../game/runConfig';
 import { useGameStore } from '../store/useGameStore';
 
 export function useBreachEndWatcher() {
@@ -12,9 +13,9 @@ export function useBreachEndWatcher() {
     if (gameState !== 'PLAYING') return;
     if (isDevInvincible()) return;
 
-    const breachCap = 100 + upgrades.criticalThreshold * 10;
+    const breachCap = getBreachCap(upgrades);
     if (breachProgress >= breachCap) {
       endRun('defeat_breach');
     }
-  }, [breachProgress, gameState, endRun, upgrades.criticalThreshold]);
+  }, [breachProgress, gameState, endRun, upgrades]);
 }

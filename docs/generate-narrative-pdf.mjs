@@ -224,7 +224,7 @@ const html = `<!DOCTYPE html>
   Textes in-game en anglais · Ce document en français.
   </p>
   <p class="cover-meta">
-    <strong>Kernel</strong> · <strong>TRACE</strong> · <strong>Breach</strong> · <strong>Quarantaine</strong><br />
+    <strong>Node-0</strong> · <strong>ARCH</strong> · <strong>Breach</strong> · <strong>Quarantaine</strong><br />
     Méta progression v4 · Dark Hex Terminal<br />
     Généré depuis <code style="background:transparent;color:#c5a059;">docs/narrative.md</code>
   </p>

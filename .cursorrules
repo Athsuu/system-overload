@@ -43,10 +43,16 @@ Jeu web **roguelite / incrémental / arena survivor** nerveux, à **démarrage i
 - Ne jamais laisser une langue en retard : toute clé ajoutée/modifiée en anglais doit être ajoutée/modifiée en français dans la même tâche (et inversement).
 - En cas de doute narratif sur ARCH : garder une voix cohérente d'entité consciente, à la **première personne** quand ARCH parle d'elle-même (`I/Je`, pas `ARCH` à la 3e personne).
 
+## Règle typographie dialogue (obligatoire)
+
+- **Pas de guillemets décoratifs** (`"` `"` ou `"`) autour des dialogues ARCH, tutoriels, ou textes narratifs affichés au joueur.
+- Les composants glitch / typewriter (`ArchGlitchText`, `ArchTypewriterGlitchText`) ne doivent **pas** encadrer le texte avec des guillemets par défaut (`quote={false}`).
+- Exception : le PO le demande explicitement, ou le contexte l'exige (citation grammaticale d'un terme ou d'une expression dans la phrase elle-même).
+
 ## Règle lexique créateur (obligatoire)
 
 - Le document **`docs/lexique-jeu.md`** est le vocabulaire de référence pour traduire les demandes du product owner (écrans, mécaniques, tutoriels, DA).
-- Lors de toute feature **visible par le joueur** (nouvel écran, bouton, mécanique, branche skill tree, étape ARCH, terme UI) : **ajouter ou mettre à jour** l'entrée correspondante dans `docs/lexique-jeu.md` **dans la même tâche**.
+- Lors de toute feature **visible par le joueur** (nouvel écran, bouton, mécanique, branche skill tree, étape ARCH, terme UI, **dialogue**) : mettre à jour **`docs/lexique-jeu.md`** et/ou **`docs/dialogues.md`** dans la même tâche (voir règle Dialogues).
 - Quand l'utilisateur décrit une idée avec des mots flous, l'agent s'appuie sur ce lexique pour reformuler et confirmer le périmètre avant de coder.
 - Ne pas dupliquer tout le lexique dans `.cursorrules` — pointer vers le fichier.
 
@@ -63,36 +69,45 @@ L'**Archive Zéro** s'effondre sous une vague de **processus corrompus**.
 
 - Le joueur **n'est pas** un opérateur externe qui pilote à distance.
 - Le joueur **est Node-0** : il **exécute** via la **zone de purge** (souris) — pas de sprite joueur visible en arène.
-- Entre les runs, le **skill tree** représente la **réécriture du code** de Node-0 (modules, upgrades Hex Shards).
+- Entre les runs, le **skill tree** matérialise le travail d'**ARCH** sur Node-0 : **optimisation continue** (chaque run) + **corrections d'urgence** (Meltdown = signal critique).
 
 ## Terminologie canonique (UI et communication)
 
 | Concept | Terme canonique (UI anglais) | À ne plus utiliser (ancien lore) |
 |---------|-------------------------------|-----------------------------------|
-| Joueur | **Node-0** | Kernel, Heart, Cœur |
-| Conseil | **ARCH** — *Archive Recovery & Containment Heuristic* | TRACE |
+| Joueur | **Node-0** | Heart, Cœur |
+| Conseil | **ARCH** — *Archive Recovery & Containment Heuristic* | — |
 | Monde | **Zero Archive** | the system (sans nom) |
 | Macguffin | **the Seed** | — |
 | Objectif long terme | **Uplink** (narratif) | — |
-| Module racine | **Node-0 Boot** | Kernel Boot |
+| Nœud racine (skill tree) | **Node-0 Boot** | — |
 | Jauge de défaite | **Breach** / **Overload** | — |
-| Défaite | **Meltdown** | Kernel critical |
+| Défaite | **Meltdown** | — |
 | Victoire | **Breach Contained** | — |
 | Ennemis | **Corrupted processes** | — |
 | Monnaie | **Hex Shards** / **Run Shards** / **Anchor Fragments** | TFLOPS, Cycles |
-| Hub progression | **Skill tree** — réécriture Node-0 | Module Bay |
+| Hub progression | **Skill tree** — optimisations ARCH (continue + urgence Meltdown) | — |
 
 ## Vestiges techniques dans le code
 
 Le code peut encore contenir `core`, `DissipationNode`, `HEART` dans des identifiants internes — **legacy acceptable**.
-Les clés de migration save (`kernelBoot`, `kernel_role`, `trace-ambient`) peuvent subsister **uniquement** dans la couche persistence — pas dans les nouveaux textes UI.
+Les clés de migration save (`kernelBoot`, `kernel_role`, `trace-ambient` dans localStorage) peuvent subsister **uniquement** dans la couche persistence — pas dans les nouveaux textes UI ni commentaires joueur.
 Pour tout **nouveau texte UI** : utiliser **Node-0**, **ARCH**, **Zero Archive**, **the Seed**, **Uplink**.
-**Interdit** de réintroduire un sprite joueur (PNG / hex procédural `PlayerCore`, hub « singularité KERNEL ») sans demande explicite du PO.
+**Interdit** de réintroduire un sprite joueur (PNG / hex procédural, hub « singularité » centrale) sans demande explicite du PO.
 
 ## Bible narrative (référence PO)
 
 - Document canon fusionné : [`docs/narrative.md`](docs/narrative.md) **v0.7**
 - Lexique communication : [`docs/lexique-jeu.md`](docs/lexique-jeu.md)
+
+## Ton narratif (dialogues ARCH, tutos)
+
+- **Urgent, terminal, attaché** — pas heroic fantasy.
+- Le joueur s'attache à **ARCH** et **Node-0** : voix parental/urgente (*I compiled you*), **pas froide ni distante**.
+
+## Dialogues
+
+Tout nouveau dialogue ARCH ajouté au jeu (tutoriel, ambient, écran de fin, ou autre) **DOIT** être ajouté dans [`docs/dialogues.md`](docs/dialogues.md) dans la même tâche, avec sa clé i18n exacte, son texte EN/FR, son déclencheur et son contexte d'apparition. Ne jamais ajouter un dialogue au code sans mettre à jour `docs/dialogues.md` en parallèle.
 
 ---
 
@@ -140,10 +155,11 @@ Pour tout **nouveau texte UI** : utiliser **Node-0**, **ARCH**, **Zero Archive**
 **Fichiers de référence** (consulter plutôt que recopier dans les règles) :
 - **Lexique créateur (communication PO → agent)** : `docs/lexique-jeu.md` — **mettre à jour dans la même tâche** si nouvel écran, mécanique, bouton UI ou étape tuto visible
 - **Bible narrative v0.7** : `docs/narrative.md`
+- **Référence dialogues** : `docs/dialogues.md` — inventaire exhaustif EN/FR + déclencheurs
 - **Textes joueur (i18n)** : `src/i18n/locales/en.ts`, `src/i18n/locales/fr.ts`, `src/i18n/types.ts`
 - Tokens visuels : `src/theme/darkHexTerminal.ts`, `src/ui/skillTreeTheme.ts`
 - Effets visuels / glitch / WebGL : `docs/visual-effects-references.md`
-- Tutoriels ARCH : `src/tutorial/tutorialCatalog.ts`, `src/ui/TutorialCoach.tsx`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`, `src/ui/useAnimatedTutorialLayout.ts`, `src/ui/TutorialTransitionOverlay.tsx`, `src/tutorial/archAmbientCatalog.ts`, `src/ui/ArchAmbient.tsx`
+- Tutoriels ARCH : `src/tutorial/tutorialCatalog.ts`, `src/ui/TutorialCoach.tsx`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`, `src/ui/useAnimatedTutorialLayout.ts`, `src/ui/TutorialTransitionOverlay.tsx`, `src/tutorial/archAmbientCatalog.ts`, `src/tutorial/archAmbientPersistence.ts`, `src/ui/ArchAmbient.tsx`, `src/ui/ArchRunDialogue.tsx`
 - Constantes gameplay Pixi : `src/game/constants.ts`
 - État global : `src/store/useGameStore.ts`
 - Catalogue upgrades : `src/store/upgradeCatalog.ts`, `src/store/skillTree.ts`
@@ -191,18 +207,17 @@ Le store (`src/store/`) fait le pont : métadonnées lues par l'UI et par le gam
 
 - **Action immédiate** : clic « Start Run » → le run commence sans phase de préparation.
 - **Boucle de run** : vagues d'ennemis → arène (zone de purge) → montée de **Breach** / **Overload** (temps, purge, pression) → victoire (Breach Anchor) ou **Meltdown**.
-- **Contrôle direct** : **zone de purge** (souris), skill actif **Overclock** (Space si débloqué), toggle **Flux Drive** (si acheté).
+- **Contrôle direct** : **zone de purge** (souris). **Overclock** (Space) et **Flux Drive** (toggle ×2) sont **prévus** dans le design mais **désactivés dans le build actuel** (`isOverclockUnlocked` → false, tutos/ambient Flux et Overclock en `unlockWhen: false`, `FluxDriveToggle` HUD absent, `getRunTimeScale` → 1) — ne pas documenter comme actifs sans vérifier le code.
 - **Méta-progression** : Hex Shards gagnés en run → skill tree radial permanent (branches Attack Speed, Damage, Heat, Purge AOE, Shards, Enemies, Flux).
 - **Ressenti visé** : nerveux, réactif, lisible malgré le chaos — terminal en surcharge, pas fantasy biologique.
 
 ## Lore à ne pas réintroduire sans demande explicite
 
-- **Kernel** / **TRACE** comme termes UI ou lore (remplacés par **Node-0** / **ARCH**).
 - **Heart / Cœur** comme métaphore centrale.
-- **Sprite joueur** visible en arène (hex doré, PNG shell/core, `PlayerCore`, hub singularité KERNEL).
+- **Sprite joueur** visible en arène (hex doré, PNG shell/core, hub singularité centrale).
 - Gameplay « connexions et redirection de flux » (ancienne vision abandonnée).
 - Gardien externe protégeant un noyau fixe et immobile.
-- **Module Bay**, **Cycles**, **draft entre vagues**, auto-fire / **Flux Bolts** (mécaniques retirées).
+- **Cycles**, **draft entre vagues**, auto-fire / **Flux Bolts** (mécaniques retirées).
 
 ---
 
@@ -215,14 +230,14 @@ Esthétique **immersive sombre** : terminal de l'**Archive Zéro** en surcharge,
 - Grille et nœuds **hexagonaux** ; connexions arête→arête.
 - Glow breach orange : `#ff4d00`, `#ff6b2b`.
 - Fond charbon `#0a0a0f` ; verrouillé rouge sombre `#4a0000`, `#5c1515` ; accents or `#c5a059`.
-- Titres **serif** dorés (ex. Georgia) ; corps sans-serif ; textes UI via **i18n** (EN + FR — voir règle i18n).
+- Titres et UI : police **Rajdhani** (`index.css`, `src/theme/typography.ts`) ; accents or `#c5a059` ; textes via **i18n** (EN + FR — voir règle i18n).
 - **Interdit** : glassmorphism, esthétique Apple, `backdrop-blur` décoratif.
 
 ## Gameplay (PLAYING)
 
 - Même DA : fond `#0a0a0f`, overlay grille hex React, vignette rouge.
 - PixiJS : ennemis en hexagones ; glow orange breach ; zone de purge ambre `#e8b896`.
-- Skill tree : arbre hex SVG radial — module racine **Node-0 Boot** (pas de sprite central PNG).
+- Skill tree : arbre hex SVG radial — nœud racine **Node-0 Boot** (pas de sprite central PNG).
 - HUD minimal : barre Overload fine en bas ; badge Run Shards discret haut-droit (libellés i18n EN/FR).
 - Urgence visuelle breach ≥ 80 %.
 
@@ -243,7 +258,7 @@ Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight p
 - **Pas de clip-path dur** : bords en fondu via masque / dégradé à longue transition.
 - **Pas d'éclaircissement** (lift / bloom / screen blend) sur la zone cible — accent par **dim léger** autour seulement.
 - **Pas de glassmorphism** ni esthétique « popup SaaS » sur les cartes ARCH.
-- Classes CSS canal / glitch ARCH : préfixe `.so-arch-*` (pas `.so-trace-*`).
+- Classes CSS canal / glitch ARCH : préfixe `.so-arch-*` uniquement.
 
 ### Animation spotlight (obligatoire entre étapes)
 
@@ -258,7 +273,7 @@ Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight p
 
 - La carte ARCH + boutons **Skip** et **‹ ›** doivent **toujours rester entièrement visibles** dans le viewport (marge 16 px).
 - La carte **ne doit jamais recouvrir** la zone éclairée ni l’élément HUD expliqué — zone d’exclusion = ellipse du spotlight + marge (`CARD_GAP`).
-- Hauteur réservée canonique : **300 px** (`SPOTLIGHT_CARD_ESTIMATED_HEIGHT`) — inclut nav de groupe et footnote.
+- Hauteur réservée canonique : **300 px** (`SPOTLIGHT_CARD_ESTIMATED_HEIGHT`) — inclut nav de groupe si présente.
 - Algorithme : candidats **collés à la cible** (gauche / droite / dessus / dessous, alignés sur l’élément HUD) ; choisir la **plus proche** qui reste visible et ne recouvre pas l’élément expliqué.
 - **Exception Overload** : carte **centrée au milieu de l'écran**, sous la zone HUD (`OVERLOAD_CARD_TOP_OFFSET_PX = 115` dans `tutorialSpotlightDefaults.ts`) ; spotlight sur la jauge en bas.
 - **Réglages canoniques** : positions validées en jeu → `src/tutorial/tutorialSpotlightDefaults.ts` (ne pas disperser les valeurs ailleurs).
@@ -283,8 +298,8 @@ Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight p
 
 ### Textes UI tutoriel
 
-- **Anglais + français** (i18n) : titres, corps, bouton `Skip`, footnotes (`‹ › to browse — Skip when ready.`).
-- Canal carte : **`ARCH // ADVISORY CHANNEL`** (clé i18n `arch.channelLabel`).
+- **Anglais + français** (i18n) : titres, corps, bouton `Skip`.
+- Canal carte : `arch.channelLabel` → **`ARCH // ADVISORY CHANNEL`** (tutoriels, ambient hub, relay in-run).
 - Speaker canonique en run / menu : **ARCH** — voix advisory, ton parental/urgent (*I compiled you*), pas « System » sauf cas exceptionnel documenté.
 
 ---
@@ -295,6 +310,7 @@ Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight p
 - Respecter les conventions existantes du fichier/dossier modifié.
 - Commentaires **uniquement** pour logique mathématique ou géométrie spatiale complexe.
 - Changements **minimalistes** : ne pas refactorer ou « améliorer » du code non demandé.
+- **Ne pas sur-ingénierer** : avant d'ajouter de la logique (hooks, conditions, flags, abstractions), vérifier si le besoin se règle **dans le fichier déjà prévu** (catalogue, constante, token). Ex. tuto sans spotlight → ajuster `display` / `anchor` dans `tutorialCatalog.ts`, pas patcher le coach avec des cas spéciaux. N'ajouter de code transversal que si un changement catalogue **ne suffit pas** — et le dire brièvement au PO si un effet de bord apparaît (ex. pause run).
 - Référencer les fichiers canoniques plutôt que dupliquer leur contenu dans les réponses.
 - **Ajustements game feel (vitesses, dégâts, timings, etc.)** : quand l'utilisateur demande « +X % » ou « -X % », **calculer le résultat** et **écrire la valeur finale** dans les constantes (ex. `38.64 + 13.524 → 52.16`). **Ne pas** laisser de multiplicateur intermédiaire (`* 1.35`, `ENEMY_SPEED_MULT`, etc.) sauf **demande explicite** de l'utilisateur. Les formules runtime liées aux upgrades ou au gameplay (tier, boss, skill tree) restent autorisées.
 
@@ -353,13 +369,15 @@ Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight p
 
 # Anti-patterns à éviter
 
+- Sur-ingénierer une tâche simple (plusieurs fichiers, flags ou conditions) alors qu'une **modification locale** suffit.
 - Expliquer le code ligne par ligne à un utilisateur non technique.
 - Proposer à l'utilisateur d'« ouvrir le fichier X et modifier la ligne Y ».
 - Mélanger plusieurs features non liées dans une seule session sans accord.
 - Installer des libs ou committer sans validation.
 - Violer la séparation UI / Game pour des raisons de convenience.
 - Créer des dizaines de subagents ou rules redondantes.
-- Réintroduire le lore **Kernel**, **TRACE**, **Heart / Cœur à protéger**, sprite joueur PNG/hex, ou « redirection de flux » dans les textes UI ou features sans accord explicite.
+- Réintroduire le lore **Heart / Cœur à protéger**, sprite joueur PNG/hex, ou « redirection de flux » dans les textes UI ou features sans accord explicite.
 - Tutoriel sans **Skip**, fermeture auto sur action gameplay, ou spotlight avec **cadre coloré** autour de la cible.
 - Transition spotlight par **cut / fade complet** entre deux cibles au lieu du **glide 350 ms**.
 - Carte ARCH **hors écran**, **superposée à la cible HUD**, ou **trop loin** de l'élément expliqué (lecture « tuto → regard autour → élément » cassée).
+- Guillemets décoratifs autour des dialogues / tutos ARCH (sauf demande PO ou citation contextuelle).

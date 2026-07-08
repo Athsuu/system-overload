@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { canQuitApp, quitApp } from '../platform/canQuitApp';
-import { hasSave, hasProgressToErase } from '../store/persistence';
+import { hasSave } from '../store/persistence';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { clearProgressionData } from '../store/playerReset';
 import { useGameStore, persistCurrentProgress, resetToFreshPlayer } from '../store/useGameStore';
@@ -40,7 +40,7 @@ export function MainMenuScreen() {
   };
 
   const handleNewGame = () => {
-    if (hasProgressToErase()) {
+    if (saveExists) {
       setConfirmNewGame(true);
       return;
     }
@@ -62,6 +62,7 @@ export function MainMenuScreen() {
     resetToFreshPlayer();
     ensureHubAudioUnlocked();
     setConfirmNewGame(false);
+    setGameState('MENU');
   };
 
   return (

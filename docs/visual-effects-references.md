@@ -41,7 +41,7 @@ PixiJS utilise WebGL en interne. Respecter ces principes :
 - **Supprimer les objets** (`destroy()`) dès qu'ils ne servent plus ; ne pas attendre le GC.
 - **Réutiliser** textures, géométries, VAO — éviter recréer chaque frame.
 - **Budget VRAM** : estimer `pixels × bytes/pixel` ; adapter au `devicePixelRatio` et à la taille fenêtre.
-- **Back buffer plus petit** acceptable pour effets d'arrière-plan (upscale CSS) — pas pour le Kernel/ennemis lisibles.
+- **Back buffer plus petit** acceptable pour effets d'arrière-plan (upscale CSS) — pas pour les ennemis lisibles.
 
 ### Robustesse
 
@@ -61,7 +61,7 @@ PixiJS utilise WebGL en interne. Respecter ces principes :
 ### Texte / titres (menus, Meltdown, victoire)
 
 - Deux pseudo-éléments `::before` / `::after` avec `content: attr(data-text)`.
-- Couleurs breach : cyan `#0ff` / magenta `#f0f` **ou** tokens `darkHexTerminal` (orange `#ff4d00`, ambre).
+- Couleurs breach : tokens `darkHexTerminal` (orange `#ff4d00`) — purge = blanc/cyan `#e8f4f8` / `#22d3ee`, pas orange.
 - Distorsion : `clip-path: inset(...)` + `transform: translate(...)`.
 - Timing : `animation: … infinite steps(2)` ou `steps(3)` — **pas** `ease` (le glitch doit « sauter »).
 - Durée typique : **0.2–0.4 s** ; déclencher sur `:hover`, seuil breach, ou état `Meltdown` — **pas** en permanence sur tout le HUD.
@@ -120,12 +120,15 @@ float b = texture2D(image, vec2(uv.x + offset - chromatic, uv.y)).b;
 
 ## Mapping aesthetic Dark Hex Terminal
 
-| Effet glitch | Token / couleur projet |
-|--------------|------------------------|
-| Urgence / breach | `#ff4d00`, `#ff6b2b` (`DARK_HEX.breach`) |
-| Glow / scanline | `#e8b896` flux atténué |
-| Fond | `#0a0a0f` |
-| Texte HUD | anglais, sans-serif ; titres serif doré `#c5a059` |
+| Rôle visuel | Token / couleur projet |
+|-------------|------------------------|
+| **Purge zone / Node-0 (arène)** | `#e8f4f8` purge (blanc cassé), `#22d3ee` purgeGlow (cyan exécution) — distinct de la Breach |
+| **Urgence / Breach / Meltdown** | `#ff4d00`, `#ff6b2b` (`DARK_HEX.breach`) — jauge Overload, boss, danger uniquement |
+| **Hub / menu** | charbon + or `#c5a059`, grille `hexGridHub` dorée, vignette or/orange légère — **pas de bleu froid** |
+| **Arène** | vignette orange (`.so-terminal-vignette--arena`), unité chaleur avec le hub |
+| **Ennemis corrompus** | `#8b5cf6` violet, `#22d3ee` cyan |
+| **Fond** | `#0a0a0f` / `#131018` |
+| **Texte HUD** | anglais, sans-serif ; titres serif doré `#c5a059` |
 
 **Feel cible** : terminal en surcharge, corruption de signal — pas vaporwave pastel, pas glassmorphism.
 
@@ -135,7 +138,7 @@ float b = texture2D(image, vec2(uv.x + offset - chromatic, uv.y)).b;
 |------|-------------------|-----------|
 | Breach < 80 % | Aucun glitch HUD | — |
 | Breach 80–95 % | Subtle / Scanline léger | CSS overlay React |
-| Breach > 95 % | Classic + RGB split faible | CSS + pulse Kernel Pixi existant |
+| Breach > 95 % | Classic + RGB split faible | CSS + pulse HUD / arène existant |
 | Meltdown | Heavy / Chaos, 0.3–0.5 s puis écran fin | CSS plein écran + flash Pixi |
 
 ---

@@ -23,7 +23,7 @@ interface EffectEngineProps {
 function drawPurgeHit(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = (1 - progress) * 0.85;
-  const baseRadius = getEnemyHexRadius(effect.tier, effect.isBoss);
+  const baseRadius = getEnemyHexRadius(effect.waveIndex, effect.isBoss);
   const ringRadius = baseRadius * (0.92 + progress * 0.35);
 
   drawFlatTopHexStroke(
@@ -31,7 +31,7 @@ function drawPurgeHit(graphics: Graphics, effect: GameEffect): void {
     effect.x,
     effect.y,
     ringRadius,
-    DARK_HEX_PIXI.breachGlow,
+    DARK_HEX_PIXI.purgeGlow,
     1.5,
     alpha,
   );
@@ -40,7 +40,7 @@ function drawPurgeHit(graphics: Graphics, effect: GameEffect): void {
     effect.x,
     effect.y,
     ringRadius * 0.88,
-    DARK_HEX_PIXI.breach,
+    DARK_HEX_PIXI.purge,
     0.75,
     alpha * 0.55,
   );

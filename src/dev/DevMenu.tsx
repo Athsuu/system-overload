@@ -7,6 +7,7 @@ import {
   devForceVictoryBoss,
   devMaxAllUpgrades,
   devResetToNewPlayer,
+  devResetArchDialogues,
   devResetTutorial,
   devResetUpgrades,
   devSetBreachProgress,
@@ -14,9 +15,11 @@ import {
   devToggleInvincible,
   devTogglePrestigeUnlocked,
   devToggleShowEnemyHpBars,
+  devToggleSpeed2x,
   devWipeProgress,
 } from './devActions';
 import { DevUpgradePanel } from './DevUpgradePanel';
+import { DevRunSimPanel } from './DevRunSimPanel';
 
 const GAME_STATES: GameState[] = ['MAIN_MENU', 'MENU', 'PLAYING', 'PAUSED', 'RUN_END', 'UPGRADING', 'GAME_OVER'];
 
@@ -47,6 +50,7 @@ export function DevMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [invincible, setInvincible] = useState(false);
   const [enemyHpBars, setEnemyHpBars] = useState(false);
+  const [speed2x, setSpeed2x] = useState(false);
   const gameState = useGameStore((state) => state.gameState);
   const breachProgress = useGameStore((state) => state.breachProgress);
   const bankShards = useGameStore((state) => state.bankShards);
@@ -66,7 +70,7 @@ export function DevMenu() {
   }, []);
 
   return (
-    <div className="pointer-events-auto fixed bottom-4 left-4 z-50 font-sans">
+    <div className="pointer-events-auto fixed right-4 bottom-4 z-50 flex flex-col items-end font-sans">
       {!isOpen && (
         <button
           type="button"
@@ -101,6 +105,7 @@ export function DevMenu() {
             <p>Prestige : {prestigeUnlocked ? 'unlocked' : 'locked'}</p>
             <p>Invincible : {invincible ? 'ON' : 'OFF'}</p>
             <p>Enemy HP : {enemyHpBars ? 'ON' : 'OFF'}</p>
+            <p>Vitesse : {speed2x ? '×2' : '×1'}</p>
           </div>
 
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Run debug</p>
@@ -110,6 +115,9 @@ export function DevMenu() {
             </DevButton>
             <DevButton onClick={() => setEnemyHpBars(devToggleShowEnemyHpBars())}>
               Enemy HP {enemyHpBars ? 'ON' : 'OFF'}
+            </DevButton>
+            <DevButton onClick={() => setSpeed2x(devToggleSpeed2x())}>
+              Vitesse ×2 {speed2x ? 'ON' : 'OFF'}
             </DevButton>
           </div>
 
@@ -145,6 +153,22 @@ export function DevMenu() {
             <DevButton onClick={() => devForceVictoryBoss()}>Victory boss</DevButton>
           </div>
 
+          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Tutoriel</p>
+          <p className="mb-2 text-[10px] text-white/30">
+            Réaffiche les cartes ARCH depuis le début (hub). Ferme ce menu — la carte apparaît derrière.
+          </p>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <DevButton
+              onClick={() => {
+                devResetTutorial();
+                setIsOpen(false);
+              }}
+            >
+              Reset tutoriel
+            </DevButton>
+            <DevButton onClick={() => devResetArchDialogues()}>Reset dialogues run</DevButton>
+          </div>
+
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Progression</p>
           <p className="mb-2 text-[10px] text-white/30">
             « Reset nouveau joueur » efface tout (Shards, skill tree, audio 50 %, vue skill tree).
@@ -153,13 +177,17 @@ export function DevMenu() {
             <DevButton onClick={() => devMaxAllUpgrades()}>Max upgrades</DevButton>
             <DevButton onClick={() => devTogglePrestigeUnlocked()}>Toggle prestige</DevButton>
             <DevButton onClick={() => devResetUpgrades()}>Reset upgrades</DevButton>
-            <DevButton onClick={() => devResetTutorial()}>Reset tutorial</DevButton>
             <DevButton onClick={() => devWipeProgress()} variant="danger">
               Wipe save
             </DevButton>
             <DevButton onClick={() => devResetToNewPlayer()} variant="danger">
               Reset nouveau joueur
             </DevButton>
+          </div>
+
+          <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Simulation run</p>
+          <div className="mb-4">
+            <DevRunSimPanel />
           </div>
 
           <p className="mb-2 text-[10px] tracking-wider text-white/40 uppercase">Skill Tree</p>

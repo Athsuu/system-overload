@@ -1,11 +1,12 @@
 import type { SkillState } from '../store/upgradeCatalog';
 import type { SkillIconBranch } from '../store/skillTree';
 import { NODE_RADIUS } from '../store/skillTree';
+import { getNodeHexRadius } from './skillTreeGeometry';
 import { playHubSfx } from '../audio/hubAudio';
 import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
 import { hexagonPoints } from './skillTreeGeometry';
 import { SkillTreeBranchGlyph } from './skillTreeBranchIcons';
-import { getNodeVisualState, SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { getNodeVisualState, getRootNodeVisualState, SKILL_TREE_VISUAL } from './skillTreeTheme';
 
 interface SkillTreeNodeProps {
   x: number;
@@ -14,6 +15,7 @@ interface SkillTreeNodeProps {
   level: number;
   state: SkillState;
   isSelected: boolean;
+  isRoot?: boolean;
   onSelect: () => void;
 }
 
@@ -24,10 +26,13 @@ export function SkillTreeNode({
   level,
   state,
   isSelected,
+  isRoot = false,
   onSelect,
 }: SkillTreeNodeProps) {
-  const radius = NODE_RADIUS;
-  const visual = getNodeVisualState(state, isSelected, level);
+  const radius = isRoot ? getNodeHexRadius('node0Boot') : NODE_RADIUS;
+  const visual = isRoot
+    ? getRootNodeVisualState(isSelected, level)
+    : getNodeVisualState(state, isSelected, level);
   const isLocked = state === 'locked';
   const isReserved = state === 'reserved';
 

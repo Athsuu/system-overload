@@ -64,7 +64,7 @@ export function isEnemyInPurgeZone(
   purgeY: number,
   purgeRadius: number,
 ): boolean {
-  const enemyR = getEnemyHexRadius(node.tier, node.isBoss ?? false);
+  const enemyR = getEnemyHexRadius(node.waveIndex, node.isBoss ?? false);
   const dx = node.x - purgeX;
   const dy = node.y - purgeY;
   return Math.hypot(dx, dy) <= purgeRadius + enemyR * 0.35;
@@ -90,7 +90,7 @@ function drawPurgeScanlines(
     graphics.lineTo(drawX + halfWidth, y);
   }
 
-  graphics.stroke({ color: DARK_HEX_PIXI.breachGlow, width: 1, alpha: lineAlpha });
+  graphics.stroke({ color: DARK_HEX_PIXI.purgeGlow, width: 1, alpha: lineAlpha });
 }
 
 /** Anneau unique + scanlines — tremblement visuel uniquement (hitbox inchangée). */
@@ -107,11 +107,11 @@ export function drawPurgeZone(
   const drawX = x + shake.offsetX;
   const drawY = y + shake.offsetY;
   const drawRadius = radius * shake.ringScale;
-  const alpha = 0.36 + flash * 0.5;
+  const alpha = 0.42 + flash * 0.48;
   const width = 1.2 + flash * 0.9;
 
   drawPurgeScanlines(graphics, drawX, drawY, drawRadius * 0.98, flash);
 
   graphics.circle(drawX, drawY, drawRadius);
-  graphics.stroke({ color: DARK_HEX_PIXI.breachGlow, width, alpha });
+  graphics.stroke({ color: flash > 0.35 ? DARK_HEX_PIXI.purgeGlow : DARK_HEX_PIXI.purge, width, alpha });
 }

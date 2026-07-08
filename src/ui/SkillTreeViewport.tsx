@@ -1,7 +1,30 @@
-import { useRef } from 'react';
-import type { TreeNodeId } from '../store/skillTree';
+import { useEffect, useRef } from 'react';
+import { useGameStore } from '../store/useGameStore';
+import {
+  getPlaceholderNode,
+  getSkillNode,
+  isPlaceholderId,
+  type TreeNodeId,
+} from '../store/skillTree';
+import { type UpgradeId } from '../store/upgradeCatalog';
+import { getUpgradeTooltipLines } from './upgradeTooltipStats';
 import { SkillTree } from './SkillTree';
 import { SkillTreeGlitchOverlay } from './SkillTreeGlitchOverlay';
+import {
+  PLACEHOLDER_TOOLTIP_TITLE_ID,
+  SkillTreePlaceholderTooltip,
+} from './SkillTreePlaceholderTooltip';
+import {
+  getSkillTreeTooltipHeight,
+  SKILL_TREE_TOOLTIP_TITLE_ID,
+  SkillTreeTooltip,
+} from './SkillTreeTooltip';
+import { SkillTreePopover } from './SkillTreePopover';
+import {
+  PLACEHOLDER_POPOVER_HEIGHT,
+  PLACEHOLDER_POPOVER_WIDTH,
+  SKILL_POPOVER_WIDTH,
+} from './skillTreePopoverPlacement';
 import { useSkillTreePan } from './useSkillTreePan';
 
 interface SkillTreeViewportProps {
@@ -37,8 +60,51 @@ export function SkillTreeViewport({
   onClearSelection,
 }: SkillTreeViewportProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const upgrades = useGameStore((state) => state.upgrades);
   const { transform, isGrabbing, onPointerDown, onPointerMove, onPointerUp, zoomIn, zoomOut, resetView } =
     useSkillTreePan(viewportRef);
+
+  useEffect(() => {
+    if (!selectedId) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      onClearSelection();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClearSelection, selectedId]);
+
+  const popoverConfig = (() => {
+    if (!selectedId) return null;
+
+    if (isPlaceholderId(selectedId)) {
+      const node = getPlaceholderNode(selectedId);
+      return {
+        canvasX: node.position.x,
+        canvasY: node.position.y,
+        nodeId: selectedId,
+        width: PLACEHOLDER_POPOVER_WIDTH,
+        height: PLACEHOLDER_POPOVER_HEIGHT,
+        titleId: PLACEHOLDER_TOOLTIP_TITLE_ID,
+        kind: 'placeholder' as const,
+      };
+    }
+
+    const node = getSkillNode(selectedId);
+    const statLines = getUpgradeTooltipLines(selectedId, upgrades);
+    return {
+      canvasX: node.position.x,
+      canvasY: node.position.y,
+      nodeId: selectedId,
+      width: SKILL_POPOVER_WIDTH,
+      height: getSkillTreeTooltipHeight(statLines.length),
+      titleId: SKILL_TREE_TOOLTIP_TITLE_ID,
+      kind: 'upgrade' as const,
+      upgradeId: selectedId,
+    };
+  })();
 
   return (
     <>
@@ -70,9 +136,29 @@ export function SkillTreeViewport({
             onClearSelection={onClearSelection}
           />
         </div>
+
+        {popoverConfig && (
+          <SkillTreePopover
+            viewportRef={viewportRef}
+            transform={transform}
+            canvasX={popoverConfig.canvasX}
+            canvasY={popoverConfig.canvasY}
+            nodeId={popoverConfig.nodeId}
+            popoverWidth={popoverConfig.width}
+            popoverHeight={popoverConfig.height}
+            titleId={popoverConfig.titleId}
+            onDismiss={onClearSelection}
+          >
+            {popoverConfig.kind === 'placeholder' ? (
+              <SkillTreePlaceholderTooltip placeholderId={popoverConfig.nodeId} />
+            ) : (
+              <SkillTreeTooltip selectedId={popoverConfig.upgradeId as UpgradeId} />
+            )}
+          </SkillTreePopover>
+        )}
       </div>
 
-      <div className="pointer-events-auto absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2">
+      <div className="pointer-events-auto absolute bottom-8 left-8 z-20 flex items-center gap-2">
         <ZoomButton label="−" onClick={zoomOut} title="Zoom out" />
         <button
           type="button"

@@ -7,7 +7,7 @@ import {
   getUpgradeDefinition,
   type UpgradeId,
 } from '../store/upgradeCatalog';
-import { getSkillNode, getParentRequirementLabel, getSkillIconBranch, getUpgradeBranch, NODE_RADIUS } from '../store/skillTree';
+import { getSkillNode, getParentRequirementLabel, getSkillIconBranch, getUpgradeBranch } from '../store/skillTree';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { playHubSfx } from '../audio/hubAudio';
 import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
@@ -17,13 +17,14 @@ import { SkillBranchIcon } from './skillTreeBranchIcons';
 import { SKILL_TREE_VISUAL } from './skillTreeTheme';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 
-const TOOLTIP_WIDTH = 300;
-const TOOLTIP_OFFSET_Y = 16;
 const STAT_GREEN = '#4ade80';
+export const SKILL_TREE_TOOLTIP_TITLE_ID = 'skill-tree-popover-title';
 
-interface SkillTreeTooltipProps {
-  selectedId: UpgradeId;
+export function getSkillTreeTooltipHeight(statLineCount: number): number {
+  return getTooltipHeight(statLineCount);
 }
+
+export const SKILL_TREE_POPOVER_WIDTH = 300;
 
 function getPurchaseButtonStyle(isAvailable: boolean, isAnchor: boolean): CSSProperties {
   if (isAvailable) {
@@ -66,6 +67,10 @@ function StatRow({
   );
 }
 
+interface SkillTreeTooltipProps {
+  selectedId: UpgradeId;
+}
+
 export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
   const bankShards = useGameStore((state) => state.bankShards);
   const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
@@ -92,14 +97,11 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
   const balance = isAnchor ? bankAnchorFragments : bankShards;
   const costProgress = isMaxed ? 100 : Math.min(100, (balance / Math.max(cost, 1)) * 100);
   const statLines = getUpgradeTooltipLines(selectedId, upgrades);
-  const tooltipHeight = getTooltipHeight(statLines.length);
   const branch = getUpgradeBranch(selectedId);
 
   useEffect(() => {
     playOneShotAnimation(panelRef.current, 'so-animate-slide-up');
   }, [selectedId, level]);
-
-  const { x, y } = skillNode.position;
 
   const handlePurchase = (event: MouseEvent<HTMLButtonElement>) => {
     ensureHubAudioUnlocked();
@@ -109,23 +111,16 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
   };
 
   return (
-    <foreignObject
-      x={x - TOOLTIP_WIDTH / 2}
-      y={y - NODE_RADIUS - tooltipHeight - TOOLTIP_OFFSET_Y}
-      width={TOOLTIP_WIDTH}
-      height={tooltipHeight}
-      style={{ overflow: 'visible' }}
+    <div
+      ref={panelRef}
+      data-skill-tooltip
+      className="pointer-events-auto rounded border px-4 py-3 shadow-[0_0_32px_rgba(255,77,0,0.15)]"
+      style={{
+        backgroundColor: SKILL_TREE_VISUAL.tooltipBg,
+        borderColor: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.tooltipBorder,
+      }}
+      onPointerDown={(event) => event.stopPropagation()}
     >
-      <div
-        ref={panelRef}
-        data-skill-tooltip
-        className="pointer-events-auto rounded border px-4 py-3 shadow-[0_0_32px_rgba(255,77,0,0.15)]"
-        style={{
-          backgroundColor: SKILL_TREE_VISUAL.tooltipBg,
-          borderColor: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.tooltipBorder,
-        }}
-        onPointerDown={(event) => event.stopPropagation()}
-      >
         <div className="flex items-start gap-3">
           <div
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded border text-sm font-bold text-white"
@@ -138,6 +133,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
           </div>
           <div className="min-w-0 flex-1">
             <p
+              id={SKILL_TREE_TOOLTIP_TITLE_ID}
               className="text-[10px] font-semibold tracking-[0.2em] uppercase"
               style={{ color: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.gold }}
             >
@@ -206,7 +202,6 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
             {isMaxed ? strings.ui.max : isAnchor ? strings.ui.purchaseAnchor : strings.ui.purchase}
           </button>
         </div>
-      </div>
-    </foreignObject>
+    </div>
   );
 }

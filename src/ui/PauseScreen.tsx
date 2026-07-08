@@ -10,7 +10,6 @@ import { SettingsPanel } from './SettingsPanel';
 export function PauseScreen() {
   const breachProgress = useGameStore((state) => state.breachProgress);
   const waveIndex = useGameStore((state) => state.waveIndex);
-  const runShards = useGameStore((state) => state.runShards);
   const upgrades = useGameStore((state) => state.upgrades);
   const resumeRun = useGameStore((state) => state.resumeRun);
   const abortRun = useGameStore((state) => state.abortRun);
@@ -74,10 +73,6 @@ export function PauseScreen() {
             <div className="flex flex-col gap-1">
               <span className="text-[9px] text-white/30">{strings.pause.statWave}</span>
               <span className="text-sm text-white/70">{waveIndex}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[9px] text-white/30">{strings.pause.statShards}</span>
-              <span className="text-sm text-white/70">{runShards.toLocaleString()}</span>
             </div>
           </div>
 

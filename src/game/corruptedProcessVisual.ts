@@ -385,7 +385,7 @@ function drawHitFeedback(
 }
 
 export function drawCorruptedProcess(graphics: Graphics, node: DissipationNode): void {
-  const radius = getEnemyHexRadius(node.tier, node.isBoss ?? false);
+  const radius = getEnemyHexRadius(node.waveIndex, node.isBoss ?? false);
   const hpRatio = Math.max(0, node.hp / node.maxHp);
   const isBoss = node.isBoss ?? false;
 
@@ -403,7 +403,7 @@ export function drawCorruptedProcess(graphics: Graphics, node: DissipationNode):
 export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = (1 - progress) * 0.85;
-  const radius = getEnemyHexRadius(effect.tier, effect.isBoss) * (0.2 + progress * 0.8);
+  const radius = getEnemyHexRadius(effect.waveIndex, effect.isBoss) * (0.2 + progress * 0.8);
 
   drawRadialFill(graphics, effect.x, effect.y, radius * 0.18, CORE_BLOOM_GRADIENT, alpha);
   drawRotatedFlatTopHexStroke(
@@ -423,7 +423,7 @@ export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): v
 export function drawCorruptDeathEffect(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = 1 - progress;
-  const radius = getEnemyHexRadius(effect.tier, effect.isBoss);
+  const radius = getEnemyHexRadius(effect.waveIndex, effect.isBoss);
 
   drawRadialFill(
     graphics,

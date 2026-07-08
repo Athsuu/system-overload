@@ -19,6 +19,9 @@ interface TutorialCardProps {
   body: string;
   footnote?: string;
   featured: boolean;
+  glitchIntensity?: 'normal' | 'heavy';
+  bodyGlitchChance?: number;
+  titleGlitchChance?: number;
   onSkip: () => void;
   groupNav?: ArchChannelGroupNav;
 }
@@ -29,6 +32,9 @@ function TutorialCard({
   body,
   footnote,
   featured,
+  glitchIntensity = 'normal',
+  bodyGlitchChance,
+  titleGlitchChance,
   onSkip,
   groupNav,
 }: TutorialCardProps) {
@@ -39,10 +45,10 @@ function TutorialCard({
         className={`mt-1.5 font-normal tracking-[0.12em] ${featured ? 'text-lg' : 'text-base'}`}
         style={{ color: ARCH_CYAN }}
       >
-        <ArchGlitchLine text={title} variant="title" />
+        <ArchGlitchLine text={title} variant="title" intensity={glitchIntensity} glitchChance={titleGlitchChance} />
       </h2>
       <p className={`mt-3 leading-relaxed text-white/65 ${featured ? 'text-[14px]' : 'text-[13px]'}`}>
-        <ArchGlitchText text={body} />
+        <ArchGlitchText text={body} intensity={glitchIntensity} glitchChance={bodyGlitchChance} />
       </p>
       {footnote && (
         <p className="mt-3 text-[10px] tracking-[0.12em] text-white/35 uppercase">{footnote}</p>
@@ -96,6 +102,9 @@ export function TutorialCoach() {
       body={displayStep.body}
       footnote={displayStep.footnote}
       featured={isFeatured || displayStep.display === 'spotlight'}
+      glitchIntensity={displayStep.glitchIntensity}
+      bodyGlitchChance={displayStep.bodyGlitchChance}
+      titleGlitchChance={displayStep.titleGlitchChance}
       onSkip={dismissCurrent}
       groupNav={
         hasGroupNavigation

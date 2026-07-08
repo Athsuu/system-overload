@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import type { TutorialSnapshot } from './tutorialCatalog';
 import { getActiveArchAmbient } from './archAmbientCatalog';
-import {
-  loadHeardArchAmbientIds,
-  markArchAmbientHeard,
-  subscribeArchAmbient,
-} from './archAmbientPersistence';
+import { subscribeArchAmbient } from './archAmbientPersistence';
 import { isStepDismissed, subscribeTutorialProgress } from './tutorialPersistence';
 import { getTutorialSignals, subscribeTutorialSignals } from './tutorialSignals';
+
+export const ARCH_RUN_DIALOGUE_MS = 5000;
 
 export function useArchAmbient(enabled: boolean) {
   const gameState = useGameStore((state) => state.gameState);
@@ -28,11 +26,6 @@ export function useArchAmbient(enabled: boolean) {
   useEffect(() => subscribeArchAmbient(() => setAmbientRevision((n) => n + 1)), []);
   useEffect(() => subscribeTutorialSignals(() => setSignalRevision((n) => n + 1)), []);
   useEffect(() => subscribeTutorialProgress(() => setProgressRevision((n) => n + 1)), []);
-
-  const heardIds = useMemo(() => {
-    void ambientRevision;
-    return new Set(loadHeardArchAmbientIds());
-  }, [ambientRevision]);
 
   const snapshot: TutorialSnapshot = useMemo(() => {
     void signalRevision;
@@ -64,26 +57,14 @@ export function useArchAmbient(enabled: boolean) {
 
   const archIntroDismissed = useMemo(() => {
     void progressRevision;
+    void ambientRevision;
     return isStepDismissed('welcome');
-  }, [progressRevision]);
+  }, [progressRevision, ambientRevision]);
 
   const activeLine = useMemo(() => {
     if (!enabled) return null;
-    return getActiveArchAmbient(snapshot, heardIds, archIntroDismissed);
-  }, [enabled, snapshot, heardIds, archIntroDismissed]);
+    return getActiveArchAmbient(snapshot, archIntroDismissed);
+  }, [enabled, snapshot, archIntroDismissed]);
 
-  const dismissActive = useCallback(() => {
-    if (!activeLine) return;
-    markArchAmbientHeard(activeLine.id);
-  }, [activeLine]);
-
-  useEffect(() => {
-    if (!activeLine) return;
-    const timeoutId = window.setTimeout(() => {
-      markArchAmbientHeard(activeLine.id);
-    }, 5000);
-    return () => window.clearTimeout(timeoutId);
-  }, [activeLine?.id]);
-
-  return { activeLine, dismissActive };
+  return { activeLine };
 }

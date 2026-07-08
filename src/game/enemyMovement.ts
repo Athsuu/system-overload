@@ -15,20 +15,21 @@ function pointOnEdge(
   innerW: number,
   innerH: number,
   t: number,
+  inset: number,
 ): Vec2 {
   switch (edge) {
     case 0:
-      return { x: pad + innerW * t, y: pad };
+      return { x: pad + innerW * t, y: pad + inset };
     case 1:
-      return { x: pad + innerW * t, y: height - pad };
+      return { x: pad + innerW * t, y: height - pad - inset };
     case 2:
-      return { x: pad, y: pad + innerH * t };
+      return { x: pad + inset, y: pad + innerH * t };
     default:
-      return { x: width - pad, y: pad + innerH * t };
+      return { x: width - pad - inset, y: pad + innerH * t };
   }
 }
 
-function pickFlowEndpoints(bounds: ScreenBounds): { spawn: Vec2; exit: Vec2 } {
+function pickFlowEndpoints(bounds: ScreenBounds, inset: number): { spawn: Vec2; exit: Vec2 } {
   const spawnEdge = Math.floor(Math.random() * 4);
   const exitEdge = spawnEdge < 2 ? 1 - spawnEdge : 5 - spawnEdge;
   const pad = bounds.padding;
@@ -36,17 +37,60 @@ function pickFlowEndpoints(bounds: ScreenBounds): { spawn: Vec2; exit: Vec2 } {
   const innerH = bounds.height - pad * 2;
 
   return {
-    spawn: pointOnEdge(spawnEdge, pad, bounds.width, bounds.height, innerW, innerH, Math.random()),
-    exit: pointOnEdge(exitEdge, pad, bounds.width, bounds.height, innerW, innerH, Math.random()),
+    spawn: pointOnEdge(
+      spawnEdge,
+      pad,
+      bounds.width,
+      bounds.height,
+      innerW,
+      innerH,
+      Math.random(),
+      inset,
+    ),
+    exit: pointOnEdge(
+      exitEdge,
+      pad,
+      bounds.width,
+      bounds.height,
+      innerW,
+      innerH,
+      Math.random(),
+      inset,
+    ),
   };
 }
 
+function buildFlowVelocity(spawn: Vec2, exit: Vec2): { vx: number; vy: number; flowDistance: number } {
+  const dx = exit.x - spawn.x;
+  const dy = exit.y - spawn.y;
+  const flowDistance = Math.hypot(dx, dy) || 1;
+  return {
+    vx: dx / flowDistance,
+    vy: dy / flowDistance,
+    flowDistance,
+  };
+}
+
+function portalWrapEnemy(node: DissipationNode, bounds: ScreenBounds): void {
+  const pad = bounds.padding;
+  const innerW = bounds.width - pad * 2;
+  const innerH = bounds.height - pad * 2;
+  if (innerW <= 0 || innerH <= 0) return;
+
+  const minX = pad;
+  const maxX = bounds.width - pad;
+  const minY = pad;
+  const maxY = bounds.height - pad;
+
+  while (node.x < minX) node.x += innerW;
+  while (node.x > maxX) node.x -= innerW;
+  while (node.y < minY) node.y += innerH;
+  while (node.y > maxY) node.y -= innerH;
+}
+
 export interface SpawnEnemyOptions {
-  tier: number;
   waveIndex: number;
   isBoss?: boolean;
-  bossHpMult?: number;
-  bossSpeedMult?: number;
 }
 
 function createFlowEnemy(
@@ -54,22 +98,26 @@ function createFlowEnemy(
   config: RunConfig,
   options: SpawnEnemyOptions,
 ): DissipationNode {
-  const { tier, waveIndex, isBoss, bossHpMult = 1, bossSpeedMult = 1 } = options;
-  const { spawn, exit } = pickFlowEndpoints(bounds);
-  const speed = getEnemySpeed(config, tier, waveIndex, bossSpeedMult);
-  const maxHp = getEnemyMaxHp(config, tier, waveIndex, bossHpMult);
+  const { waveIndex, isBoss = false } = options;
+  const edgeInset = getEnemyHexRadius(waveIndex, isBoss) * 0.35;
+  const { spawn, exit } = pickFlowEndpoints(bounds, edgeInset);
+  const speed = getEnemySpeed(config, waveIndex, isBoss);
+  const maxHp = getEnemyMaxHp(config, waveIndex, isBoss);
+  const flow = buildFlowVelocity(spawn, exit);
 
   return {
     x: spawn.x,
     y: spawn.y,
-    flowTargetX: exit.x,
-    flowTargetY: exit.y,
+    vx: flow.vx,
+    vy: flow.vy,
+    flowDistance: flow.flowDistance,
+    distanceTraveled: 0,
     hp: maxHp,
     maxHp,
-    tier,
+    waveIndex,
     flashTimer: 0,
     satelliteAngle: Math.random() * Math.PI * 2,
-    hexAngle: Math.random() * Math.PI * 2,
+    hexAngle: Math.atan2(flow.vy, flow.vx),
     corruptSeed: Math.random() * 10000,
     isBoss,
     moveSpeed: speed,
@@ -93,22 +141,10 @@ export function spawnStarterNodes(
   for (let index = 0; index < count; index += 1) {
     nodes.push(
       createFlowEnemy(bounds, config, {
-        tier: 0,
         waveIndex: 1,
       }),
     );
   }
-}
-
-function hasEscapedArena(node: DissipationNode, bounds: ScreenBounds): boolean {
-  const margin = getEnemyHexRadius(node.tier, node.isBoss ?? false) * 0.35;
-  const pad = bounds.padding;
-  return (
-    node.x < pad - margin ||
-    node.x > bounds.width - pad + margin ||
-    node.y < pad - margin ||
-    node.y > bounds.height - pad + margin
-  );
 }
 
 export function tickEnemyMovement(
@@ -119,15 +155,20 @@ export function tickEnemyMovement(
 ): void {
   for (let index = nodes.length - 1; index >= 0; index -= 1) {
     const node = nodes[index];
-    const dx = node.flowTargetX - node.x;
-    const dy = node.flowTargetY - node.y;
-    const distance = Math.hypot(dx, dy) || 1;
-    const step = (node.moveSpeed * deltaSeconds) / distance;
+    const remaining = node.flowDistance - node.distanceTraveled;
+    if (remaining <= 0) {
+      onFlowEscape(node);
+      nodes.splice(index, 1);
+      continue;
+    }
 
-    node.x += dx * step;
-    node.y += dy * step;
+    const step = Math.min(node.moveSpeed * deltaSeconds, remaining);
+    node.x += node.vx * step;
+    node.y += node.vy * step;
+    node.distanceTraveled += step;
+    portalWrapEnemy(node, bounds);
 
-    if (hasEscapedArena(node, bounds)) {
+    if (node.distanceTraveled >= node.flowDistance) {
       onFlowEscape(node);
       nodes.splice(index, 1);
     }

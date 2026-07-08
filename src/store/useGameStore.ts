@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { saveGame } from './persistence';
-import { loadSettings, saveFluxDriveEnabled } from './settingsPersistence';
+import { loadSettings } from './settingsPersistence';
 import { DEFAULT_PRESTIGE } from './prestigeTypes';
 import {
   ANCHOR_FRAGMENTS_PER_BOSS,
@@ -16,6 +16,7 @@ import {
 import { getBreachCap } from '../game/runConfig';
 import { getSkillNode } from './skillTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
+import { clearRunArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 
 export type GameState =
   | 'MAIN_MENU'
@@ -224,7 +225,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ bankShards, upgrades });
     return true;
   },
-  startRun: () =>
+  startRun: () => {
+    clearRunArchAmbientHeard();
     set({
       gameState: 'PLAYING',
       breachProgress: 0,
@@ -235,15 +237,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       waveIndex: 1,
       wavePhase: 'spawning',
       showWaveClear: false,
-    }),
-  toggleFluxDriveEnabled: () =>
-    set((state) => {
-      if (state.upgrades.fluxDrive <= 0) return state;
-      const fluxDriveEnabled = !state.fluxDriveEnabled;
-      saveFluxDriveEnabled(fluxDriveEnabled);
-      markTutorialSignal('fluxDriveToggled');
-      return { fluxDriveEnabled };
-    }),
+    });
+  },
+  toggleFluxDriveEnabled: () => {},
   setWaveIndex: (waveIndex) => set({ waveIndex }),
   setWavePhase: (wavePhase) => set({ wavePhase }),
   setShowWaveClear: (showWaveClear) => set({ showWaveClear }),

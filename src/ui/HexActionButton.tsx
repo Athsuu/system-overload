@@ -5,7 +5,7 @@ import { SKILL_TREE_VISUAL } from './skillTreeTheme';
 interface HexActionButtonProps {
   label: string;
   onClick?: () => void;
-  size?: 'md' | 'lg' | 'xl';
+  size?: 'md' | 'lg' | 'hubRun' | 'xl';
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
   title?: string;
@@ -15,6 +15,7 @@ interface HexActionButtonProps {
 const SIZE_CONFIG = {
   md: { width: 100, height: 88, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[10px]' },
   lg: { width: 100, height: 88, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[11px]' },
+  hubRun: { width: 125, height: 110, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[14px]' },
   xl: { width: 180, height: 158, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[12px]' },
 } as const;
 

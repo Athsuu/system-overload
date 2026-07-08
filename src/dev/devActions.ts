@@ -1,16 +1,22 @@
 import {
   devSetInvincible,
   devSetShowEnemyHpBars,
+  devSetSpeed2x,
   devToggleInvincible,
   devToggleShowEnemyHpBars,
+  devToggleSpeed2x,
   isDevInvincible,
   isDevShowEnemyHpBars,
+  isDevSpeed2x,
 } from './devFlags';
 import { clearSave, saveGame } from '../store/persistence';
 import { clearAllPlayerData } from '../store/playerReset';
 import { clearTutorialProgress } from '../tutorial/tutorialPersistence';
 import { clearArchAmbientHeard } from '../tutorial/archAmbientPersistence';
+import { clearMeltdownArchRotation } from '../ui/meltdownArchRotation';
+import { setTutorialRunSpotlightActive } from '../tutorial/tutorialRunSpotlight';
 import { resetTutorialSignals } from '../tutorial/tutorialSignals';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { DEFAULT_PRESTIGE } from '../store/prestigeTypes';
 import {
   DEFAULT_UPGRADES,
@@ -37,6 +43,9 @@ export {
   devToggleShowEnemyHpBars,
   devSetShowEnemyHpBars,
   isDevShowEnemyHpBars,
+  devToggleSpeed2x,
+  devSetSpeed2x,
+  isDevSpeed2x,
 };
 
 export function devAddBankShards(amount: number): void {
@@ -145,8 +154,21 @@ export function devResetToNewPlayer(): void {
   window.location.reload();
 }
 
+export function devResetArchDialogues(): void {
+  clearArchAmbientHeard();
+}
+
 export function devResetTutorial(): void {
+  // Signals first — if progress is cleared while skillNodeSelected / upgradePurchased
+  // are still true, useTutorialCoach auto-completes and instantly re-dismisses steps.
+  resetTutorialSignals();
   clearTutorialProgress();
   clearArchAmbientHeard();
-  resetTutorialSignals();
+  clearMeltdownArchRotation();
+  setTutorialRunSpotlightActive(false);
+
+  useSettingsStore.getState().closeSettings();
+  if (useGameStore.getState().gameState !== 'MENU') {
+    useGameStore.setState({ gameState: 'MENU' });
+  }
 }

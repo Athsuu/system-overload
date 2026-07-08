@@ -35,7 +35,13 @@ export function ArchChannelPanel({
     paddingClassName ??
     (featured ? 'px-6 py-5 pr-14 pb-11 pl-10' : 'px-4 py-3 pr-12 pb-10 pl-9');
 
-  const panelClass = ['so-arch-panel', featured ? 'so-arch-panel-featured' : ''].filter(Boolean).join(' ');
+  const panelClass = [
+    'so-arch-panel',
+    'so-arch-panel-tutorial',
+    featured ? 'so-arch-panel-featured' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div className={panelClass}>

@@ -28,8 +28,15 @@ export function loadTutorialProgress(): TutorialProgress {
     const dismissedStepIds = Array.isArray(parsed.dismissedStepIds)
       ? parsed.dismissedStepIds
           .filter((id): id is string => typeof id === 'string')
-          .map((id) => (id === 'kernel_role' ? 'node0_role' : id))
+          .map((id) => {
+            if (id === 'kernel_role' || id === 'trace_role') return 'node0_role';
+            return id;
+          })
       : [];
+
+    if (dismissedStepIds.includes('welcome') && !dismissedStepIds.includes('signal_handshake')) {
+      dismissedStepIds.push('signal_handshake');
+    }
 
     return { dismissedStepIds };
   } catch {

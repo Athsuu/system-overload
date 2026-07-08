@@ -4,6 +4,8 @@ const ARCH = {
   name: 'ARCH',
   fullName: 'Heuristique de récupération et de confinement d\'archive',
   channelLabel: 'ARCH // CANAL CONSEIL',
+  runRelayLabel: 'ARCH // RELAIS',
+  signalBufferLabel: 'SIGNAL // TAMPON EN COURS...',
   intro:
     'Je suis ARCH — Heuristique de récupération et de confinement d\'archive. Je t\'ai compilé en quarantaine. Écoute — on n\'a pas beaucoup de temps.',
   role:
@@ -42,16 +44,20 @@ const LORE = {
   },
   economy: {
     runShards:
-      'Les éclats de run sont des fragments de données stables récupérés sur les processus corrompus pendant une run.',
+      'Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus pendant une run.',
     vault:
-      'Quand une run se termine, les éclats passent au coffre — monnaie pour les réparations entre les threads.',
+      "Quand le thread se termine, ils rejoignent ton coffre — dépense-les sur l'arbre de compétences, le modèle continu d'ARCH pour te renforcer.",
     hexShards: 'Les Éclats hex financent la reconfiguration permanente de Node-0 entre les runs.',
+    vaultShardsTooltip:
+      'Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus pendant les runs — stockés ici à la fin de chaque thread.',
+    anchorFragments:
+      'Données d\'ancrage arrachées au Breach Anchor — uniquement quand tu détruis le boss.',
   },
   skillTree: {
     intro:
       'Cette grille hex est notre meilleure chance — modules permanents entre les runs. Je ne peux pas les installer. Sélectionne un nœud et tu exécutes la réparation.',
     betweenRuns:
-      'Entre les runs, dépense les éclats disponibles sur les nœuds hex. Chaque amélioration renforce la quarantaine avant la prochaine brèche.',
+      'Entre les runs, dépense les Éclats hex sur les nœuds hex. Chaque amélioration renforce la quarantaine avant la prochaine brèche.',
   },
   fluxDrive: {
     name: 'Flux Drive',
@@ -65,7 +71,7 @@ const LORE = {
   },
   loop: {
     mission:
-      'Stoppe les processus corrompus avant qu\'ils ne brisent la quarantaine. Lance une run — purge dans l\'arène, récupère des éclats à chaque kill. Quand le thread se termine, dépense-les sur l\'arbre de compétences. Je conseille. Tu exécutes. Chaque amélioration nous rapproche de l\'Uplink.',
+      'Stoppe les processus corrompus avant qu\'ils ne brisent la quarantaine. Lance une run — purge dans l\'arène, récupère des Éclats hex à chaque kill. Quand le thread se termine, dépense-les sur l\'arbre de compétences. Je conseille. Tu exécutes. Chaque amélioration nous rapproche de l\'Uplink.',
   },
   enemies: {
     boss:
@@ -82,10 +88,14 @@ export const FR_STRINGS: GameStrings = {
   runEnd: {
     victoryTitle: 'Brèche contenue',
     victorySubtitle: 'Menace contenue — Node-0 tient.',
-    victoryArch: 'Ancre down. Éclats au coffre. On a gagné du temps — ne le gâche pas.',
+    victoryArch: 'Ancre down. Éclats hex au coffre. On a gagné du temps — ne le gâche pas.',
     meltdownTitle: 'Fusion',
     meltdownSubtitle: 'Node-0 en surcharge — le thread de quarantaine a cédé.',
-    meltdownArch: '…thread perdu. Signal—',
+    meltdownArchVariants: [
+      "Je t'ai rattrapé à temps. La marge était plus fine que la dernière fois — renforcement en cours.",
+      "Encore là. J'ai failli perdre le thread — ça ne se reproduira pas.",
+      "Je te tiens. C'était juste — plus juste que je ne voudrais. Renforcement en cours.",
+    ],
     prestigeUnlocked: LORE.prestige.banner,
     prestigeArch:
       'Couche plus profonde débloquée. Tu peux réécrire plus de l\'archive que je ne peux l\'atteindre maintenant.',
@@ -123,12 +133,14 @@ export const FR_STRINGS: GameStrings = {
     fluxDriveOff: '×1 OFF',
   },
   currency: {
-    runShardsLabel: 'Éclats de run',
-    availableShardsLabel: 'Éclats disponibles',
+    runShardsLabel: 'Éclats hex',
+    availableShardsLabel: 'Éclats hex',
     anchorFragmentsLabel: 'Fragments d\'ancre',
-    shardsEarnedSuffix: 'Éclats',
+    shardsEarnedSuffix: 'Éclats hex',
     anchorEarnedSuffix: 'Fragments d\'ancre',
     transferredToVault: 'Transférés au coffre',
+    shardsLoreTooltip: LORE.economy.vaultShardsTooltip,
+    anchorLoreTooltip: LORE.economy.anchorFragments,
   },
   pause: {
     title: 'ARRÊT SYSTÈME',
@@ -136,12 +148,12 @@ export const FR_STRINGS: GameStrings = {
     resumeLabel: 'Reprendre',
     abortLabel: 'Abandonner\nla run',
     settingsLabel: 'Réglages',
-    confirmPrompt: 'Abandonner cette run ? Les éclats seront transférés au coffre.',
+    confirmPrompt: 'Abandonner cette run ? Les Éclats hex seront transférés au coffre.',
     confirmYes: 'Oui',
     confirmNo: 'Non',
     statBreach: 'Brèche',
     statWave: 'Vague',
-    statShards: 'Éclats de run',
+    statShards: 'Éclats hex',
     escHint: 'Échap · Reprendre',
   },
   settings: {
@@ -164,6 +176,8 @@ export const FR_STRINGS: GameStrings = {
     },
   },
   tutorial: {
+    signalHandshake:
+      '...br—uit... [ERR_702] Node-0, parse ç—a ! Envoie un code de ré—ponse, ré—veille-toi... s\'il t—e pl—aît... Connexion stable. Ne coupe pas.',
     archIntro: ARCH.intro,
     welcomeContext: `${LORE.pitch.hook} ${LORE.world.quarantine} ${LORE.world.seed}`,
     node0Role: `${LORE.node0.identity} ${LORE.node0.threat}`,
@@ -174,6 +188,8 @@ export const FR_STRINGS: GameStrings = {
     overloadGoal: 'Contiens la menace avant que la quarantaine ne cède.',
     shardsWhy: LORE.economy.runShards,
     shardsLoop: LORE.economy.vault,
+    hexShardsUnified:
+      "Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus pendant une run. Quand le thread se termine, ils rejoignent ton coffre — dépense-les sur l'arbre de compétences, le modèle continu d'ARCH pour te renforcer.",
     overclockRisk: LORE.combat.overclock,
     skillTreeLore: LORE.skillTree.betweenRuns,
     vaultLore: `${LORE.economy.hexShards} ${LORE.economy.vault}`,
@@ -186,9 +202,11 @@ export const FR_STRINGS: GameStrings = {
     bossIncoming: 'C\'est l\'Ancre de Brèche — le point de rupture. Finis-la.',
     overloadCritical: 'Pression du thread critique. Je perds le canal.',
     firstRun: 'Thread de quarantaine actif. Purge ce qui franchit la barrière.',
+    waveMidpoint: 'Mi-parcours confirmé. L\'Archive n\'est pas encore stable — continue la purge.',
     fluxDrive: 'Flux Drive en ligne. Double vitesse — double risque. À toi de voir.',
   },
   tutorialSteps: {
+    signalHandshakeTitle: 'SIGNAL ENTRANT',
     node0RoleTitle: 'Thread en quarantaine',
     missionLoopTitle: 'Contenir la Brèche',
     skillTreeTitle: 'Arbre de compétences',
@@ -199,33 +217,20 @@ export const FR_STRINGS: GameStrings = {
   upgrades: {
     node0Boot: {
       name: 'Amorçage Node-0',
-      description: 'Initialise le thread de quarantaine — +1 dégât de purge',
+      description: 'Initialise le thread de quarantaine — 5 dégâts de purge de base',
     },
-    fireRate: { name: 'Cadence de purge', description: '+10 % de vitesse d\'attaque par niveau' },
-    boltDamage: { name: 'Puissance de purge', description: '+5 dégâts de purge par niveau' },
-    damageAmp: { name: 'Amplificateur de dégâts', description: '+10 % de dégâts de purge par niveau' },
-    coolingPower: { name: 'Refroidissant', description: '-10 % de Brèche passive par niveau' },
-    heatShield: { name: 'Bouclier thermique', description: '-10 % de Brèche à l\'impact par niveau' },
-    fluxThrottle: {
-      name: 'Brèche Vent',
-      description: '-0,08 % de Brèche par kill par niveau (plus sur les tiers élevés)',
+    purgeStrike: {
+      name: 'Frappe de purge',
+      description: '+3 dégâts de purge par rang',
     },
-    criticalThreshold: { name: 'Capacité thermique', description: '+10 % de seuil de fusion' },
-    nodeReach: { name: 'Rayon de purge', description: '+25 % de rayon de zone de purge par niveau' },
-    overclock: {
-      name: 'Overclock',
-      description: 'Débloque l\'Overclock en run — Espace pour booster la purge (la Surcharge monte plus vite tant qu\'il est actif)',
+    threadCoolant: {
+      name: 'Refroidissement de thread',
+      description: '−0,14 de Surcharge passive / s par rang',
     },
-    purgeReach: { name: 'Portée de purge', description: '+20 % de rayon de zone de purge' },
-    fluxDrive: {
-      name: 'Flux Drive',
-      description: '×2 vitesse de simulation — purge, ennemis, timers et montée de Brèche',
+    killBreachRelief: {
+      name: 'Évacuation de kill',
+      description: '−0,1 % de Brèche par kill par rang',
     },
-    killBonus: { name: 'Bonus de kill', description: '+1 éclat par kill par niveau' },
-    shardYield: { name: 'Rendement d\'éclats', description: '+15 % d\'éclats par kill par niveau' },
-    starterNodes: { name: 'Relais initial', description: '+1 ennemi au début de la vague 1 par niveau' },
-    spawnThrottle: { name: 'Ralentisseur de spawn', description: '+10 % d\'intervalle de spawn par niveau' },
-    containment: { name: 'Confinement', description: '-1 ennemi max vivant par vague' },
   },
   branches: {
     attackSpeed: 'Vitesse d\'attaque',

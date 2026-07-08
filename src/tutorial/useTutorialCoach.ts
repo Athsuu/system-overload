@@ -158,11 +158,13 @@ export function useTutorialCoach(enabled: boolean): TutorialCoachState {
     hasGroupNavigation && displayIndex >= 0 && displayIndex === groupSteps.length - 1;
   const canGoNextInGroup = hasGroupNavigation && displayIndex >= 0;
   const isRunSpotlight = displayStep?.display === 'spotlight';
+  const isRunTutorialPause =
+    gameState === 'PLAYING' && Boolean(displayStep?.screens.includes('PLAYING'));
 
   useEffect(() => {
-    setTutorialRunSpotlightActive(Boolean(enabled && isRunSpotlight));
+    setTutorialRunSpotlightActive(Boolean(enabled && isRunTutorialPause));
     return () => setTutorialRunSpotlightActive(false);
-  }, [enabled, isRunSpotlight]);
+  }, [enabled, isRunTutorialPause]);
 
   const dismissCurrent = useCallback(() => {
     if (!displayStep) return;

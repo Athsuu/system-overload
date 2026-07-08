@@ -27,6 +27,19 @@ export interface NodeVisualState {
   opacity: number;
 }
 
+export function getRootNodeVisualState(isSelected: boolean, level: number): NodeVisualState {
+  const active = level > 0;
+  return {
+    stroke: DARK_HEX.gold,
+    strokeWidth: active ? 2 : 1.5,
+    iconFill: active ? '#ffffff' : DARK_HEX.gold,
+    glowColor: DARK_HEX.gold,
+    glowOpacity: isSelected ? 0.28 : active ? 0.16 : 0.1,
+    doubleBorder: isSelected || active,
+    opacity: 1,
+  };
+}
+
 export function getNodeVisualState(state: SkillState, isSelected: boolean, level: number): NodeVisualState {
   if (state === 'reserved') {
     return {
