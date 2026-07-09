@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
-import { skillPopoverArrowStyle } from './popoverArrow';
+import { modulePopoverArrowStyle } from './popoverArrow';
 import { useDomPopoverLayout } from './useDomPopoverLayout';
 
 interface HubPopoverProps {
@@ -67,7 +67,7 @@ export function HubPopover({
         role="tooltip"
         aria-labelledby={titleId}
         tabIndex={-1}
-        data-skill-tooltip
+        data-module-tooltip
         data-currency-tooltip
         className="pointer-events-auto relative outline-none"
         onPointerDown={(event) => event.stopPropagation()}
@@ -82,7 +82,7 @@ export function HubPopover({
         <span
           aria-hidden
           className="absolute"
-          style={skillPopoverArrowStyle(placement.side, placement.arrowOffset)}
+          style={modulePopoverArrowStyle(placement.side, placement.arrowOffset)}
         />
         {children}
       </div>

@@ -40,7 +40,7 @@ const LORE = {
   breach: {
     overload: 'La Surcharge est le compteur de Brèche en direct sur ton thread. Garde-le sous contrôle.',
     meltdown: 'À 100 % de Surcharge. Fusion. La quarantaine cède.',
-    vent: 'Les modules Brèche Vent évacuent la pression à chaque kill, soulagement permanent via l\'arbre de compétences.',
+    vent: 'Les modules Brèche Vent évacuent la pression à chaque kill, soulagement permanent via l\'arbre de modules.',
   },
   economy: {
     vaultShardsTooltip:
@@ -48,7 +48,7 @@ const LORE = {
     anchorFragments:
       'Données d\'ancrage arrachées au Breach Anchor, uniquement quand tu détruis le boss.',
   },
-  skillTree: {
+  moduleTree: {
     intro:
       'Cette grille hex est notre meilleure chance. Elle intègre tes modules permanents entre les runs. Je ne peux pas les installer directement. Sélectionne un nœud pour exécuter le renforcement.',
     betweenRuns:
@@ -66,7 +66,7 @@ const LORE = {
   },
   loop: {
     mission:
-      'Stoppe les processus corrompus avant qu\'ils ne brisent la quarantaine. Lance une run : purge l\'arène et extrais des Éclats hex à chaque kill. Quand le thread se termine, dépense-les sur l\'arbre de compétences. Je conseille. Tu exécutes. Chaque renforcement nous fait gagner du temps pour l\'Uplink.',
+      'Stoppe les processus corrompus avant qu\'ils ne brisent la quarantaine. Lance une run : purge l\'arène et extrais des Éclats hex à chaque kill. Quand le thread se termine, dépense-les sur l\'arbre de modules. Je conseille. Tu exécutes. Chaque renforcement nous fait gagner du temps pour l\'Uplink.',
   },
   enemies: {
     boss:
@@ -83,7 +83,10 @@ export const FR_STRINGS: GameStrings = {
   runEnd: {
     victoryTitle: 'Brèche contenue',
     victorySubtitle: 'Menace contenue. Node-0 tient.',
-    victoryArch: 'Ancre down. Éclats hex au coffre. On a gagné du temps. Ne le gâche pas.',
+    victoryArchVariants: [
+      'Ancre down. Éclats hex au coffre. On a gagné du temps. Ne le gâche pas.',
+      'Données d\'ancre sécurisées. Les modules capstone sont en ligne. Dépense les fragments sur les nœuds marqués.',
+    ],
     meltdownTitle: 'Fusion',
     meltdownSubtitle: 'Surcharge à 100 %. Le thread actif s\'est effondré. Node-0 en attente.',
     meltdownArchVariants: [
@@ -95,14 +98,12 @@ export const FR_STRINGS: GameStrings = {
     prestigeArch:
       'Couche plus profonde débloquée. Tu peux réécrire plus de l\'archive que je ne peux l\'atteindre maintenant.',
     anchorFragmentsEarned: 'Fragments d\'ancre',
-    firstAnchorArch:
-      'Données d\'ancre sécurisées. Les modules capstone sont en ligne. Dépense les fragments sur les nœuds marqués.',
   },
   hub: {
     upgradesTitle: 'Améliorations',
-    upgradesSubtitle: LORE.skillTree.betweenRuns,
+    upgradesSubtitle: LORE.moduleTree.betweenRuns,
   },
-  skillTree: {
+  moduleTree: {
     placeholderTitle: 'Module réservé',
     placeholderBody: 'Emplacement design. Ce nœud sera remplacé dans une mise à jour.',
   },
@@ -178,14 +179,14 @@ export const FR_STRINGS: GameStrings = {
     welcomeContext: `${LORE.pitch.hook} ${LORE.world.quarantine} ${LORE.world.seed}`,
     node0Role: `${LORE.node0.identity} ${LORE.node0.threat}`,
     missionLoop: LORE.loop.mission,
-    skillTreeIntro: `${LORE.skillTree.intro} ${ARCH.improvises}`,
+    moduleTreeIntro: `${LORE.moduleTree.intro} ${ARCH.improvises}`,
     purgeAction: `Tu es en ligne. ${LORE.combat.purge} ${LORE.combat.purgeCost}`,
     overloadStakes: `${LORE.breach.overload} ${LORE.breach.meltdown}`,
     overloadGoal: 'Contiens la menace avant que la quarantaine ne cède.',
     hexShardsUnified:
-      "Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus. Ils tombent au sol quand tu purges une cible. Passe ta zone de purge dessus pour les ramasser. Dépense-les sur l'arbre de compétences pour te renforcer.",
+      "Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus. Ils tombent au sol quand tu purges une cible. Passe ta zone de purge dessus pour les ramasser. Dépense-les sur l'arbre de modules pour te renforcer.",
     overclockRisk: LORE.combat.overclock,
-    skillTreeLore: LORE.skillTree.betweenRuns,
+    moduleTreeLore: LORE.moduleTree.betweenRuns,
     prestigeReveal: LORE.prestige.unlock,
     fluxDriveLore: LORE.fluxDrive.description,
   },
@@ -200,7 +201,7 @@ export const FR_STRINGS: GameStrings = {
     signalHandshakeTitle: 'SIGNAL ENTRANT',
     node0RoleTitle: 'NODE-0',
     missionLoopTitle: 'Contenir la Brèche',
-    skillTreeTitle: 'Arbre de compétences',
+    moduleTreeTitle: 'Arbre de modules',
     purgeZoneTitle: 'Zone de purge',
     overclockTitle: 'Overclock',
     breachContainedTitle: 'Brèche contenue',
@@ -214,6 +215,10 @@ export const FR_STRINGS: GameStrings = {
       name: 'Récupération d\'éclats',
       description: 'Extrait plus d\'Éclats hex de chaque processus corrompu purgé',
     },
+    shardYield: {
+      name: 'Rendement d\'extraction',
+      description: 'Augmente le rendement de base en Éclats hex à chaque kill',
+    },
     shardMagnet: {
       name: 'Aimant d\'éclats',
       description: 'Attire les éclats au sol vers ta zone de purge, de plus loin',
@@ -222,6 +227,10 @@ export const FR_STRINGS: GameStrings = {
       name: 'Frappe de purge',
       description: 'Augmente les dégâts de purge contre les processus corrompus',
     },
+    eliteBreaker: {
+      name: 'Briseur d\'élite',
+      description: 'Frappe plus fort les processus corrompus lourds avec ta zone de purge',
+    },
     purgeCadence: {
       name: 'Cadence de purge',
       description: 'Accélère la cadence de purge pour vider plus vite',
@@ -229,6 +238,10 @@ export const FR_STRINGS: GameStrings = {
     purgeReach: {
       name: 'Portée de purge',
       description: 'Étend la couverture de la zone de purge sur l\'arène',
+    },
+    purgeSplash: {
+      name: 'Éclat de purge',
+      description: 'Inflige des dégâts d\'éclaboussure aux processus juste à l\'extérieur de ta zone',
     },
     threadCoolant: {
       name: 'Refroidissement de thread',
@@ -251,12 +264,17 @@ export const FR_STRINGS: GameStrings = {
   tooltipStats: {
     purgeHitDamage: 'Dégâts de purge',
     purgeDamageBonus: 'Bonus dégâts purge',
+    elitePurgeDamageBonus: 'Bonus processus lourd',
+    elitePurgeHitDamage: 'Dégâts purge vs lourd',
     shardBonusPerKill: 'Éclats hex / kill',
+    shardYieldBonus: 'Bonus rendement éclats',
     shardPickupRadius: 'Rayon de collecte',
     shardPickupReachBonus: 'Rayon d\'attraction',
     purgeCadence: 'Cadence de purge',
-    purgeReach: 'Rayon zone de purge',
+    purgeReach: 'Zone principale',
     purgeReachBonus: 'Bonus zone de purge',
+    purgeSplashRadius: 'Portée éclaboussure (vs zone principale)',
+    purgeSplashDamage: 'Dégâts d\'éclaboussure',
     passiveBreachPerSec: 'Brèche passive / sec',
     reduction: 'Réduction',
     breachReliefPerKill: 'Soulagement Brèche / kill',
@@ -267,6 +285,20 @@ export const FR_STRINGS: GameStrings = {
     title: 'NODE-0 // STATS',
     openLabel: 'Stats Node-0',
     cadenceUnit: '/s',
+    purgeSplashZone: 'Zone éclaboussure',
+  },
+  transitions: {
+    bootTitle: 'ARCH // AMORÇAGE NODE-0',
+    shutdownTitle: 'ARCH // SUSPENSION THREAD',
+    bootLine1: 'NODE-0 STATUT: EN LIGNE',
+    bootLine2: 'ARCH // THREAD DE PURGE ACTIF',
+    bootLine3: 'CONTENEMENT BRÈCHE: ENGAGÉ',
+    shutdownLine1: 'ARCH // THREAD DE PURGE SUSPENDU',
+    shutdownLine2: 'NODE-0 STATUT: VEILLE',
+    shutdownLine3: 'ARCHIVE ZÉRO: MODE RÉCUPÉRATION',
+    shutdownAbortedLine1: 'ARCH // THREAD DE PURGE INTERROMPU',
+    shutdownAbortedLine2: 'NODE-0 STATUT: VEILLE',
+    shutdownAbortedLine3: 'ARCHIVE ZÉRO: MODE RÉCUPÉRATION',
   },
   ui: {
     startRun: 'Lancer\nla run',
@@ -290,7 +322,7 @@ export const FR_STRINGS: GameStrings = {
     previous: 'Précédent',
     next: 'Suivant',
     gotIt: 'Compris',
-    skillTree: 'Arbre de\ncompétences',
+    moduleTree: 'Arbre de\nmodules',
     cycleLabel: 'Cycle {n}',
     cycleWaveFormat: 'Cycle {cycle} · Vague {wave}/{max}',
     cycleBossFormat: 'Cycle {cycle} · BOSS',

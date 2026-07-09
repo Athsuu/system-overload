@@ -1,13 +1,13 @@
 import type { CSSProperties } from 'react';
-import { SKILL_TREE_VISUAL } from './skillTreeTheme';
-import { SKILL_POPOVER_ARROW } from './skillTreePopoverPlacement';
+import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
+import { MODULE_POPOVER_ARROW } from './moduleTreePopoverPlacement';
 
-export function skillPopoverArrowStyle(
+export function modulePopoverArrowStyle(
   side: 'top' | 'bottom' | 'left' | 'right',
   offset: number,
 ): CSSProperties {
-  const size = SKILL_POPOVER_ARROW;
-  const color = SKILL_TREE_VISUAL.tooltipBg;
+  const size = MODULE_POPOVER_ARROW;
+  const color = MODULE_TREE_VISUAL.tooltipBg;
 
   switch (side) {
     case 'bottom':

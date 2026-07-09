@@ -1,7 +1,7 @@
-import type { SkillState } from '../store/upgradeCatalog';
+import type { ModuleState } from '../store/upgradeCatalog';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 
-export const SKILL_TREE_VISUAL = {
+export const MODULE_TREE_VISUAL = {
   canvasBg: DARK_HEX.canvasBg,
   hexGrid: DARK_HEX.hexGrid,
   edgeActive: DARK_HEX.breach,
@@ -40,7 +40,7 @@ export function getRootNodeVisualState(isSelected: boolean, level: number): Node
   };
 }
 
-export function getNodeVisualState(state: SkillState, isSelected: boolean, level: number): NodeVisualState {
+export function getNodeVisualState(state: ModuleState, isSelected: boolean, level: number): NodeVisualState {
   if (state === 'reserved') {
     return {
       stroke: '#4a4a55',
@@ -114,7 +114,7 @@ export function getNodeVisualState(state: SkillState, isSelected: boolean, level
 
 export function getEdgeVisual(unlocked: boolean): { stroke: string; glow: string } {
   if (unlocked) {
-    return { stroke: SKILL_TREE_VISUAL.edgeActive, glow: SKILL_TREE_VISUAL.edgeActiveGlow };
+    return { stroke: MODULE_TREE_VISUAL.edgeActive, glow: MODULE_TREE_VISUAL.edgeActiveGlow };
   }
-  return { stroke: SKILL_TREE_VISUAL.edgeLocked, glow: '#2a0505' };
+  return { stroke: MODULE_TREE_VISUAL.edgeLocked, glow: '#2a0505' };
 }

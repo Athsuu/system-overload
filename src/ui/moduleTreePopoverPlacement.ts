@@ -1,9 +1,9 @@
-/** Popover placement for skill-tree panels (click-triggered rich tooltips). */
+/** Popover placement for module-tree panels (click-triggered rich tooltips). */
 
-export const SKILL_POPOVER_WIDTH = 300;
-export const SKILL_POPOVER_GAP = 12;
-export const SKILL_POPOVER_ARROW = 8;
-export const SKILL_POPOVER_VIEWPORT_MARGIN = 16;
+export const MODULE_POPOVER_WIDTH = 300;
+export const MODULE_POPOVER_GAP = 12;
+export const MODULE_POPOVER_ARROW = 8;
+export const MODULE_POPOVER_VIEWPORT_MARGIN = 16;
 export const PLACEHOLDER_POPOVER_WIDTH = 280;
 export const PLACEHOLDER_POPOVER_HEIGHT = 110;
 
@@ -14,7 +14,7 @@ export interface ViewportRect {
   height: number;
 }
 
-export interface SkillTreePanTransform {
+export interface ModuleTreePanTransform {
   x: number;
   y: number;
   scale: number;
@@ -34,7 +34,7 @@ export interface AnchorMetrics extends AxisRect {
   cy: number;
 }
 
-export interface SkillPopoverPlacement {
+export interface ModulePopoverPlacement {
   left: number;
   top: number;
   width: number;
@@ -83,7 +83,7 @@ function isFullyVisible(
   height: number,
   viewport: ViewportRect,
 ): boolean {
-  const margin = SKILL_POPOVER_VIEWPORT_MARGIN;
+  const margin = MODULE_POPOVER_VIEWPORT_MARGIN;
   return (
     left >= margin &&
     top >= margin &&
@@ -99,7 +99,7 @@ function overflowScore(
   height: number,
   viewport: ViewportRect,
 ): number {
-  const margin = SKILL_POPOVER_VIEWPORT_MARGIN;
+  const margin = MODULE_POPOVER_VIEWPORT_MARGIN;
   let score = 0;
   score += Math.max(0, margin - left);
   score += Math.max(0, margin - top);
@@ -115,7 +115,7 @@ function popoverFootprint(
   width: number,
   height: number,
 ): AxisRect {
-  const arrow = SKILL_POPOVER_ARROW;
+  const arrow = MODULE_POPOVER_ARROW;
   switch (side) {
     case 'top':
       return { left, top, width, height: height + arrow };
@@ -134,9 +134,9 @@ function positionForSide(
   width: number,
   height: number,
 ): { left: number; top: number; arrowOffset: number } {
-  const gap = SKILL_POPOVER_GAP + SKILL_POPOVER_ARROW;
-  const arrowMin = SKILL_POPOVER_ARROW + 6;
-  const arrowMax = width - SKILL_POPOVER_ARROW - 6;
+  const gap = MODULE_POPOVER_GAP + MODULE_POPOVER_ARROW;
+  const arrowMin = MODULE_POPOVER_ARROW + 6;
+  const arrowMax = width - MODULE_POPOVER_ARROW - 6;
 
   switch (side) {
     case 'bottom': {
@@ -154,13 +154,13 @@ function positionForSide(
     case 'right': {
       const left = anchor.right + gap;
       const top = anchor.cy - height / 2;
-      const arrowOffset = clamp(anchor.cy - top, arrowMin, Math.min(arrowMax, height - SKILL_POPOVER_ARROW - 6));
+      const arrowOffset = clamp(anchor.cy - top, arrowMin, Math.min(arrowMax, height - MODULE_POPOVER_ARROW - 6));
       return { left, top, arrowOffset };
     }
     default: {
       const left = anchor.left - gap - width;
       const top = anchor.cy - height / 2;
-      const arrowOffset = clamp(anchor.cy - top, arrowMin, Math.min(arrowMax, height - SKILL_POPOVER_ARROW - 6));
+      const arrowOffset = clamp(anchor.cy - top, arrowMin, Math.min(arrowMax, height - MODULE_POPOVER_ARROW - 6));
       return { left, top, arrowOffset };
     }
   }
@@ -169,7 +169,7 @@ function positionForSide(
 export function canvasPointToViewport(
   canvasX: number,
   canvasY: number,
-  transform: SkillTreePanTransform,
+  transform: ModuleTreePanTransform,
 ): { x: number; y: number } {
   return {
     x: canvasX * transform.scale + transform.x,
@@ -177,11 +177,11 @@ export function canvasPointToViewport(
   };
 }
 
-export function getSkillAnchorRect(
+export function getModuleAnchorRect(
   canvasX: number,
   canvasY: number,
   nodeRadiusCanvas: number,
-  transform: SkillTreePanTransform,
+  transform: ModuleTreePanTransform,
   glowPadding = 8,
 ): AxisRect {
   const center = canvasPointToViewport(canvasX, canvasY, transform);
@@ -194,18 +194,18 @@ export function getSkillAnchorRect(
   };
 }
 
-export function placeSkillTreePopover(
+export function placeModuleTreePopover(
   anchorRect: AxisRect,
   popoverWidth: number,
   popoverHeight: number,
   viewport: ViewportRect,
-): SkillPopoverPlacement {
+): ModulePopoverPlacement {
   const anchor = toAnchorMetrics(anchorRect);
   const keepOut: AxisRect = {
-    left: anchor.left - SKILL_POPOVER_GAP,
-    top: anchor.top - SKILL_POPOVER_GAP,
-    width: anchor.width + SKILL_POPOVER_GAP * 2,
-    height: anchor.height + SKILL_POPOVER_GAP * 2,
+    left: anchor.left - MODULE_POPOVER_GAP,
+    top: anchor.top - MODULE_POPOVER_GAP,
+    width: anchor.width + MODULE_POPOVER_GAP * 2,
+    height: anchor.height + MODULE_POPOVER_GAP * 2,
   };
 
   const sides: PopoverSide[] = ['top', 'bottom', 'right', 'left'];
@@ -234,7 +234,7 @@ export function placeSkillTreePopover(
     }
   }
 
-  let best: SkillPopoverPlacement = {
+  let best: ModulePopoverPlacement = {
     left: 0,
     top: 0,
     width: popoverWidth,
@@ -268,7 +268,7 @@ export function placeSkillTreePopover(
     }
   }
 
-  const margin = SKILL_POPOVER_VIEWPORT_MARGIN;
+  const margin = MODULE_POPOVER_VIEWPORT_MARGIN;
   const maxLeft = Math.max(margin, viewport.width - popoverWidth - margin);
   const bestFootprint = popoverFootprint(
     best.side,
@@ -283,12 +283,12 @@ export function placeSkillTreePopover(
   best.top = clamp(best.top, margin, maxTop);
 
   if (best.side === 'top' || best.side === 'bottom') {
-    best.arrowOffset = clamp(anchor.cx - best.left, SKILL_POPOVER_ARROW + 6, popoverWidth - SKILL_POPOVER_ARROW - 6);
+    best.arrowOffset = clamp(anchor.cx - best.left, MODULE_POPOVER_ARROW + 6, popoverWidth - MODULE_POPOVER_ARROW - 6);
   } else {
     best.arrowOffset = clamp(
       anchor.cy - best.top,
-      SKILL_POPOVER_ARROW + 6,
-      popoverHeight - SKILL_POPOVER_ARROW - 6,
+      MODULE_POPOVER_ARROW + 6,
+      popoverHeight - MODULE_POPOVER_ARROW - 6,
     );
   }
 

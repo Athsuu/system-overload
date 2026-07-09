@@ -10,26 +10,26 @@ export type TutorialStepId =
   | 'welcome'
   | 'node0_role'
   | 'mission_loop'
-  | 'skill_tree_intro'
+  | 'module_tree_intro'
   | 'purge_zone'
   | 'overload'
   | 'run_shards'
   | 'overclock'
-  | 'skill_tree'
+  | 'module_tree'
   | 'vault'
   | 'prestige'
   | 'flux_drive';
 
 export type TutorialAnchor =
   | 'featured-center'
-  | 'featured-skill-tree'
+  | 'featured-module-tree'
   | 'start-run'
   | 'purge-zone'
   | 'overload-bar'
   | 'run-shards'
   | 'hex-shards'
   | 'overclock'
-  | 'skill-tree'
+  | 'module-tree'
   | 'vault-shards'
   | 'flux-drive';
 
@@ -155,19 +155,19 @@ export function buildTutorialSteps(): TutorialStep[] {
       completeWhen: SKIP_ONLY,
     },
     {
-      id: 'skill_tree_intro',
+      id: 'module_tree_intro',
       order: 4,
       groupId: 'menu_intro',
       storyBeat: 'growth',
       display: 'spotlight',
       screens: ['MENU'],
-      anchor: 'skill-tree',
+      anchor: 'module-tree',
       speaker: 'arch',
       label: ARCH_LABEL,
-      title: steps.skillTreeTitle,
-      body: T.skillTreeIntro,
+      title: steps.moduleTreeTitle,
+      body: T.moduleTreeIntro,
       unlockWhen: (s) => s.dismissedIds.has('mission_loop'),
-      completeWhen: (s) => s.signals.skillNodeSelected,
+      completeWhen: (s) => s.signals.moduleNodeSelected,
     },
     {
       id: 'purge_zone',
@@ -229,16 +229,16 @@ export function buildTutorialSteps(): TutorialStep[] {
       completeWhen: SKIP_ONLY,
     },
     {
-      id: 'skill_tree',
+      id: 'module_tree',
       order: 9,
       storyBeat: 'growth',
       display: 'anchored',
       screens: ['UPGRADING'],
-      anchor: 'skill-tree',
+      anchor: 'module-tree',
       speaker: 'arch',
       label: ARCH_LABEL,
       title: strings.hub.upgradesTitle,
-      body: T.skillTreeLore,
+      body: T.moduleTreeLore,
       unlockWhen: (s) => s.gameState === 'UPGRADING',
       completeWhen: (s) => s.signals.upgradePurchased,
     },

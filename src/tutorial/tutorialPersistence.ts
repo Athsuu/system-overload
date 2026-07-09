@@ -30,6 +30,8 @@ export function loadTutorialProgress(): TutorialProgress {
           .filter((id): id is string => typeof id === 'string')
           .map((id) => {
             if (id === 'kernel_role' || id === 'trace_role') return 'node0_role';
+            if (id === 'skill_tree_intro') return 'module_tree_intro';
+            if (id === 'skill_tree') return 'module_tree';
             return id;
           })
       : [];

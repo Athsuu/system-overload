@@ -133,7 +133,7 @@ export function TutorialCoach() {
         display={displayStep.display}
         navDirection={navDirection}
         showCenterDim={isFeatured && displayStep.anchor === 'featured-center'}
-        showSkillTreeGradient={isFeatured && displayStep.anchor === 'featured-skill-tree'}
+        showModuleTreeGradient={isFeatured && displayStep.anchor === 'featured-module-tree'}
       >
         {card}
       </TutorialTransitionOverlay>

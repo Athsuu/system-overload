@@ -4,7 +4,7 @@
 
 You are **Node-0** — a child process compiled by **ARCH** into quarantine to protect **the Seed** (the archive's original pure source code). Purge corrupted processes, keep **Breach** overload under control, and survive until you **Contain the Breach** or suffer a **Meltdown**. Long-term narrative goal: the **Uplink** — extracting the Seed from a dying archive.
 
-Roguelite arena survivor with instant-start runs and permanent **Skill Tree** meta-progression. Dark Hex Terminal aesthetic: terminal UI over a high-frequency WebGL battlefield.
+Roguelite arena survivor with instant-start runs and permanent **Module Tree** meta-progression. Dark Hex Terminal aesthetic: terminal UI over a high-frequency WebGL battlefield.
 
 ---
 
@@ -14,12 +14,12 @@ Roguelite arena survivor with instant-start runs and permanent **Skill Tree** me
 2. **Survive waves** of **Corrupted Processes**.
 3. **Purge** — hold the purge zone over enemies (mouse); no visible player sprite.
 4. **Manage Breach** — time and purge pressure drive Overload toward Meltdown.
-5. **End of run** → **Run Shards** transfer to your vault → spend **Hex Shards** on permanent Skill Enhancements.
+5. **End of run** → **Run Shards** transfer to your vault → spend **Hex Shards** on permanent Module Enhancements.
 
 | In-run | Between runs |
 |--------|----------------|
 | Purge zone, Overclock | Hex Shards (vault) |
-| Breach / Overload | Skill Tree upgrades |
+| Breach / Overload | Module Tree upgrades |
 | Wave progression | Node-0 reconfiguration |
 
 ---
@@ -58,7 +58,7 @@ Internal code name: `DissipationNode`. Player-facing lore: *Corrupted Processes*
 
 ```
 src/
-├── ui/          React + Tailwind — menus, HUD, Skill Tree, settings
+├── ui/          React + Tailwind — menus, HUD, Module Tree, settings
 ├── game/        PixiJS + pure TS — arena, enemies, purge zone, effects (60+ FPS)
 ├── store/       Zustand — persistence, upgrades
 └── theme/       Dark Hex Terminal design tokens

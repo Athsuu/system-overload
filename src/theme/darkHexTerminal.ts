@@ -1,4 +1,4 @@
-/** Tokens visuels partagés — DA "Dark Hex Terminal" (skill tree + gameplay). */
+/** Tokens visuels partagés — DA "Dark Hex Terminal" (module tree + gameplay). */
 
 export const DARK_HEX = {
   /** Charbon relevé — surface principale (hub, menus). */
@@ -25,6 +25,8 @@ export const DARK_HEX = {
   coreFillBottom: '#120404',
   nodeFill: '#120808',
   corruptViolet: '#8b5cf6',
+  corruptVioletLite: '#b3a3f0',
+  corruptVoid: '#120820',
   corruptCyan: '#22d3ee',
 } as const;
 
@@ -40,6 +42,10 @@ export const DARK_HEX_PIXI = {
   breach: 0xff4d00,
   breachGlow: 0xff6b2b,
   corruptViolet: 0x8b5cf6,
+  corruptVioletLite: 0xb3a3f0,
+  corruptVoid: 0x120820,
+  corruptScanline: 0xe9e0ff,
+  corruptScanlineDim: 0x6b5a9e,
   corruptCyan: 0x22d3ee,
 } as const;
 

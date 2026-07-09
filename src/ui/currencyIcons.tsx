@@ -1,5 +1,5 @@
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
 
 interface CurrencyIconProps {
   size?: number;
@@ -18,15 +18,15 @@ export function HexShardIcon({ size = 20 }: CurrencyIconProps) {
       <polygon
         points="12 2 20 6.5 20 17.5 12 22 4 17.5 4 6.5"
         fill="#120808"
-        stroke={SKILL_TREE_VISUAL.gold}
+        stroke={MODULE_TREE_VISUAL.gold}
         strokeWidth={1.25}
         strokeOpacity={0.85}
       />
       <polygon
         points="12 7 16 9.5 16 14.5 12 17 8 14.5 8 9.5"
-        fill={SKILL_TREE_VISUAL.gold}
+        fill={MODULE_TREE_VISUAL.gold}
         fillOpacity={0.22}
-        stroke={SKILL_TREE_VISUAL.gold}
+        stroke={MODULE_TREE_VISUAL.gold}
         strokeWidth={0.75}
         strokeOpacity={0.55}
       />

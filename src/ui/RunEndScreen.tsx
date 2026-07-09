@@ -7,7 +7,9 @@ import { useGameStrings } from '../i18n/useGameStrings';
 import { ArchRunEndRelay } from './ArchRunEndRelay';
 import { HexActionButton } from './HexActionButton';
 import { pickMeltdownArchVariantIndex } from './meltdownArchRotation';
+import { pickVictoryArchVariantIndex } from './victoryArchRotation';
 import { useCountUp } from './useCountUp';
+import { useScreenTransition } from './transitions/useScreenTransition';
 
 export function RunEndScreen() {
   const lastRunShards = useGameStore((state) => state.lastRunShards);
@@ -16,12 +18,12 @@ export function RunEndScreen() {
   const runOutcome = useGameStore((state) => state.runOutcome);
   const activeCycle = useGameStore((state) => state.activeCycle);
   const waveIndex = useGameStore((state) => state.waveIndex);
-  const openSkillTree = useGameStore((state) => state.openSkillTree);
-  const startRun = useGameStore((state) => state.startRun);
   const selectedCycle = useGameStore((state) => state.selectedCycle);
+  const { launchHubToArena, launchArenaToHub, isTransitioning } = useScreenTransition();
 
   const strings = useGameStrings();
   const [meltdownArchText, setMeltdownArchText] = useState<string | null>(null);
+  const [victoryArchText, setVictoryArchText] = useState<string | null>(null);
 
   const isVictory = runOutcome === 'victory_boss';
   const title = isVictory ? strings.runEnd.victoryTitle : strings.runEnd.meltdownTitle;
@@ -38,7 +40,6 @@ export function RunEndScreen() {
   const displayShards = useCountUp(lastRunShards, 600);
   const displayAnchors = useCountUp(lastRunAnchorFragments, 600);
   const showRewards = lastRunShards > 0 || lastRunAnchorFragments > 0;
-  const showFirstAnchorArch = anchorFragmentEarnedThisRun;
 
   const accentColor = isVictory ? DARK_HEX.gold : DARK_HEX.breach;
   const accentGlow = isVictory ? DARK_HEX.goldMuted : 'rgba(255, 77, 0, 0.22)';
@@ -52,9 +53,25 @@ export function RunEndScreen() {
     setMeltdownArchText(strings.runEnd.meltdownArchVariants[index]);
   }, [runOutcome, lastRunShards, waveIndex, strings.runEnd.meltdownArchVariants]);
 
+  useEffect(() => {
+    if (runOutcome !== 'victory_boss') {
+      setVictoryArchText(null);
+      return;
+    }
+    const index = pickVictoryArchVariantIndex(anchorFragmentEarnedThisRun);
+    setVictoryArchText(strings.runEnd.victoryArchVariants[index]);
+  }, [runOutcome, anchorFragmentEarnedThisRun, strings.runEnd.victoryArchVariants]);
+
   const handleStartRun = () => {
+    if (isTransitioning) return;
     markTutorialSignal('runsStarted');
-    startRun(selectedCycle);
+    launchHubToArena(selectedCycle);
+  };
+
+  const handleOpenModuleTree = () => {
+    if (isTransitioning) return;
+    const reason = isVictory ? 'victory' : 'meltdown';
+    launchArenaToHub(reason);
   };
 
   return (
@@ -130,32 +147,34 @@ export function RunEndScreen() {
 
         <div className="so-animate-reveal-step-3 mt-8 flex items-center justify-center gap-4">
           <HexActionButton
-            label={strings.ui.skillTree}
-            onClick={openSkillTree}
+            label={strings.ui.moduleTree}
+            onClick={handleOpenModuleTree}
             variant="secondary"
+            disabled={isTransitioning}
           />
           <HexActionButton
             label={strings.ui.startRun}
             onClick={handleStartRun}
             clickSound="startRun"
             variant="primary"
+            disabled={isTransitioning}
           />
         </div>
       </div>
 
-      {(isVictory || meltdownArchText || showFirstAnchorArch) && (
+      {(victoryArchText || meltdownArchText) && (
         <div className="pointer-events-none absolute inset-x-0 bottom-[5rem] z-[23] flex flex-col items-center gap-8 px-6">
-          {isVictory && (
-            <ArchRunEndRelay lineKey="victory-arch" text={strings.runEnd.victoryArch} />
+          {victoryArchText && (
+            <ArchRunEndRelay
+              lineKey={`victory-arch-${victoryArchText.slice(0, 12)}`}
+              text={victoryArchText}
+            />
           )}
-          {!isVictory && meltdownArchText && (
+          {meltdownArchText && (
             <ArchRunEndRelay
               lineKey={`meltdown-arch-${meltdownArchText.slice(0, 12)}`}
               text={meltdownArchText}
             />
-          )}
-          {showFirstAnchorArch && (
-            <ArchRunEndRelay lineKey="first-anchor-arch" text={strings.runEnd.firstAnchorArch} />
           )}
         </div>
       )}

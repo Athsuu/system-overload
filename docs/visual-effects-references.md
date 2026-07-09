@@ -1,7 +1,7 @@
 # Références effets visuels — Zero Archive
 
-Document de référence pour l'agent et les futures features visuelles (glitch, surcharge, terminal Dark Hex).
-**À consulter avant** d'ajouter des effets CSS, Canvas 2D, WebGL ou shaders PixiJS.
+Document de référence pour l'agent et les futures features visuelles (glitch, surcharge, terminal Dark Hex, **VFX gameplay**).
+**À consulter avant** d'ajouter des effets CSS, Canvas 2D, WebGL, shaders PixiJS ou tout feedback visuel lié au combat.
 
 ---
 
@@ -13,6 +13,10 @@ Document de référence pour l'agent et les futures features visuelles (glitch, 
 | Kirupa — Advanced Glitch Effect | https://www.kirupa.com/codingexercises/advanced_glitch_effect.htm | Glitch Canvas 2D : pixel shift, slices, distortion |
 | Alvaro Trigo — CSS Glitch Effect | https://alvarotrigo.com/fullPage/css-glitch-effect/ | Glitch CSS pur : texte, images, scanlines, RGB split |
 | Luciano Lupo — Digital Garden | https://lucianolupo.com/ | Veille créative / méthode « digital garden » (docs vivantes) |
+| CRYENGINE — Game Dev Tips VFX | https://www.cryengine.com/news/view/game-design-tips-tricks-visual-effects | Message gameplay d'abord, références réelles, tester tôt, simplicité |
+| Pixune — Ultimate Guide to Game VFX | https://pixune.com/blog/the-ultimate-guide-to-game-vfx/ | Rôles VFX (feedback, guidage, ambiance), déclenchement gameplay, perf |
+| VFX Apprentice — Style Guides | https://www.vfxapprentice.com/blog/creating-vfx-style-guides-for-games | Style guide, lisibilité vs bruit, formes/couleurs/timing |
+| Riot — LoL VFX Style Guide (2017) | https://nexus.leagueoflegends.com/en-us/2017/10/dev-leagues-vfx-style-guide/ | Clarté gameplay, hiérarchie, impact visuel = impact gameplay |
 
 ---
 
@@ -126,7 +130,7 @@ float b = texture2D(image, vec2(uv.x + offset - chromatic, uv.y)).b;
 | **Urgence / Breach / Meltdown** | `#ff4d00`, `#ff6b2b` (`DARK_HEX.breach`) — jauge Overload, boss, danger uniquement |
 | **Hub / menu** | charbon + or `#c5a059`, grille `hexGridHub` dorée, vignette or/orange légère — **pas de bleu froid** |
 | **Arène** | vignette orange (`.so-terminal-vignette--arena`), unité chaleur avec le hub |
-| **Ennemis corrompus** | `#8b5cf6` violet, `#22d3ee` cyan |
+| **Ennemis corrompus** | `#b3a3f0` violet clair (`corruptVioletLite`), creux sombre `#120820` = HP, scanlines, contour violet ; boss = contour orange breach |
 | **Fond** | `#0a0a0f` / `#131018` |
 | **Texte HUD** | anglais, sans-serif ; titres serif doré `#c5a059` |
 
@@ -143,6 +147,98 @@ float b = texture2D(image, vec2(uv.x + offset - chromatic, uv.y)).b;
 
 ---
 
+## Principes game VFX (design industrie)
+
+Synthèse CRYENGINE, Pixune, VFX Apprentice (Sparkball / Hallzy), Riot LoL 2017.
+
+### Priorités (ordre non négociable)
+
+1. **Clarté gameplay** — le joueur comprend la mécanique sans lire de texte.
+2. **Réduction du bruit visuel** — pas d'effet décoratif permanent qui pollue l'arène.
+3. **Thème / identité** — terminal ARCH, hex, surcharge, pas fantasy biologique.
+4. **Satisfaction** — flash court, timing snappy, reward visuel au bon moment.
+
+### Impact visuel = impact gameplay (LoL)
+
+- Purge principale : **forte** (cyan/blanc, shake, scanlines).
+- Dégâts secondaires (ex. Purge Splash) : **plus discrets** que la zone centrale si un VFX est ajouté un jour.
+- Boss elite : **plus visible** que normal (taille + teinte breach), cohérent avec la menace.
+
+### Cinq leviers du style guide
+
+| Levier | Question | Zero Archive |
+|--------|----------|--------------|
+| **Gameplay** | Quelle info est critique ? | Creux hex = HP restant ; purge = zone d'exécution |
+| **Value** | Qu'est-ce qui doit briller ? | Purge cyan > ennemis violet clair > fond charbon |
+| **Couleur** | Friendly vs menace ? | Purge = Node-0 ; violet = ennemis ; orange = breach/boss |
+| **Forme** | Net, large, fluide ? | Hex flat-top, scanlines, langage terminal |
+| **Timing** | Rapide ou durable ? | Flash impact ~200 ms ; rotation lente (~52 s/tour hex) |
+
+### Primary vs Secondary (LoL / Sparkball)
+
+- **Primary** = porte le gameplay (zone purge, creux HP, flash hit).
+- **Secondary** = ambiance (halo, scanlines, glitch sporadique).
+
+Les secondaires **soutiennent** le primary, ne le remplacent pas.
+
+### Timing « snappy » (VFX Apprentice)
+
+- Action principale dans le **premier quart** de la durée de l'effet.
+- Puis fade / erosion (ease-out, pas linéaire).
+- Glitch : **rare et aléatoire**, jamais la même ligne en boucle fixe.
+
+### Simplicité (CRYENGINE)
+
+- Chaque effet **deliver a message** avant d'être joli.
+- Tester **in-game** (plusieurs ennemis + purge active).
+- Pas de sur-ingénierie : `Graphics` Pixi procédural suffit pour l'arène actuelle.
+- VFX **déclenchés par l'état gameplay** (dégâts, HP, phase), pas par la possession d'un module en UI.
+
+---
+
+## Style guide gameplay Zero Archive (canon v0.1)
+
+### Langage visuel arène
+
+| Élément | Rendu | Fichier(s) |
+|---------|-------|------------|
+| Zone de purge | Cercle cyan/blanc, scanlines horizontales, shake court à l'impact | `purgeZone.ts`, `PurgeZoneEngine.tsx` |
+| Ennemi normal | Hex violet clair, dégradé radial, halo discret, scanlines alternées + glitch rare, creux hex sombre = HP | `corruptedProcessVisual.ts` |
+| Ennemi elite | Même skin, rayon plus grand, **contour orange breach** | `enemyClass.ts`, `corruptedProcessVisual.ts` |
+| Hit purge | Anneau hex ambre sur la cible | `EffectEngine.tsx` |
+| Purge Splash (gameplay) | Dégâts en anneau autour de la zone ; **shockwave cyan** à chaque purge hit (module installé) | `PurgeZoneEngine.tsx`, `effects.ts`, `purgeZone.ts` |
+
+### Couches ennemi (ordre de draw)
+
+1. Halo violet (respiration, détachement du fond)
+2. Fill hex + dégradé radial (volume)
+3. Creux HP (hex sombre central, grandit quand HP baisse)
+4. Scanlines (clip hex, masquées sur le creux)
+5. Contour hex (alpha lié au HP)
+6. Flash impact si `flashTimer > 0`
+
+### Règles scanlines ennemi
+
+- Synchronisées avec la **rotation** de l'hex (repère local, pas horizontal écran).
+- **Clippées** sur le contour hex (pas de débordement).
+- **Absentes** sur le creux sombre (anneau violet uniquement).
+- Alternance clair / foncé (effet CRT).
+- Glitch : 1–2 lignes aléatoires par slot temporel, décalage horizontal + trait fantôme.
+
+### Tokens couleurs VFX arène
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `purge` / `purgeGlow` | `#e8f4f8` / `#22d3ee` | Zone de purge Node-0 |
+| `corruptVioletLite` | `#b3a3f0` | Corps ennemi |
+| `corruptVoid` | `#120820` | Creux HP |
+| `corruptScanline` / `corruptScanlineDim` | `#e9e0ff` / `#6b5a9e` | Scanlines ennemi |
+| `breach` / `breachGlow` | `#ff4d00` / `#ff6b2b` | Boss, urgence |
+
+Source canonique code : `src/theme/darkHexTerminal.ts`.
+
+---
+
 ## Luciano Lupo — digital garden
 
 https://lucianolupo.com/ — jardin numérique (notes evergreen, projets, agents).
@@ -155,10 +251,22 @@ Pertinence indirecte pour Zero Archive :
 
 ## Checklist agent avant implémentation
 
+### Technique
+
 - [ ] L'effet est-il dans `src/ui/` (CSS) ou `src/game/` (Pixi) ?
 - [ ] Respecte-t-il la séparation UI / Game (pas de useState 60 FPS) ?
 - [ ] Le glitch est-il **ponctuel ou seuil-driven**, pas permanent partout ?
 - [ ] Pas de `getImageData` en boucle dans l'arène ?
 - [ ] Couleurs alignées `darkHexTerminal.ts` ?
-- [ ] Textes UI en **anglais** ?
+- [ ] Textes UI en **i18n EN + FR** si visible joueur ?
 - [ ] Nouvelle lib npm ? → **demander validation**.
+
+### Design gameplay (LoL / CRYENGINE)
+
+- [ ] **Quel message** le joueur doit-il lire ? (obligatoire)
+- [ ] Effet **primary** (gameplay) ou **secondary** (ambiance) ?
+- [ ] **Impact visuel** proportionnel à l'impact gameplay ?
+- [ ] Lisible avec **5–10 ennemis** + purge active ?
+- [ ] **Timing snappy** (flash court, fade ease-out) ?
+- [ ] Déclenché par **état gameplay** (dégâts, HP, phase), pas par UI/module tree seul ?
+- [ ] Mise à jour **`docs/lexique-jeu.md`** si nouvelle mécanique ou zone visible nommable ?

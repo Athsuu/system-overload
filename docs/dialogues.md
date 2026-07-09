@@ -15,8 +15,8 @@
 | `signal_handshake` | `tutorial.signalHandshake` | INCOMING SIGNAL | SIGNAL ENTRANT | …noi—se… [ERR_702] Node-0, parse th—is! Send a re—turn code, wak—e up... pl--ea--se... Connection stable. Do not drop. | …br—uit… [ERR_702] Node-0, parse ç—a ! Envoie un code de ré—ponse, ré—veille-toi... s'il t—e pl—aît... Connexion stable. Ne coupe pas. | Hub `MENU`, première visite ; `unlockWhen: true` | `featured-center` |
 | `welcome` | `tutorial.archIntro` + `tutorial.welcomeContext` | ARCH | ARCH | I'm ARCH, Archive Recovery & Containment Heuristic. Listen. We don't have much time. Corrupted processes flood the Zero Archive. The Breach is rising. I compiled you as a child process, operating within a quarantined thread, the last bubble still stable inside a dying archive. The Seed is the original pure source code of the Zero Archive. I am trying to save it. Buy us as much time as possible. | Je suis ARCH, Heuristique de récupération et de confinement d'archive. Écoute. On n'a pas beaucoup de temps. Les processus corrompus inondent l'Archive Zéro. La Brèche monte. Je t'ai compilé comme processus enfant, opérant dans un thread en quarantaine, la dernière bulle encore stable dans une archive qui meurt. La Graine est le code source originel pur de l'Archive Zéro. J'essaie de la sauver. Gagne-nous un maximum de temps. | `signal_handshake` dismissé (Skip / Got it) | `featured-center` |
 | `node0_role` | `tutorial.node0Role` | NODE-0 | NODE-0 | You are Node-0. Your active thread is all that stands between the corruption and the Seed. Corrupted processes hammer the quarantine wall. Every purge hit and every passing second feeds the Breach closer to Meltdown. | Tu es Node-0. Ton thread actif est tout ce qui sépare la corruption de la Graine. Les processus corrompus martèlent le mur de quarantaine. Chaque purge et chaque seconde rapproche la Brèche de la fusion. | `welcome` dismissé | `featured-center` |
-| `mission_loop` | `tutorial.missionLoop` | Contain the Breach | Contenir la Brèche | Stop corrupted processes before they break quarantine. Launch a run. Purge the arena and extract Hex Shards from every kill. When the thread ends, spend them on the Skill Tree. I advise. You execute. Each reinforcement buys us time toward the Uplink. | Stoppe les processus corrompus avant qu'ils ne brisent la quarantaine. Lance une run : purge l'arène et extrais des Éclats hex à chaque kill. Quand le thread se termine, dépense-les sur l'arbre de compétences. Je conseille. Tu exécutes. Chaque renforcement nous fait gagner du temps pour l'Uplink. | `node0_role` dismissé | `start-run` (spotlight) |
-| `skill_tree_intro` | `tutorial.skillTreeIntro` | Skill Tree | Arbre de compétences | This hex grid is our best shot. It integrates your permanent modules between runs. I cannot install them directly. Select a node to execute the reinforcement. I have no clean blueprint and I am routing untested protocols. We improvise, or we lose the Seed. | Cette grille hex est notre meilleure chance. Elle intègre tes modules permanents entre les runs. Je ne peux pas les installer directement. Sélectionne un nœud pour exécuter le renforcement. Je n'ai pas de schéma propre et je route des protocoles non testés. On improvise, ou on perd la Graine. | `mission_loop` dismissé · se complète si `skillNodeSelected` | `skill-tree` (spotlight) |
+| `mission_loop` | `tutorial.missionLoop` | Contain the Breach | Contenir la Brèche | Stop corrupted processes before they break quarantine. Launch a run. Purge the arena and extract Hex Shards from every kill. When the thread ends, spend them on the Module Tree. I advise. You execute. Each reinforcement buys us time toward the Uplink. | Stoppe les processus corrompus avant qu'ils ne brisent la quarantaine. Lance une run : purge l'arène et extrais des Éclats hex à chaque kill. Quand le thread se termine, dépense-les sur l'arbre de modules. Je conseille. Tu exécutes. Chaque renforcement nous fait gagner du temps pour l'Uplink. | `node0_role` dismissé | `start-run` (spotlight) |
+| `module_tree_intro` | `tutorial.moduleTreeIntro` | Module Tree | Arbre de modules | This hex grid is our best shot. It integrates your permanent modules between runs. I cannot install them directly. Select a node to execute the reinforcement. I have no clean blueprint and I am routing untested protocols. We improvise, or we lose the Seed. | Cette grille hex est notre meilleure chance. Elle intègre tes modules permanents entre les runs. Je ne peux pas les installer directement. Sélectionne un nœud pour exécuter le renforcement. Je n'ai pas de schéma propre et je route des protocoles non testés. On improvise, ou on perd la Graine. | `mission_loop` dismissé · se complète si `moduleNodeSelected` | `module-tree` (spotlight) |
 
 **Labels carte (menu_intro)** : `signal_handshake` → `arch.signalBufferLabel` · autres étapes → `arch.channelLabel` (`ARCH // ADVISORY CHANNEL`).
 
@@ -33,9 +33,9 @@ Les autres lignes ci-dessous sont des **tutoriels contextuels** (pas de `groupId
 |----------|------------------|----------|----------|------------------|------------------|-------------|-----------|
 | `purge_zone` | `tutorial.purgeAction` | Purge Zone | Zone de purge | You're live. Your purge zone is the only weapon inside quarantine. Hold it over corrupted processes to destroy them. Every purge hit and every passing second feeds Overload. | Tu es en ligne. Ta zone de purge est la seule arme en quarantaine. Maintiens-la sur les processus corrompus pour les détruire. Chaque coup de purge et chaque seconde qui passe alimente la Surcharge. | `runsStarted >= 1` · écran `PLAYING` | `featured-center` (anchored) |
 | `overload` | `tutorial.overloadStakes` + `tutorial.overloadGoal` | Overload | Surcharge | Overload is the live Breach meter on your thread. Keep it under control. At 100% Overload. Meltdown. The quarantine fails. Contain the threat before quarantine breaks. | La Surcharge est le compteur de Brèche en direct sur ton thread. Garde-le sous contrôle. À 100 % de Surcharge. Fusion. La quarantaine cède. Contiens la menace avant que la quarantaine ne cède. | `runsStarted >= 1` · `PLAYING` | `overload-bar` (spotlight) |
-| `run_shards` | `tutorial.hexShardsUnified` | Hex Shards | Éclats hex | Hex Shards are stable data fragments salvaged from corrupted processes. They drop when you purge a target. Sweep your purge zone over them to collect. Spend them on the Skill Tree to reinforce yourself. | Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus. Ils tombent au sol quand tu purges une cible. Passe ta zone de purge dessus pour les ramasser. Dépense-les sur l'arbre de compétences pour te renforcer. | `runsStarted >= 1` · `PLAYING` | `hex-shards` (spotlight) |
+| `run_shards` | `tutorial.hexShardsUnified` | Hex Shards | Éclats hex | Hex Shards are stable data fragments salvaged from corrupted processes. They drop when you purge a target. Sweep your purge zone over them to collect. Spend them on the Module Tree to reinforce yourself. | Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus. Ils tombent au sol quand tu purges une cible. Passe ta zone de purge dessus pour les ramasser. Dépense-les sur l'arbre de modules pour te renforcer. | `runsStarted >= 1` · `PLAYING` | `hex-shards` (spotlight) |
 | `overclock` | `tutorial.overclockRisk` | Overclock | Overclock | Overclock surges purge output, but Overload builds faster while active. Press Space when you can handle the pressure. | L'Overclock booste la purge, mais la Surcharge monte plus vite tant qu'il est actif. Espace quand tu peux encaisser la pression. | `[DÉSACTIVÉ]` `unlockWhen: () => false` | `overclock` (spotlight) |
-| `skill_tree` | `tutorial.skillTreeLore` | Skill Enhancements | Améliorations | Between runs, spend Hex Shards on hex nodes. Every upgrade hardens the quarantine before the next breach. | Entre les runs, dépense les Éclats hex sur les nœuds hex. Chaque amélioration renforce la quarantaine avant la prochaine brèche. | Écran `UPGRADING` · se complète si `upgradePurchased` | `skill-tree` (anchored) |
+| `module_tree` | `tutorial.moduleTreeLore` | Module Enhancements | Améliorations | Between runs, spend Hex Shards on hex nodes. Every upgrade hardens the quarantine before the next breach. | Entre les runs, dépense les Éclats hex sur les nœuds hex. Chaque amélioration renforce la quarantaine avant la prochaine brèche. | Écran `UPGRADING` · se complète si `upgradePurchased` | `module-tree` (anchored) |
 | `prestige` | `tutorial.prestigeReveal` | Breach Contained | Brèche contenue | Breach Anchor down. I'm opening a deeper reconfiguration layer. Prestige. Core reconfiguration, permanent gains. The Uplink is still ahead. We take this anyway. | Ancre de Brèche neutralisée. J'ouvre une couche de reconfiguration plus profonde. Prestige. Reconfiguration du noyau, gains permanents. L'Uplink est encore devant. On y va quand même. | `prestigeUnlocked` · écrans `RUN_END` ou `MENU` | `featured-center` (featured) |
 | `flux_drive` | `tutorial.fluxDriveLore` | Flux Drive | Flux Drive | Flux Drive doubles simulation speed inside quarantine. Faster combat, faster timers, faster Overload. Toggle only if you can handle the pressure. | Flux Drive double la vitesse de simulation en quarantaine. Combat plus rapide, timers plus rapides, Surcharge plus rapide. Active seulement si tu encaisses la pression. | `[DÉSACTIVÉ]` `unlockWhen: () => false` | `flux-drive` (anchored) |
 
@@ -70,8 +70,20 @@ Composant : `RunEndScreen.tsx` · condition : `runOutcome === 'victory_boss'`.
 |------|----------|----------|----------|-------------|
 | Titre système | `runEnd.victoryTitle` | Breach Contained | Brèche contenue | Victoire boss |
 | Sous-titre système | `runEnd.victorySubtitle` | Threat contained. Node-0 holds. | Menace contenue. Node-0 tient. | + vague affichée (`ui.wave`) |
-| **ARCH** | `runEnd.victoryArch` | Anchor down. Hex Shards to vault. We bought time. Don't waste it. | Ancre down. Éclats hex au coffre. On a gagné du temps. Ne le gâche pas. | Victoire boss |
 | Système (shards) | `currency.shardsEarnedSuffix` + `currency.transferredToVault` | +N Hex Shards · Earned this run | +N Éclats hex · Gagnés cette run | Toujours |
+
+### Pool ARCH (rotation, 1 variante aléatoire par victoire boss)
+
+Sélection : `pickVictoryArchVariantIndex(anchorEarned)` · deck des indices restants en `sessionStorage` (`zero-archive-victory-arch-remaining`).  
+**Règle sans Anchor Fragment** (clear boss déjà fait sur ce cycle) : toujours la variante générale `[0]`.  
+**Règle avec premier Anchor Fragment** (`anchorFragmentEarnedThisRun`) : deck `[0,1]` mélangé aléatoirement ; une phrase ne revient qu'après l'autre.
+
+| # | Clé i18n | Texte EN | Texte FR | Éligibilité |
+|---|----------|----------|----------|-------------|
+| 1 | `runEnd.victoryArchVariants[0]` | Anchor down. Hex Shards to vault. We bought time. Don't waste it. | Ancre down. Éclats hex au coffre. On a gagné du temps. Ne le gâche pas. | Toujours |
+| 2 | `runEnd.victoryArchVariants[1]` | Anchor data secured. Capstone modules are online. Spend fragments on the marked nodes. | Données d'ancre sécurisées. Les modules capstone sont en ligne. Dépense les fragments sur les nœuds marqués. | Premier clear boss du cycle (Anchor Fragment gagné) |
+
+Référence narrative validée : `docs/narrative.md` § ARCH, *Premier Anchor Fragment* (variante `[1]`).
 
 ---
 
@@ -100,19 +112,7 @@ Sélection : `pickMeltdownArchVariantIndex()` · deck des indices restants en `s
 
 ---
 
-## 6. Écran de fin: Premier Anchor Fragment (unique, one-shot)
-
-Composant : `RunEndScreen.tsx` · condition : `anchorFragmentEarnedThisRun` (premier clear boss du cycle en cours).
-
-| Rôle | Clé i18n | Texte EN | Texte FR | Déclencheur |
-|------|----------|----------|----------|-------------|
-| **ARCH** | `runEnd.firstAnchorArch` | Anchor data secured. Capstone modules are online. Spend fragments on the marked nodes. | Données d'ancre sécurisées. Les modules capstone sont en ligne. Dépense les fragments sur les nœuds marqués. | 1ère fois qu'un Anchor Fragment entre au vault |
-
-Référence narrative validée : `docs/narrative.md` § ARCH, *Premier Anchor Fragment*.
-
----
-
-## 7. Écran de fin: Prestige
+## 6. Écran de fin: Prestige
 
 Composant : `RunEndScreen.tsx` · condition : `prestigeUnlockedThisRun` (première victoire boss de la session / run).
 
@@ -125,7 +125,7 @@ Composant : `RunEndScreen.tsx` · condition : `prestigeUnlockedThisRun` (premiè
 
 ---
 
-## 8. Historique des ajouts
+## 7. Historique des ajouts
 
 | Date | Dialogue ajouté | Contexte | Version narrative.md liée |
 |------|-----------------|----------|---------------------------|
@@ -136,8 +136,8 @@ Composant : `RunEndScreen.tsx` · condition : `prestigeUnlockedThisRun` (premiè
 | 2026-07-08 | Unification terminologique **Hex Shards**, fusion tuto `run_shards` + `vault` (ID conservé : `run_shards`) ; retrait de « Run Shards » / « Available Shards » des textes joueur | Économie méta v4 · HUD · hub · run end | v0.7 |
 | 2026-07-08 | Nettoyage i18n tutoriel, retrait clés orphelines `shardsWhy`, `shardsLoop`, `vaultLore`, `breachVentHint`, `bossHint` (seule `hexShardsUnified` reste branchée) | Maintenance locales | v0.7 |
 | 2026-07-08 | Retrait des tirets cadratin (—) dans les textes lore joueur (i18n) et docs canon (`narrative`, `dialogues`, `lexique`, screenplay) | Style dialogue plus direct | v0.7 |
-| 2026-07-08 | Refonte `skill_tree_intro` + retrait des deux-points superflus dans la prose ARCH (virgules/points) | Lisibilité tutos + règle `.cursorrules` | v0.7 |
-| 2026-07-08 | `[NON IMPLÉMENTÉ]` cartes tuto Breach Vent / boss dédiées | Lore dispo dans `LORE.breach.vent` · ping run `archAmbient.bossIncoming` | v0.7 |
+| 2026-07-08 | Refonte `module_tree_intro` + retrait des deux-points superflus dans la prose ARCH (virgules/points) | Lisibilité tutos + règle `.cursorrules` | v0.7 |
+| 2026-07-09 | Pool 2 variantes `runEnd.victoryArchVariants` (rotation deck, 1 réplique ARCH par victoire boss ; variante ancre uniquement si premier clear cycle) | Écran victoire, fin double dialogue ARCH | v0.7 |
 
 ---
 

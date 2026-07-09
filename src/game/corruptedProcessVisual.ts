@@ -1,101 +1,43 @@
 /**
- * NODE-ALPHA — Corrupted Process (#8b5cf6 / #22d3ee)
+ * Corrupted Process — skin Lite (violet clair, scanlines, creux HP).
  */
 import type { Graphics } from 'pixi.js';
 import { FillGradient } from 'pixi.js';
 import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
 import { FLASH_DURATION_MS } from './constants';
 import { getEnemyHexRadius } from './enemyClass';
-import { drawRotatedFlatTopHexFillGradient, drawRotatedFlatTopHexStroke } from './hexDraw';
+import {
+  drawRotatedFlatTopHexFill,
+  drawRotatedFlatTopHexFillGradient,
+  drawRotatedFlatTopHexStroke,
+} from './hexDraw';
+import { getFlatTopHexVertices } from './hexUtils';
 import type { GameEffect } from './effects';
 import type { DissipationNode } from './types';
 
-const NODE_VIOLET = DARK_HEX_PIXI.corruptViolet;
-const NODE_CYAN = DARK_HEX_PIXI.corruptCyan;
-const VIOLET_DEEP = 0x4c1d95;
-const VIOLET_DARK = 0x5b21b6;
-const VIOLET_BRIGHT = 0xa78bfa;
-
-const SATELLITE_ORBIT_PERIOD_S = 36 / 1.3 / 1.44;
 const HEX_FRAME_PERIOD_S = 52 / 1.44;
-const SATELLITE_ANGLES = [-Math.PI / 3, Math.PI / 3] as const;
-const HEX_BAND_SCALE = 0.5136;
-const CORE_SCALE = 0.085 * 1.3 * 1.2;
-const BOSS_CORE_SCALE = 0.1 * 1.3 * 1.2;
-const CORRUPT_GRAIN_COUNT = 10;
-const BOSS_GRAIN_COUNT = 14;
-const SCANLINE_COUNT = 5;
+const SCANLINE_COUNT = 4;
+const HEX_FILL_SCALE = 0.92;
+const INNER_RADIUS_SCALE = 0.88;
+const HP_VOID_EASE = 0.85;
+const ELITE_STROKE_WIDTH = 2.5;
+const NORMAL_STROKE_WIDTH = 1.5;
+const SCANLINE_EDGE_INSET = 0.45;
+const HALO_SCALE = 1.12;
+const HALO_ALPHA = 0.2;
+const VOID_RIM_WIDTH = 0.85;
+const VOID_RIM_ALPHA = 0.42;
 
-const HEX_BAND_GRADIENT = new FillGradient({
+const HEX_BODY_GRADIENT = new FillGradient({
   type: 'radial',
-  center: { x: 0.5, y: 0.45 },
+  center: { x: 0.5, y: 0.42 },
   innerRadius: 0,
   outerCenter: { x: 0.5, y: 0.5 },
   outerRadius: 0.5,
   colorStops: [
-    { offset: 0.42, color: 'rgba(76, 29, 149, 0.92)' },
-    { offset: 0.68, color: 'rgba(139, 92, 246, 1)' },
-    { offset: 0.88, color: 'rgba(167, 139, 250, 0.55)' },
-    { offset: 1, color: 'rgba(49, 16, 96, 0.95)' },
-  ],
-  textureSpace: 'local',
-});
-
-const BOSS_HEX_BAND_GRADIENT = new FillGradient({
-  type: 'radial',
-  center: { x: 0.5, y: 0.45 },
-  innerRadius: 0,
-  outerCenter: { x: 0.5, y: 0.5 },
-  outerRadius: 0.5,
-  colorStops: [
-    { offset: 0.4, color: 'rgba(80, 20, 8, 0.95)' },
-    { offset: 0.65, color: 'rgba(255, 77, 0, 0.75)' },
-    { offset: 0.85, color: 'rgba(139, 92, 246, 0.45)' },
-    { offset: 1, color: 'rgba(40, 10, 4, 0.95)' },
-  ],
-  textureSpace: 'local',
-});
-
-const VOID_GRADIENT = new FillGradient({
-  type: 'radial',
-  center: { x: 0.5, y: 0.5 },
-  innerRadius: 0,
-  outerCenter: { x: 0.5, y: 0.5 },
-  outerRadius: 0.5,
-  colorStops: [
-    { offset: 0, color: 'rgba(1, 0, 6, 1)' },
-    { offset: 0.55, color: 'rgba(6, 2, 14, 1)' },
-    { offset: 0.85, color: 'rgba(14, 6, 28, 0.92)' },
-    { offset: 1, color: 'rgba(22, 10, 38, 0.75)' },
-  ],
-  textureSpace: 'local',
-});
-
-const CORE_BLOOM_GRADIENT = new FillGradient({
-  type: 'radial',
-  center: { x: 0.5, y: 0.48 },
-  innerRadius: 0,
-  outerCenter: { x: 0.5, y: 0.5 },
-  outerRadius: 0.5,
-  colorStops: [
-    { offset: 0, color: 'rgba(255, 255, 255, 0.98)' },
-    { offset: 0.15, color: 'rgba(34, 211, 238, 0.9)' },
-    { offset: 0.5, color: 'rgba(34, 211, 238, 0.2)' },
-    { offset: 1, color: 'rgba(34, 211, 238, 0)' },
-  ],
-  textureSpace: 'local',
-});
-
-const BOSS_CORE_GRADIENT = new FillGradient({
-  type: 'radial',
-  center: { x: 0.5, y: 0.5 },
-  innerRadius: 0,
-  outerCenter: { x: 0.5, y: 0.5 },
-  outerRadius: 0.5,
-  colorStops: [
-    { offset: 0, color: 'rgba(255, 200, 120, 1)' },
-    { offset: 0.4, color: 'rgba(255, 107, 43, 0.6)' },
-    { offset: 1, color: 'rgba(255, 77, 0, 0)' },
+    { offset: 0, color: 'rgba(221, 214, 254, 0.96)' },
+    { offset: 0.55, color: 'rgba(179, 163, 240, 0.94)' },
+    { offset: 1, color: 'rgba(96, 78, 158, 0.9)' },
   ],
   textureSpace: 'local',
 });
@@ -107,24 +49,27 @@ const HIT_BURST_GRADIENT = new FillGradient({
   outerCenter: { x: 0.5, y: 0.5 },
   outerRadius: 0.5,
   colorStops: [
-    { offset: 0, color: 'rgba(255, 255, 255, 0.9)' },
-    { offset: 0.4, color: 'rgba(34, 211, 238, 0.45)' },
-    { offset: 1, color: 'rgba(34, 211, 238, 0)' },
+    { offset: 0, color: 'rgba(255, 255, 255, 0.92)' },
+    { offset: 0.35, color: 'rgba(179, 163, 240, 0.45)' },
+    { offset: 1, color: 'rgba(139, 92, 246, 0)' },
   ],
   textureSpace: 'local',
 });
 
 export function tickCorruptProcessAnim(nodes: DissipationNode[], deltaMs: number): void {
   if (deltaMs <= 0) return;
-  const satelliteDelta = (deltaMs * 0.001 * (Math.PI * 2)) / SATELLITE_ORBIT_PERIOD_S;
   const hexDelta = (deltaMs * 0.001 * (Math.PI * 2)) / HEX_FRAME_PERIOD_S;
   for (const node of nodes) {
-    node.satelliteAngle += satelliteDelta;
     node.hexAngle += hexDelta;
     if (node.flashTimer > 0) {
       node.flashTimer = Math.max(0, node.flashTimer - deltaMs);
     }
   }
+}
+
+function corruptHash(seed: number, index: number): number {
+  const t = Math.sin(seed * 127.1 + index * 311.7) * 43758.5453;
+  return t - Math.floor(t);
 }
 
 function drawRadialFill(
@@ -140,111 +85,215 @@ function drawRadialFill(
   graphics.fill({ fill: gradient, alpha });
 }
 
-function getHexBandRadii(radius: number, isElite: boolean): { outerHexR: number; innerCircleR: number } {
-  const outerHexR = radius * (isElite ? 0.94 : 0.92);
-  const bandRadial = (outerHexR / radius - (isElite ? 0.5 : 0.48)) * HEX_BAND_SCALE;
-  return { outerHexR, innerCircleR: outerHexR - bandRadial * radius };
+function getInnerRadius(radius: number): number {
+  return radius * INNER_RADIUS_SCALE;
 }
 
-function corruptHash(seed: number, index: number): number {
-  const t = Math.sin(seed * 127.1 + index * 311.7) * 43758.5453;
-  return t - Math.floor(t);
-}
-
-function drawCorruptGrain(
+function drawHpVoid(
   graphics: Graphics,
   cx: number,
   cy: number,
   innerR: number,
-  outerR: number,
-  seed: number,
+  hexAngle: number,
+  hpRatio: number,
+): void {
+  const hollowT = (1 - hpRatio) ** HP_VOID_EASE;
+  const voidR = innerR * hollowT;
+  if (voidR <= 0.5) return;
+
+  drawRotatedFlatTopHexFill(
+    graphics,
+    cx,
+    cy,
+    voidR,
+    hexAngle,
+    DARK_HEX_PIXI.corruptVoid,
+    1,
+  );
+
+  const rimAlpha = VOID_RIM_ALPHA * (0.35 + hollowT * 0.65);
+  drawRotatedFlatTopHexStroke(
+    graphics,
+    cx,
+    cy,
+    voidR,
+    hexAngle,
+    DARK_HEX_PIXI.corruptScanline,
+    VOID_RIM_WIDTH,
+    rimAlpha,
+    'butt',
+    'miter',
+  );
+}
+
+function drawOuterHalo(
+  graphics: Graphics,
+  cx: number,
+  cy: number,
+  fillR: number,
   hexAngle: number,
   isElite: boolean,
 ): void {
-  const count = isElite ? BOSS_GRAIN_COUNT : CORRUPT_GRAIN_COUNT;
-  const band = outerR - innerR;
-  if (band <= 1) return;
-
-  for (let i = 0; i < count; i += 1) {
-    const angle = corruptHash(seed, i) * Math.PI * 2 + hexAngle * 0.015;
-    const radialT = 0.12 + corruptHash(seed, i + 17) * 0.76;
-    const r = innerR + band * radialT;
-    const px = cx + Math.cos(angle) * r;
-    const py = cy + Math.sin(angle) * r;
-    const len = 1.4 + corruptHash(seed, i + 33) * 3.6;
-    const segAngle = angle + (corruptHash(seed, i + 51) - 0.5) * 1.1;
-    const flicker = 0.85 + Math.sin(hexAngle * 6 + seed + i * 2.1) * 0.15;
-    const useCyan = corruptHash(seed, i + 69) > 0.68;
-
-    graphics.moveTo(px, py);
-    graphics.lineTo(px + Math.cos(segAngle) * len, py + Math.sin(segAngle) * len);
-    graphics.stroke({
-      color: useCyan ? NODE_CYAN : isElite ? DARK_HEX_PIXI.breachGlow : VIOLET_BRIGHT,
-      width: 0.75,
-      alpha: (0.1 + corruptHash(seed, i + 88) * 0.22) * flicker,
-    });
-  }
+  const haloR = fillR * HALO_SCALE;
+  drawRotatedFlatTopHexFill(
+    graphics,
+    cx,
+    cy,
+    haloR,
+    hexAngle,
+    isElite ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptViolet,
+    isElite ? HALO_ALPHA * 0.85 : HALO_ALPHA,
+  );
 }
 
-function drawVoidScanlines(
+function clipHorizontalToFlatTopHex(
+  localY: number,
+  hexR: number,
+): { x1: number; x2: number } | null {
+  const verts = getFlatTopHexVertices(0, 0, hexR);
+  const xs: number[] = [];
+
+  for (let i = 0; i < verts.length; i += 1) {
+    const a = verts[i];
+    const b = verts[(i + 1) % verts.length];
+    const yMin = Math.min(a.y, b.y);
+    const yMax = Math.max(a.y, b.y);
+    if (localY < yMin - 1e-6 || localY > yMax + 1e-6) continue;
+
+    if (Math.abs(b.y - a.y) < 1e-6) {
+      if (Math.abs(localY - a.y) < 1e-6) {
+        xs.push(a.x, b.x);
+      }
+      continue;
+    }
+
+    const t = (localY - a.y) / (b.y - a.y);
+    if (t >= -1e-6 && t <= 1 + 1e-6) {
+      xs.push(a.x + t * (b.x - a.x));
+    }
+  }
+
+  if (xs.length < 2) return null;
+  xs.sort((left, right) => left - right);
+  return { x1: xs[0], x2: xs[xs.length - 1] };
+}
+
+function isScanlineGlitching(seed: number, slot: number, lineIndex: number): boolean {
+  const lineSpan = SCANLINE_COUNT * 2 + 1;
+  const pick = (offset: number) =>
+    Math.floor(corruptHash(seed, slot + offset) * lineSpan) - SCANLINE_COUNT;
+
+  if (lineIndex === pick(11)) return true;
+  return corruptHash(seed, slot + 23) > 0.5 && lineIndex === pick(29);
+}
+
+function getVoidRadius(innerR: number, hpRatio: number): number {
+  const hollowT = (1 - hpRatio) ** HP_VOID_EASE;
+  return innerR * hollowT;
+}
+
+function subtractVoidFromScanline(
+  outer: { x1: number; x2: number },
+  localY: number,
+  voidR: number,
+): Array<{ x1: number; x2: number }> {
+  if (voidR <= 0.5) return [outer];
+
+  const voidClip = clipHorizontalToFlatTopHex(localY, voidR);
+  if (!voidClip) return [outer];
+
+  const segments: Array<{ x1: number; x2: number }> = [];
+  if (voidClip.x1 > outer.x1 + 0.5) {
+    segments.push({ x1: outer.x1, x2: voidClip.x1 });
+  }
+  if (outer.x2 > voidClip.x2 + 0.5) {
+    segments.push({ x1: voidClip.x2, x2: outer.x2 });
+  }
+  return segments.filter((segment) => segment.x2 - segment.x1 >= 1);
+}
+
+function drawScanlineStroke(
   graphics: Graphics,
   cx: number,
   cy: number,
-  innerR: number,
+  cos: number,
+  sin: number,
+  localY: number,
+  lx1: number,
+  lx2: number,
+  color: number,
+  width: number,
+  alpha: number,
+): void {
+  graphics.moveTo(cx + lx1 * cos - localY * sin, cy + lx1 * sin + localY * cos);
+  graphics.lineTo(cx + lx2 * cos - localY * sin, cy + lx2 * sin + localY * cos);
+  graphics.stroke({ color, width, alpha });
+}
+
+function drawScanlines(
+  graphics: Graphics,
+  cx: number,
+  cy: number,
+  clipHexR: number,
+  voidR: number,
   hexAngle: number,
   seed: number,
+  hpRatio: number,
 ): void {
-  const spacing = innerR * 0.24;
+  const spacing = clipHexR * 0.28;
   const scroll = ((hexAngle / (Math.PI * 2)) % 1) * spacing;
+  const lowHpBoost = hpRatio < 0.3 ? 1.3 : 1;
+  const cos = Math.cos(hexAngle);
+  const sin = Math.sin(hexAngle);
+  const maxLocalY = clipHexR * (Math.sqrt(3) / 2);
+  const glitchSlot = Math.floor(hexAngle * 9 + corruptHash(seed, 3) * 48);
 
   for (let i = -SCANLINE_COUNT; i <= SCANLINE_COUNT; i += 1) {
-    const y = cy + i * spacing + scroll;
-    const dy = y - cy;
-    if (Math.abs(dy) >= innerR - 0.5) continue;
+    const localY = i * spacing + scroll;
+    if (Math.abs(localY) >= maxLocalY - 0.5) continue;
 
-    const halfW = Math.sqrt(innerR * innerR - dy * dy);
-    const glitch =
-      Math.sin(hexAngle * 11 + seed + i * 1.7) > 0.93
-        ? (corruptHash(seed, i + 120) - 0.5) * 5
-        : 0;
-    const alpha = 0.06 + corruptHash(seed, i + 140) * 0.09;
-    const color = i % 2 === 0 ? NODE_CYAN : VIOLET_DARK;
+    const clip = clipHorizontalToFlatTopHex(localY, clipHexR);
+    if (!clip) continue;
 
-    graphics.moveTo(cx - halfW, y + glitch);
-    graphics.lineTo(cx + halfW, y + glitch);
-    graphics.stroke({ color, width: 0.7, alpha });
+    const segments = subtractVoidFromScanline(clip, localY, voidR);
+    if (segments.length === 0) continue;
+
+    const isEvenLine = i % 2 === 0;
+    const isGlitch = isScanlineGlitching(seed, glitchSlot, i);
+    const glitch = isGlitch ? (corruptHash(seed, glitchSlot + i + 120) - 0.5) * 7 : 0;
+
+    const baseAlpha = (isEvenLine ? 0.12 : 0.05) + corruptHash(seed, i + 140) * (isEvenLine ? 0.05 : 0.03);
+    const alpha = Math.min(0.4, baseAlpha * lowHpBoost * (isGlitch ? 1.75 : 1));
+    const color = isEvenLine ? DARK_HEX_PIXI.corruptScanline : DARK_HEX_PIXI.corruptScanlineDim;
+    const width = isGlitch ? 0.95 : 0.7;
+
+    for (const segment of segments) {
+      const lx1 = segment.x1 + glitch + SCANLINE_EDGE_INSET;
+      const lx2 = segment.x2 + glitch - SCANLINE_EDGE_INSET;
+      if (lx2 - lx1 < 1) continue;
+
+      if (isGlitch) {
+        drawScanlineStroke(
+          graphics,
+          cx,
+          cy,
+          cos,
+          sin,
+          localY,
+          lx1 - 2.2,
+          lx2 - 2.2,
+          DARK_HEX_PIXI.corruptVioletLite,
+          0.55,
+          alpha * 0.35,
+        );
+      }
+
+      drawScanlineStroke(graphics, cx, cy, cos, sin, localY, lx1, lx2, color, width, alpha);
+    }
   }
 }
 
-function drawHexVertexGlitches(
-  graphics: Graphics,
-  cx: number,
-  cy: number,
-  outerHexR: number,
-  hexAngle: number,
-  seed: number,
-  isElite: boolean,
-): void {
-  for (let i = 0; i < 6; i += 1) {
-    const angle = hexAngle + (i * Math.PI) / 3;
-    const vx = cx + Math.cos(angle) * outerHexR;
-    const vy = cy + Math.sin(angle) * outerHexR;
-    const tickLen = 2.5 + corruptHash(seed, i + 200) * 2;
-    const nx = Math.cos(angle);
-    const ny = Math.sin(angle);
-    const jitter = Math.sin(hexAngle * 8 + seed + i) > 0.88 ? corruptHash(seed, i + 210) * 2 : 0;
-
-    graphics.moveTo(vx - nx * tickLen + ny * jitter, vy - ny * tickLen - nx * jitter);
-    graphics.lineTo(vx + nx * (tickLen * 0.35), vy + ny * (tickLen * 0.35));
-    graphics.stroke({
-      color: isElite ? DARK_HEX_PIXI.breachGlow : VIOLET_BRIGHT,
-      width: 1,
-      alpha: 0.22 + corruptHash(seed, i + 220) * 0.2,
-    });
-  }
-}
-
-function drawHexFrame(
+function drawHexBody(
   graphics: Graphics,
   cx: number,
   cy: number,
@@ -254,119 +303,46 @@ function drawHexFrame(
   isElite: boolean,
   corruptSeed: number,
 ): void {
-  const { outerHexR, innerCircleR } = getHexBandRadii(radius, isElite);
-  const ringAlpha = 0.6 + hpRatio * 0.35;
-  const ringColor = isElite ? DARK_HEX_PIXI.breach : NODE_VIOLET;
-  const bandGradient = isElite ? BOSS_HEX_BAND_GRADIENT : HEX_BAND_GRADIENT;
+  const fillR = radius * HEX_FILL_SCALE;
+  const innerR = getInnerRadius(radius);
+  const strokeAlpha = 0.4 + hpRatio * 0.6;
 
-  drawRotatedFlatTopHexFillGradient(graphics, cx, cy, outerHexR, hexAngle, bandGradient, ringAlpha);
-  drawRadialFill(graphics, cx, cy, innerCircleR, VOID_GRADIENT, 1);
-  drawCorruptGrain(graphics, cx, cy, innerCircleR, outerHexR, corruptSeed, hexAngle, isElite);
-  drawVoidScanlines(graphics, cx, cy, innerCircleR, hexAngle, corruptSeed);
+  drawOuterHalo(graphics, cx, cy, fillR, hexAngle, isElite);
+
+  drawRotatedFlatTopHexFillGradient(
+    graphics,
+    cx,
+    cy,
+    fillR,
+    hexAngle,
+    HEX_BODY_GRADIENT,
+    0.94,
+  );
+
+  drawHpVoid(graphics, cx, cy, innerR, hexAngle, hpRatio);
+  drawScanlines(
+    graphics,
+    cx,
+    cy,
+    fillR,
+    getVoidRadius(innerR, hpRatio),
+    hexAngle,
+    corruptSeed,
+    hpRatio,
+  );
 
   drawRotatedFlatTopHexStroke(
     graphics,
     cx,
     cy,
-    outerHexR,
+    fillR,
     hexAngle,
-    ringColor,
-    1.5,
-    ringAlpha * 0.62,
+    isElite ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptViolet,
+    isElite ? ELITE_STROKE_WIDTH : NORMAL_STROKE_WIDTH,
+    strokeAlpha,
     'butt',
     'miter',
   );
-  drawRotatedFlatTopHexStroke(
-    graphics,
-    cx,
-    cy,
-    outerHexR * 0.96,
-    hexAngle,
-    isElite ? VIOLET_DARK : VIOLET_DEEP,
-    0.75,
-    ringAlpha * 0.35,
-    'butt',
-    'miter',
-  );
-  drawHexVertexGlitches(graphics, cx, cy, outerHexR, hexAngle, corruptSeed, isElite);
-
-  graphics.circle(cx, cy, innerCircleR);
-  graphics.stroke({ color: isElite ? DARK_HEX_PIXI.breachGlow : NODE_CYAN, width: 0.75, alpha: ringAlpha * 0.12 });
-}
-
-function drawCore(
-  graphics: Graphics,
-  cx: number,
-  cy: number,
-  radius: number,
-  hpRatio: number,
-  isElite: boolean,
-  flashRatio: number,
-): void {
-  const baseCoreR = radius * (isElite ? BOSS_CORE_SCALE : CORE_SCALE);
-  const coreR = baseCoreR * hpRatio;
-  if (coreR <= 0.35) return;
-
-  const intensity = 0.82;
-  const hitGlow = flashRatio ** 1.4;
-
-  if (isElite) {
-    drawRadialFill(
-      graphics,
-      cx,
-      cy,
-      coreR * (2.8 + hitGlow * 1.6),
-      BOSS_CORE_GRADIENT,
-      intensity * 0.65 + hitGlow * 0.4,
-    );
-    graphics.circle(cx, cy, coreR);
-    graphics.fill({ color: DARK_HEX_PIXI.breachGlow, alpha: 0.95 });
-    return;
-  }
-
-  drawRadialFill(
-    graphics,
-    cx,
-    cy,
-    coreR * (3.2 + hitGlow * 2.2),
-    CORE_BLOOM_GRADIENT,
-    intensity * 0.55 + hitGlow * 0.5,
-  );
-  drawRadialFill(
-    graphics,
-    cx,
-    cy,
-    coreR * (1.15 + hitGlow * 0.9),
-    CORE_BLOOM_GRADIENT,
-    intensity + hitGlow * 0.35,
-  );
-  graphics.circle(cx, cy, coreR);
-  graphics.fill({ color: NODE_CYAN, alpha: 1 });
-}
-
-function drawSatellites(
-  graphics: Graphics,
-  cx: number,
-  cy: number,
-  radius: number,
-  orbitAngle: number,
-  hpRatio: number,
-): void {
-  const orbitR = radius * 0.38;
-  const dotR = 2.1;
-
-  graphics.circle(cx, cy, orbitR);
-  graphics.stroke({ color: NODE_CYAN, width: 1, alpha: 0.25 + hpRatio * 0.2 });
-
-  for (const offset of SATELLITE_ANGLES) {
-    const angle = orbitAngle + offset;
-    const sx = cx + Math.cos(angle) * orbitR;
-    const sy = cy + Math.sin(angle) * orbitR;
-    graphics.circle(sx, sy, dotR * 2.2);
-    graphics.fill({ color: NODE_CYAN, alpha: 0.12 * hpRatio });
-    graphics.circle(sx, sy, dotR);
-    graphics.fill({ color: NODE_CYAN, alpha: 0.9 });
-  }
 }
 
 function drawHitFeedback(
@@ -375,46 +351,40 @@ function drawHitFeedback(
   cy: number,
   radius: number,
   flashAlpha: number,
-  isElite: boolean,
-  hpRatio: number,
 ): void {
   const ease = flashAlpha ** 1.6;
-  const coreRef = radius * (isElite ? BOSS_CORE_SCALE : CORE_SCALE) * hpRatio;
-  if (coreRef <= 0.35) return;
-  drawRadialFill(graphics, cx, cy, coreRef * 6, HIT_BURST_GRADIENT, ease * 1);
-  drawRadialFill(graphics, cx, cy, coreRef * 3, HIT_BURST_GRADIENT, ease * 0.85);
+  const burstR = radius * 0.35;
+  drawRadialFill(graphics, cx, cy, burstR * 2.2, HIT_BURST_GRADIENT, ease);
+  drawRadialFill(graphics, cx, cy, burstR, HIT_BURST_GRADIENT, ease * 0.85);
 }
 
 export function drawCorruptedProcess(graphics: Graphics, node: DissipationNode): void {
   const radius = getEnemyHexRadius(node.enemyClass);
   const hpRatio = Math.max(0, node.hp / node.maxHp);
   const isElite = node.enemyClass === 'elite';
-
   const flashRatio = node.flashTimer > 0 ? node.flashTimer / FLASH_DURATION_MS : 0;
 
-  drawHexFrame(graphics, node.x, node.y, radius, node.hexAngle, hpRatio, isElite, node.corruptSeed);
-  drawCore(graphics, node.x, node.y, radius, hpRatio, isElite, flashRatio);
-  drawSatellites(graphics, node.x, node.y, radius, node.satelliteAngle, hpRatio);
+  drawHexBody(graphics, node.x, node.y, radius, node.hexAngle, hpRatio, isElite, node.corruptSeed);
 
   if (flashRatio > 0) {
-    drawHitFeedback(graphics, node.x, node.y, radius, flashRatio, isElite, hpRatio);
+    drawHitFeedback(graphics, node.x, node.y, radius, flashRatio);
   }
 }
 
 export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = (1 - progress) * 0.85;
-  const radius = getEnemyHexRadius(effect.enemyClass) * (0.2 + progress * 0.8);
+  const radius = getEnemyHexRadius(effect.enemyClass) * (0.25 + progress * 0.75);
+  const isElite = effect.enemyClass === 'elite';
 
-  drawRadialFill(graphics, effect.x, effect.y, radius * 0.18, CORE_BLOOM_GRADIENT, alpha);
   drawRotatedFlatTopHexStroke(
     graphics,
     effect.x,
     effect.y,
-    radius * 0.9,
+    radius,
     0,
-    NODE_VIOLET,
-    radius * 0.22,
+    isElite ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptVioletLite,
+    isElite ? ELITE_STROKE_WIDTH : NORMAL_STROKE_WIDTH,
     alpha,
     'butt',
     'miter',
@@ -427,23 +397,24 @@ export function drawCorruptDeathEffect(graphics: Graphics, effect: GameEffect): 
   const radius = getEnemyHexRadius(effect.enemyClass);
   const isElite = effect.enemyClass === 'elite';
 
-  drawRadialFill(
+  drawRotatedFlatTopHexFillGradient(
     graphics,
     effect.x,
     effect.y,
-    radius * (0.2 + progress * 0.6),
-    isElite ? BOSS_CORE_GRADIENT : CORE_BLOOM_GRADIENT,
-    alpha * 0.45,
+    radius * (0.5 + progress * 0.35),
+    0,
+    HEX_BODY_GRADIENT,
+    alpha * 0.4,
   );
   drawRotatedFlatTopHexStroke(
     graphics,
     effect.x,
     effect.y,
-    radius * (0.9 + progress * 0.3),
+    radius * (0.9 + progress * 0.35),
     0,
-    NODE_VIOLET,
-    radius * 0.16,
-    alpha * 0.7,
+    isElite ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptViolet,
+    isElite ? ELITE_STROKE_WIDTH : NORMAL_STROKE_WIDTH,
+    alpha * 0.75,
     'butt',
     'miter',
   );

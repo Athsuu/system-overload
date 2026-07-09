@@ -1,24 +1,24 @@
-import type { SkillState } from '../store/upgradeCatalog';
-import type { SkillGlyphId } from '../store/skillTree';
-import { NODE_RADIUS } from '../store/skillTree';
-import { getNodeHexRadius } from './skillTreeGeometry';
+import type { ModuleState } from '../store/upgradeCatalog';
+import type { ModuleGlyphId } from '../store/moduleTree';
+import { NODE_RADIUS } from '../store/moduleTree';
+import { getNodeHexRadius } from './moduleTreeGeometry';
 import { triggerSfx } from '../audio/sfxApi';
-import { hexagonPoints } from './skillTreeGeometry';
-import { SkillTreeBranchGlyph } from './skillTreeBranchIcons';
-import { getNodeVisualState, getRootNodeVisualState, SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { hexagonPoints } from './moduleTreeGeometry';
+import { ModuleTreeBranchGlyph } from './moduleTreeBranchIcons';
+import { getNodeVisualState, getRootNodeVisualState, MODULE_TREE_VISUAL } from './moduleTreeTheme';
 
-interface SkillTreeNodeProps {
+interface ModuleTreeNodeProps {
   x: number;
   y: number;
-  glyph: SkillGlyphId | null;
+  glyph: ModuleGlyphId | null;
   level: number;
-  state: SkillState;
+  state: ModuleState;
   isSelected: boolean;
   isRoot?: boolean;
   onSelect: () => void;
 }
 
-export function SkillTreeNode({
+export function ModuleTreeNode({
   x,
   y,
   glyph,
@@ -27,7 +27,7 @@ export function SkillTreeNode({
   isSelected,
   isRoot = false,
   onSelect,
-}: SkillTreeNodeProps) {
+}: ModuleTreeNodeProps) {
   const radius = isRoot ? getNodeHexRadius('node0Boot') : NODE_RADIUS;
   const visual = isRoot
     ? getRootNodeVisualState(isSelected, level)
@@ -37,8 +37,8 @@ export function SkillTreeNode({
 
   return (
     <g
-      data-skill-node
-      className={isSelected ? 'so-skill-tree-node--active' : undefined}
+      data-module-node
+      className={isSelected ? 'so-module-tree-node--active' : undefined}
       style={{ cursor: isLocked ? 'not-allowed' : 'pointer', opacity: visual.opacity }}
       onPointerDown={(event) => {
         event.stopPropagation();
@@ -65,7 +65,7 @@ export function SkillTreeNode({
         <polygon
           points={hexagonPoints(x, y, radius + 4)}
           fill="none"
-          stroke={isSelected ? SKILL_TREE_VISUAL.gold : visual.stroke}
+          stroke={isSelected ? MODULE_TREE_VISUAL.gold : visual.stroke}
           strokeWidth={1}
           strokeOpacity={isSelected ? 0.85 : 0.45}
         />
@@ -73,7 +73,7 @@ export function SkillTreeNode({
 
       <polygon
         points={hexagonPoints(x, y, radius)}
-        fill={SKILL_TREE_VISUAL.nodeFill}
+        fill={MODULE_TREE_VISUAL.nodeFill}
         stroke={visual.stroke}
         strokeWidth={visual.strokeWidth}
         strokeLinejoin="round"
@@ -88,7 +88,7 @@ export function SkillTreeNode({
           ···
         </text>
       ) : glyph ? (
-        <SkillTreeBranchGlyph glyph={glyph} x={x} y={y} color={visual.iconFill} />
+        <ModuleTreeBranchGlyph glyph={glyph} x={x} y={y} color={visual.iconFill} />
       ) : null}
     </g>
   );

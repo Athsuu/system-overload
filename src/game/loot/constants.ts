@@ -7,7 +7,10 @@ import type { LootPickupRadii } from './types';
 export const LOOT_PICKUP_MAGNET_SPEED = 240;
 export const LOOT_PICKUP_BOB_AMPLITUDE = 3.5;
 export const LOOT_PICKUP_BOB_SPEED = 0.0045;
-export const LOOT_PICKUP_SCATTER_RADIUS = 12;
+/** Rayon min / max du spray de loot autour du point de mort (+38 px vs l'ancien max ~12). */
+export const LOOT_PICKUP_SCATTER_MIN = 10;
+export const LOOT_PICKUP_SCATTER_MAX = 50;
+export const LOOT_PICKUP_SCATTER_JITTER = 12;
 
 export const BASE_LOOT_PICKUP_RADII: LootPickupRadii = {
   collectRadius: SHARD_MAGNET_COLLECT_RADIUS_BY_LEVEL[0],

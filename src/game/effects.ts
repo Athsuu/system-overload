@@ -1,6 +1,6 @@
 import type { EnemyClass } from './enemyClass';
 
-export type GameEffectKind = 'death' | 'purgeHit' | 'spawn' | 'flowEscape';
+export type GameEffectKind = 'death' | 'purgeHit' | 'spawn' | 'flowEscape' | 'splashShockwave';
 
 export interface GameEffect {
   kind: GameEffectKind;
@@ -11,6 +11,10 @@ export interface GameEffect {
   elapsedMs: number;
   durationMs: number;
   rotation: number;
+  /** Anneau shockwave splash : rayon zone principale au départ. */
+  innerRadius?: number;
+  /** Anneau shockwave splash : rayon max éclaboussure. */
+  outerRadius?: number;
 }
 
 export const PURGE_HIT_DURATION_MS = 220;
@@ -101,6 +105,29 @@ export function pushFlowEscapeFlash(
       enemyClass: 'normal',
       elapsedMs: 0,
       durationMs: FLOW_ESCAPE_FLASH_MS,
+    }),
+  );
+}
+
+export function pushSplashShockwave(
+  effects: GameEffect[],
+  x: number,
+  y: number,
+  innerRadius: number,
+  outerRadius: number,
+  durationMs: number,
+): void {
+  effects.push(
+    createEffect({
+      kind: 'splashShockwave',
+      x,
+      y,
+      waveIndex: 0,
+      enemyClass: 'normal',
+      elapsedMs: 0,
+      durationMs,
+      innerRadius,
+      outerRadius,
     }),
   );
 }

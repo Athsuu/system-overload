@@ -1,4 +1,4 @@
-import type { BranchId } from '../store/skillTree';
+import type { BranchId } from '../store/moduleTree';
 import type { UpgradeId } from '../store/upgradeCatalog';
 
 export type GameLocale = 'en' | 'fr';
@@ -13,17 +13,37 @@ export interface PlayerStatsStrings {
   title: string;
   openLabel: string;
   cadenceUnit: string;
+  purgeSplashZone: string;
+}
+
+export interface TransitionStrings {
+  bootTitle: string;
+  shutdownTitle: string;
+  bootLine1: string;
+  bootLine2: string;
+  bootLine3: string;
+  shutdownLine1: string;
+  shutdownLine2: string;
+  shutdownLine3: string;
+  shutdownAbortedLine1: string;
+  shutdownAbortedLine2: string;
+  shutdownAbortedLine3: string;
 }
 
 export interface TooltipStatLabels {
   purgeHitDamage: string;
   purgeDamageBonus: string;
+  elitePurgeDamageBonus: string;
+  elitePurgeHitDamage: string;
   shardBonusPerKill: string;
+  shardYieldBonus: string;
   shardPickupRadius: string;
   shardPickupReachBonus: string;
   purgeCadence: string;
   purgeReach: string;
   purgeReachBonus: string;
+  purgeSplashRadius: string;
+  purgeSplashDamage: string;
   passiveBreachPerSec: string;
   reduction: string;
   breachReliefPerKill: string;
@@ -35,7 +55,7 @@ export interface TutorialStepText {
   signalHandshakeTitle: string;
   node0RoleTitle: string;
   missionLoopTitle: string;
-  skillTreeTitle: string;
+  moduleTreeTitle: string;
   purgeZoneTitle: string;
   overclockTitle: string;
   breachContainedTitle: string;
@@ -63,7 +83,7 @@ export interface UiStrings {
   previous: string;
   next: string;
   gotIt: string;
-  skillTree: string;
+  moduleTree: string;
   cycleLabel: string;
   cycleWaveFormat: string;
   cycleBossFormat: string;
@@ -87,20 +107,19 @@ export interface GameStrings {
   runEnd: {
     victoryTitle: string;
     victorySubtitle: string;
-    victoryArch: string;
+    victoryArchVariants: readonly [string, string];
     meltdownTitle: string;
     meltdownSubtitle: string;
     meltdownArchVariants: readonly [string, string, string];
     prestigeUnlocked: string;
     prestigeArch: string;
     anchorFragmentsEarned: string;
-    firstAnchorArch: string;
   };
   hub: {
     upgradesTitle: string;
     upgradesSubtitle: string;
   };
-  skillTree: {
+  moduleTree: {
     placeholderTitle: string;
     placeholderBody: string;
   };
@@ -175,13 +194,13 @@ export interface GameStrings {
     welcomeContext: string;
     node0Role: string;
     missionLoop: string;
-    skillTreeIntro: string;
+    moduleTreeIntro: string;
     purgeAction: string;
     overloadStakes: string;
     overloadGoal: string;
     hexShardsUnified: string;
     overclockRisk: string;
-    skillTreeLore: string;
+    moduleTreeLore: string;
     prestigeReveal: string;
     fluxDriveLore: string;
   };
@@ -197,5 +216,6 @@ export interface GameStrings {
   branches: Record<BranchId, string> & { flux: string };
   tooltipStats: TooltipStatLabels;
   playerStats: PlayerStatsStrings;
+  transitions: TransitionStrings;
   ui: UiStrings;
 }

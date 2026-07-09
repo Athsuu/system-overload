@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -247,7 +247,7 @@
   <ol class="toc">
     <li>Acte I, Première connexion (hub, tutoriel menu)</li>
     <li>Acte II, Thread quarantaine (premier run, combat)</li>
-    <li>Acte III, Boucle méta (hub, vault, skill tree)</li>
+    <li>Acte III, Boucle méta (hub, vault, module tree)</li>
     <li>Acte IV, Clôture de thread (fin de run)</li>
     <li>Acte V, Pings ARCH (ambient, contextuels)</li>
     <li>Annexe, Voix système (UI lore, non parlée)</li>
@@ -310,24 +310,24 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Contain the Breach</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Stop corrupted processes before they break quarantine. Launch a run. Purge the arena and extract Hex Shards from every kill. When the thread ends, spend them on the Skill Tree. I advise. You execute. Each reinforcement buys us time toward the Uplink.</p>
+  <p class="dialogue">Stop corrupted processes before they break quarantine. Launch a run. Purge the arena and extract Hex Shards from every kill. When the thread ends, spend them on the Module Tree. I advise. You execute. Each reinforcement buys us time toward the Uplink.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Expliquer la boucle roguelite entière en un bloc : run → shards → skill tree. La phrase « I advise. You execute. » est le pilier de tout le dialogue ARCH, elle justifie pourquoi elle parle mais ne joue pas. Le spotlight sur Start Run convertit la lore en action immédiate.
+    Expliquer la boucle roguelite entière en un bloc : run → shards → module tree. La phrase « I advise. You execute. » est le pilier de tout le dialogue ARCH, elle justifie pourquoi elle parle mais ne joue pas. Le spotlight sur Start Run convertit la lore en action immédiate.
   </div>
 </article>
 
-<article class="scene" id="skill_tree_intro">
-  <p class="scene-id">TUTO · skill_tree_intro · order 3 · beat: growth</p>
+<article class="scene" id="module_tree_intro">
+  <p class="scene-id">TUTO · module_tree_intro · order 3 · beat: growth</p>
   <h3 class="scene-heading">Scène 04, Arbre de réparation</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>MENU</dd>
-    <dt>Affichage :</dt><dd>Spotlight sur le skill tree</dd>
+    <dt>Affichage :</dt><dd>Spotlight sur le module tree</dd>
     <dt>Déclencheur :</dt><dd>Carte « mission_loop » fermée</dd>
     <dt>Complétion :</dt><dd>Joueur sélectionne un nœud (souvent Node-0 Boot)</dd>
   </dl>
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
-  <p class="card-title">Skill Tree</p>
+  <p class="card-title">Module Tree</p>
   <p class="speaker">ARCH</p>
   <p class="dialogue">This hex grid is our best shot. It integrates your permanent modules between runs. I cannot install them directly. Select a node to execute the reinforcement. I have no clean blueprint and I am routing untested protocols. We improvise, or we lose the Seed.</p>
   <div class="intent">
@@ -390,7 +390,7 @@
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Run Shards</p>
   <p class="speaker">ARCH</p>
-  <p class="dialogue">Hex Shards are stable data fragments salvaged from corrupted processes during a run. When the thread ends, they join your vault. Spend them on the Skill Tree to reinforce yourself.</p>
+  <p class="dialogue">Hex Shards are stable data fragments salvaged from corrupted processes during a run. When the thread ends, they join your vault. Spend them on the Module Tree to reinforce yourself.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
     Connecter chaque kill à la progression permanente. Le mot « salvaged » renforce le fantasy terminal / récupération de données, pas or fantasy. Prépare le retour hub sans parler encore d'Anchor Fragments (réservés au boss).
@@ -411,7 +411,7 @@
   <p class="dialogue">Overclock surges purge output, but Overload builds faster while active. Press Space when you can handle the pressure.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    N'apparaît qu'après achat du module, le tuto suit la progression méta, pas un ordre fixe arbitraire. Enseigne le skill actif comme pari conscient : puissance vs surcharge. Ton directif (« when you can handle ») = ARCH ne moralise pas, elle avertit.
+    N'apparaît qu'après achat du module, le tuto suit la progression méta, pas un ordre fixe arbitraire. Enseigne le module actif comme pari conscient : puissance vs surcharge. Ton directif (« when you can handle ») = ARCH ne moralise pas, elle avertit.
   </div>
 </article>
 
@@ -421,9 +421,9 @@
   <p>Après une run. ARCH explique le vault, les achats permanents, et les modules avancés.</p>
 </section>
 
-<article class="scene" id="skill_tree">
-  <p class="scene-id">TUTO · skill_tree · order 8 · beat: growth</p>
-  <h3 class="scene-heading">Scène 09, Skill Enhancements (post-run)</h3>
+<article class="scene" id="module_tree">
+  <p class="scene-id">TUTO · module_tree · order 8 · beat: growth</p>
+  <h3 class="scene-heading">Scène 09, Module Enhancements (post-run)</h3>
   <dl class="scene-meta">
     <dt>Écran :</dt><dd>UPGRADING</dd>
     <dt>Affichage :</dt><dd>Carte ancrée sur l'arbre</dd>
@@ -431,7 +431,7 @@
     <dt>Complétion :</dt><dd>Premier achat d'upgrade</dd>
   </dl>
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
-  <p class="card-title">Skill Enhancements</p>
+  <p class="card-title">Module Enhancements</p>
   <p class="speaker">ARCH</p>
   <p class="dialogue">Between runs, spend Available Shards on hex nodes. Every upgrade hardens the quarantine before the next breach.</p>
   <div class="intent">
@@ -447,7 +447,7 @@
     <dt>Écran :</dt><dd>MENU</dd>
     <dt>Affichage :</dt><dd>Carte ancrée badge Available Shards</dd>
     <dt>Déclencheur :</dt><dd>bankShards &gt; 0</dd>
-    <dt>Complétion :</dt><dd>Sélection d'un nœud skill tree</dd>
+    <dt>Complétion :</dt><dd>Sélection d'un nœud module tree</dd>
   </dl>
   <p class="channel">RELAY // ADVISORY CHANNEL</p>
   <p class="card-title">Available Shards</p>
@@ -455,7 +455,7 @@
   <p class="dialogue">Hex Shards fund permanent Node-0 reconfiguration between runs. When a run ends, Shards transfer to your vault, currency for repairs between threads.</p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Clarifier la différence Run Shards / Available Shards pour les joueurs incrémentaux débutants. « Reconfiguration » = fantasy skill tree, pas « shop ». Se déclenche quand le joueur a vraiment des shards à dépenser, moment d'apprentissage pertinent.
+    Clarifier la différence Run Shards / Available Shards pour les joueurs incrémentaux débutants. « Reconfiguration » = fantasy module tree, pas « shop ». Se déclenche quand le joueur a vraiment des shards à dépenser, moment d'apprentissage pertinent.
   </div>
 </article>
 
@@ -517,7 +517,7 @@
   <p class="dialogue">+N Shards · Transferred to vault<br />+N Anchor Fragments <em>(si boss tué)</em></p>
   <div class="intent">
     <strong>Pourquoi cette scène est là</strong>
-    Pas de fanfare héroïque, victoire = gain de temps, cohérent avec runs ≤4 min et retour hub rapide. « Don't waste it » pousse à enchaîner (skill tree / relance). Les fragments anchor sont montrés en UI, pas forcément commentés par ARCH à chaque fois, évite la répétition.
+    Pas de fanfare héroïque, victoire = gain de temps, cohérent avec runs ≤4 min et retour hub rapide. « Don't waste it » pousse à enchaîner (module tree / relance). Les fragments anchor sont montrés en UI, pas forcément commentés par ARCH à chaque fois, évite la répétition.
   </div>
 </article>
 

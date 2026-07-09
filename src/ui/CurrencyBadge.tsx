@@ -11,7 +11,7 @@ import {
   CurrencyLoreTooltip,
 } from './CurrencyLoreTooltip';
 import { HubPopover } from './HubPopover';
-import { SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
 
 type HoveredCurrency = 'shards' | 'anchor';
 
@@ -136,7 +136,7 @@ export function CurrencyBadge({ containerRef }: CurrencyBadgeProps) {
             iconRef={shardsIconRef}
             icon={<HexShardIcon size={26} />}
             value={bankShards}
-            valueColor={SKILL_TREE_VISUAL.gold}
+            valueColor={MODULE_TREE_VISUAL.gold}
             onHoverStart={() => showCurrency('shards')}
             onHoverEnd={scheduleDismiss}
             ariaLabel={`${strings.currency.availableShardsLabel}: ${bankShards}`}

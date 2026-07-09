@@ -40,7 +40,7 @@ const LORE = {
   breach: {
     overload: 'Overload is the live Breach meter on your thread. Keep it under control.',
     meltdown: 'At 100% Overload. Meltdown. The quarantine fails.',
-    vent: 'Breach Vent modules bleed pressure from each kill, permanent relief through the Skill Tree.',
+    vent: 'Breach Vent modules bleed pressure from each kill, permanent relief through the Module Tree.',
   },
   economy: {
     vaultShardsTooltip:
@@ -48,7 +48,7 @@ const LORE = {
     anchorFragments:
       'Anchoring data torn from the Breach Anchor, only earned when you destroy the boss.',
   },
-  skillTree: {
+  moduleTree: {
     intro:
       'This hex grid is our best shot. It integrates your permanent modules between runs. I cannot install them directly. Select a node to execute the reinforcement.',
     betweenRuns:
@@ -66,7 +66,7 @@ const LORE = {
   },
   loop: {
     mission:
-      'Stop corrupted processes before they break quarantine. Launch a run. Purge the arena and extract Hex Shards from every kill. When the thread ends, spend them on the Skill Tree. I advise. You execute. Each reinforcement buys us time toward the Uplink.',
+      'Stop corrupted processes before they break quarantine. Launch a run. Purge the arena and extract Hex Shards from every kill. When the thread ends, spend them on the Module Tree. I advise. You execute. Each reinforcement buys us time toward the Uplink.',
   },
   enemies: {
     boss:
@@ -83,7 +83,10 @@ export const EN_STRINGS: GameStrings = {
   runEnd: {
     victoryTitle: 'Breach Contained',
     victorySubtitle: 'Threat contained. Node-0 holds.',
-    victoryArch: "Anchor down. Hex Shards to vault. We bought time. Don't waste it.",
+    victoryArchVariants: [
+      "Anchor down. Hex Shards to vault. We bought time. Don't waste it.",
+      'Anchor data secured. Capstone modules are online. Spend fragments on the marked nodes.',
+    ],
     meltdownTitle: 'Meltdown',
     meltdownSubtitle: 'Overload at 100%. The active thread has collapsed. Node-0 stands by.',
     meltdownArchVariants: [
@@ -95,14 +98,12 @@ export const EN_STRINGS: GameStrings = {
     prestigeArch:
       'Deeper layer unlocked. You can rewrite more of the archive than I can reach now.',
     anchorFragmentsEarned: 'Anchor Fragments',
-    firstAnchorArch:
-      'Anchor data secured. Capstone modules are online. Spend fragments on the marked nodes.',
   },
   hub: {
-    upgradesTitle: 'Skill Enhancements',
-    upgradesSubtitle: LORE.skillTree.betweenRuns,
+    upgradesTitle: 'Module Enhancements',
+    upgradesSubtitle: LORE.moduleTree.betweenRuns,
   },
-  skillTree: {
+  moduleTree: {
     placeholderTitle: 'Reserved module',
     placeholderBody: 'Design slot. Replace this node in a future update.',
   },
@@ -178,14 +179,14 @@ export const EN_STRINGS: GameStrings = {
     welcomeContext: `${LORE.pitch.hook} ${LORE.world.quarantine} ${LORE.world.seed}`,
     node0Role: `${LORE.node0.identity} ${LORE.node0.threat}`,
     missionLoop: LORE.loop.mission,
-    skillTreeIntro: `${LORE.skillTree.intro} ${ARCH.improvises}`,
+    moduleTreeIntro: `${LORE.moduleTree.intro} ${ARCH.improvises}`,
     purgeAction: `You're live. ${LORE.combat.purge} ${LORE.combat.purgeCost}`,
     overloadStakes: `${LORE.breach.overload} ${LORE.breach.meltdown}`,
     overloadGoal: 'Contain the threat before quarantine breaks.',
     hexShardsUnified:
-      'Hex Shards are stable data fragments salvaged from corrupted processes. They drop when you purge a target. Sweep your purge zone over them to collect. Spend them on the Skill Tree to reinforce yourself.',
+      'Hex Shards are stable data fragments salvaged from corrupted processes. They drop when you purge a target. Sweep your purge zone over them to collect. Spend them on the Module Tree to reinforce yourself.',
     overclockRisk: LORE.combat.overclock,
-    skillTreeLore: LORE.skillTree.betweenRuns,
+    moduleTreeLore: LORE.moduleTree.betweenRuns,
     prestigeReveal: LORE.prestige.unlock,
     fluxDriveLore: LORE.fluxDrive.description,
   },
@@ -200,7 +201,7 @@ export const EN_STRINGS: GameStrings = {
     signalHandshakeTitle: 'INCOMING SIGNAL',
     node0RoleTitle: 'NODE-0',
     missionLoopTitle: 'Contain the Breach',
-    skillTreeTitle: 'Skill Tree',
+    moduleTreeTitle: 'Module Tree',
     purgeZoneTitle: 'Purge Zone',
     overclockTitle: 'Overclock',
     breachContainedTitle: 'Breach Contained',
@@ -214,6 +215,10 @@ export const EN_STRINGS: GameStrings = {
       name: 'Shard Salvage',
       description: 'Extract more Hex Shards from every corrupted process you purge',
     },
+    shardYield: {
+      name: 'Extraction Yield',
+      description: 'Increase the base Hex Shard yield from every kill',
+    },
     shardMagnet: {
       name: 'Shard Magnet',
       description: 'Draw dropped shards toward your purge zone from farther away',
@@ -222,6 +227,10 @@ export const EN_STRINGS: GameStrings = {
       name: 'Purge Strike',
       description: 'Increase purge hit damage against corrupted processes',
     },
+    eliteBreaker: {
+      name: 'Elite Breaker',
+      description: 'Hit heavy corrupted processes harder with your purge zone',
+    },
     purgeCadence: {
       name: 'Purge Cadence',
       description: 'Increase purge tick rate for faster clears',
@@ -229,6 +238,10 @@ export const EN_STRINGS: GameStrings = {
     purgeReach: {
       name: 'Purge Reach',
       description: 'Expand purge zone coverage on the arena',
+    },
+    purgeSplash: {
+      name: 'Purge Splash',
+      description: 'Splash purge damage to corrupted processes just outside your zone',
     },
     threadCoolant: {
       name: 'Thread Coolant',
@@ -251,12 +264,17 @@ export const EN_STRINGS: GameStrings = {
   tooltipStats: {
     purgeHitDamage: 'Purge hit damage',
     purgeDamageBonus: 'Purge damage bonus',
+    elitePurgeDamageBonus: 'Heavy process bonus',
+    elitePurgeHitDamage: 'Purge hit vs heavy',
     shardBonusPerKill: 'Hex Shards / kill',
+    shardYieldBonus: 'Shard yield bonus',
     shardPickupRadius: 'Shard pickup radius',
     shardPickupReachBonus: 'Shard attraction radius',
     purgeCadence: 'Purge cadence',
-    purgeReach: 'Purge zone radius',
+    purgeReach: 'Main purge zone',
     purgeReachBonus: 'Purge zone bonus',
+    purgeSplashRadius: 'Splash reach (vs main zone)',
+    purgeSplashDamage: 'Splash damage',
     passiveBreachPerSec: 'Passive Breach / sec',
     reduction: 'Reduction',
     breachReliefPerKill: 'Breach relief / kill',
@@ -267,6 +285,20 @@ export const EN_STRINGS: GameStrings = {
     title: 'NODE-0 // STATS',
     openLabel: 'Node-0 stats',
     cadenceUnit: '/s',
+    purgeSplashZone: 'Splash zone',
+  },
+  transitions: {
+    bootTitle: 'ARCH // NODE-0 BOOT',
+    shutdownTitle: 'ARCH // THREAD SUSPEND',
+    bootLine1: 'NODE-0 STATUS: ONLINE',
+    bootLine2: 'ARCH // PURGE THREAD ACTIVE',
+    bootLine3: 'BREACH CONTAINMENT: ENGAGED',
+    shutdownLine1: 'ARCH // PURGE THREAD SUSPENDED',
+    shutdownLine2: 'NODE-0 STATUS: STANDBY',
+    shutdownLine3: 'ZERO ARCHIVE: RECOVERY MODE',
+    shutdownAbortedLine1: 'ARCH // PURGE THREAD HALTED',
+    shutdownAbortedLine2: 'NODE-0 STATUS: STANDBY',
+    shutdownAbortedLine3: 'ZERO ARCHIVE: RECOVERY MODE',
   },
   ui: {
     startRun: 'Start\nRun',
@@ -290,7 +322,7 @@ export const EN_STRINGS: GameStrings = {
     previous: 'Previous',
     next: 'Next',
     gotIt: 'Got it',
-    skillTree: 'Skill\nTree',
+    moduleTree: 'Module\nTree',
     cycleLabel: 'Cycle {n}',
     cycleWaveFormat: 'Cycle {cycle} · Wave {wave}/{max}',
     cycleBossFormat: 'Cycle {cycle} · BOSS',

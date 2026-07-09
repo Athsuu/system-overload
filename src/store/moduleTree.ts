@@ -9,10 +9,10 @@ import { getGameStrings } from '../i18n';
 
 export type BranchId = 'degats' | 'thermique';
 
-export type SkillIconBranch = BranchId | 'flux';
+export type ModuleIconBranch = BranchId | 'flux';
 
-/** Per-node glyph on the skill tree (branch defaults + dedicated marks). */
-export type SkillGlyphId = SkillIconBranch | 'shard' | 'magnet' | 'cadence' | 'reach';
+/** Per-node glyph on the module tree (branch defaults + dedicated marks). */
+export type ModuleGlyphId = ModuleIconBranch | 'shard' | 'yield' | 'magnet' | 'cadence' | 'reach' | 'elite' | 'splash';
 
 export type TreeNodeId = UpgradeId;
 export type TreeParentId = 'root' | TreeNodeId;
@@ -75,7 +75,7 @@ export function getBranchLabels(): Record<BranchId, { label: string; color: stri
   };
 }
 
-export function getSkillIconBranchMeta(): Record<SkillIconBranch, { label: string; color: string }> {
+export function getModuleIconBranchMeta(): Record<ModuleIconBranch, { label: string; color: string }> {
   const labels = getGameStrings().branches;
   return {
     ...getBranchLabels(),
@@ -86,10 +86,13 @@ export function getSkillIconBranchMeta(): Record<SkillIconBranch, { label: strin
 const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   node0Boot: 'thermique',
   shardSalvage: 'thermique',
+  shardYield: 'thermique',
   shardMagnet: 'thermique',
   purgeStrike: 'degats',
+  eliteBreaker: 'degats',
   purgeCadence: 'degats',
   purgeReach: 'degats',
+  purgeSplash: 'degats',
   threadCoolant: 'thermique',
   killBreachRelief: 'thermique',
   meltdownThreshold: 'thermique',
@@ -98,33 +101,39 @@ const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
 const NODE_ICONS: Record<UpgradeId, string> = {
   node0Boot: '0',
   shardSalvage: '◆',
+  shardYield: '',
   shardMagnet: '',
   purgeStrike: '',
+  eliteBreaker: '',
   purgeCadence: '',
   purgeReach: '',
+  purgeSplash: '',
   threadCoolant: '◌',
   killBreachRelief: '◇',
   meltdownThreshold: '▲',
 };
 
-const SKILL_ICON_BRANCH: Partial<Record<UpgradeId, SkillIconBranch>> = {
+const MODULE_ICON_BRANCH: Partial<Record<UpgradeId, ModuleIconBranch>> = {
   node0Boot: 'flux',
 };
 
-export function getSkillIconBranch(id: UpgradeId, branch: BranchId): SkillIconBranch {
-  return SKILL_ICON_BRANCH[id] ?? branch;
+export function getModuleIconBranch(id: UpgradeId, branch: BranchId): ModuleIconBranch {
+  return MODULE_ICON_BRANCH[id] ?? branch;
 }
 
-export function getSkillGlyphId(id: UpgradeId, branch: BranchId): SkillGlyphId | null {
+export function getModuleGlyphId(id: UpgradeId, branch: BranchId): ModuleGlyphId | null {
   if (id === 'purgeStrike') return 'degats';
   if (id === 'purgeCadence') return 'cadence';
   if (id === 'purgeReach') return 'reach';
+  if (id === 'purgeSplash') return 'splash';
+  if (id === 'eliteBreaker') return 'elite';
   if (id === 'shardSalvage') return 'shard';
+  if (id === 'shardYield') return 'yield';
   if (id === 'shardMagnet') return 'magnet';
-  return getSkillIconBranch(id, branch);
+  return getModuleIconBranch(id, branch);
 }
 
-export interface SkillTreeGraphNode {
+export interface ModuleTreeGraphNode {
   id: UpgradeId;
   kind: 'upgrade';
   parentId: TreeParentId;
@@ -133,7 +142,7 @@ export interface SkillTreeGraphNode {
   requires?: UpgradeRequirement[];
 }
 
-export interface SkillNodeLayout {
+export interface ModuleNodeLayout {
   id: UpgradeId;
   maxLevel: number;
   costByLevel: readonly number[];
@@ -144,7 +153,7 @@ export interface SkillNodeLayout {
   parentId: TreeParentId;
 }
 
-export interface SkillNodeDef extends SkillNodeLayout {
+export interface ModuleNodeDef extends ModuleNodeLayout {
   name: string;
   description: string;
 }
@@ -159,16 +168,19 @@ export interface PlaceholderNodeDef {
 
 const NODE0_BOOT_POS = NODE0_HUB_POSITION;
 const SHARD_SALVAGE_POS = positionFromAxial(-1, 0);
+const SHARD_YIELD_POS = positionFromAxial(-2, 0);
 const SHARD_MAGNET_POS = positionFromAxial(-2, 1);
 const PURGE_STRIKE_POS = positionFromParent(NODE0_BOOT_POS, 'up');
+const ELITE_BREAKER_POS = positionFromAxial(0, 2);
 const THREAD_COOLANT_POS = positionFromParent(NODE0_BOOT_POS, 'downRight');
 const PURGE_CADENCE_POS = positionFromParent(PURGE_STRIKE_POS, 'upLeft');
 const PURGE_REACH_POS = positionFromAxial(1, 1);
+const PURGE_SPLASH_POS = positionFromAxial(1, 2);
 const MELTDOWN_THRESHOLD_POS = positionFromAxial(2, -1);
 const KILL_BREACH_RELIEF_POS = positionFromParent(THREAD_COOLANT_POS, 'downRight');
 
-/** Radial skill tree — Node-0 Boot root; branches rebuilt incrementally. */
-export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
+/** Radial module tree — Node-0 Boot root; branches rebuilt incrementally. */
+export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
   {
     id: 'node0Boot',
     kind: 'upgrade',
@@ -183,6 +195,14 @@ export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
     position: SHARD_SALVAGE_POS,
     branch: 'thermique',
     requires: requireLevel('node0Boot', 1),
+  },
+  {
+    id: 'shardYield',
+    kind: 'upgrade',
+    parentId: 'shardSalvage',
+    position: SHARD_YIELD_POS,
+    branch: 'thermique',
+    requires: requireLevel('shardSalvage', 1),
   },
   {
     id: 'shardMagnet',
@@ -201,6 +221,14 @@ export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
     requires: requireLevel('node0Boot', 1),
   },
   {
+    id: 'eliteBreaker',
+    kind: 'upgrade',
+    parentId: 'purgeStrike',
+    position: ELITE_BREAKER_POS,
+    branch: 'degats',
+    requires: requireLevel('purgeStrike', 1),
+  },
+  {
     id: 'purgeCadence',
     kind: 'upgrade',
     parentId: 'purgeStrike',
@@ -215,6 +243,14 @@ export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
     position: PURGE_REACH_POS,
     branch: 'degats',
     requires: requireLevel('purgeStrike', 1),
+  },
+  {
+    id: 'purgeSplash',
+    kind: 'upgrade',
+    parentId: 'purgeReach',
+    position: PURGE_SPLASH_POS,
+    branch: 'degats',
+    requires: requireLevel('purgeReach', 1),
   },
   {
     id: 'threadCoolant',
@@ -242,7 +278,7 @@ export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
   },
 ];
 
-export const SKILL_TREE_NODES: SkillNodeLayout[] = SKILL_TREE_GRAPH.map((node) => {
+export const MODULE_TREE_NODES: ModuleNodeLayout[] = MODULE_TREE_GRAPH.map((node) => {
   const definition = UPGRADE_CATALOG.find((entry) => entry.id === node.id);
   if (!definition) throw new Error(`Missing catalog entry: ${node.id}`);
   return {
@@ -266,7 +302,7 @@ function getParentLevel(
 }
 
 export function isNodeRevealed(
-  node: SkillTreeGraphNode,
+  node: ModuleTreeGraphNode,
   upgrades: import('./upgradeCatalog').UpgradeLevels,
 ): boolean {
   if (node.parentId === 'root') return true;
@@ -275,17 +311,17 @@ export function isNodeRevealed(
 
 export function getRevealedGraphNodes(
   upgrades: import('./upgradeCatalog').UpgradeLevels,
-): SkillTreeGraphNode[] {
-  return SKILL_TREE_GRAPH.filter((node) => isNodeRevealed(node, upgrades));
+): ModuleTreeGraphNode[] {
+  return MODULE_TREE_GRAPH.filter((node) => isNodeRevealed(node, upgrades));
 }
 
 export function isPlaceholderId(_id: TreeNodeId): _id is never {
   return false;
 }
 
-export function getSkillNode(id: UpgradeId): SkillNodeDef {
-  const node = SKILL_TREE_NODES.find((entry) => entry.id === id);
-  if (!node) throw new Error(`Unknown skill node: ${id}`);
+export function getModuleNode(id: UpgradeId): ModuleNodeDef {
+  const node = MODULE_TREE_NODES.find((entry) => entry.id === id);
+  if (!node) throw new Error(`Unknown module node: ${id}`);
   const localized = getUpgradeDefinition(id);
   return {
     ...node,
@@ -302,7 +338,7 @@ export function getPlaceholderNode(id: string): PlaceholderNodeDef {
 
 export function getNodePosition(id: TreeNodeId | 'core'): { x: number; y: number } {
   if (id === 'core') return NODE0_HUB_POSITION;
-  const graphNode = SKILL_TREE_GRAPH.find((entry) => entry.id === id);
+  const graphNode = MODULE_TREE_GRAPH.find((entry) => entry.id === id);
   if (!graphNode) throw new Error(`Unknown tree node: ${id}`);
   return graphNode.position;
 }

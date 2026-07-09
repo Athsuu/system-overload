@@ -1,5 +1,5 @@
-import type { TreeNodeId } from '../store/skillTree';
-import { NODE0_HUB_RADIUS, HEX_CELL, NODE_RADIUS } from '../store/skillTree';
+import type { TreeNodeId } from '../store/moduleTree';
+import { NODE0_HUB_RADIUS, HEX_CELL, NODE_RADIUS } from '../store/moduleTree';
 
 const NODE_HEX_START_ANGLE = 0;
 

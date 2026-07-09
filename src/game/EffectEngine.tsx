@@ -9,6 +9,7 @@ import {
 } from './corruptedProcessVisual';
 import type { GameEffect } from './effects';
 import { tickEffects } from './effects';
+import { drawSplashShockwave } from './purgeZone';
 import { scaleDeltaMs } from './runTimeScale';
 import {
   drawFlatTopHexFill,
@@ -54,6 +55,19 @@ function drawFlowEscapeFlash(graphics: Graphics, effect: GameEffect): void {
   drawFlatTopHexFill(graphics, effect.x, effect.y, radius * 0.85, DARK_HEX_PIXI.breachGlow, alpha * 0.18);
 }
 
+function drawSplashShockwaveEffect(graphics: Graphics, effect: GameEffect): void {
+  if (effect.innerRadius === undefined || effect.outerRadius === undefined) return;
+  drawSplashShockwave(
+    graphics,
+    effect.x,
+    effect.y,
+    effect.innerRadius,
+    effect.outerRadius,
+    effect.elapsedMs,
+    effect.durationMs,
+  );
+}
+
 function renderEffects(graphics: Graphics, effects: GameEffect[]): void {
   graphics.clear();
 
@@ -61,6 +75,9 @@ function renderEffects(graphics: Graphics, effects: GameEffect[]): void {
     switch (effect.kind) {
       case 'purgeHit':
         drawPurgeHit(graphics, effect);
+        break;
+      case 'splashShockwave':
+        drawSplashShockwaveEffect(graphics, effect);
         break;
       case 'death':
         drawCorruptDeathEffect(graphics, effect);

@@ -1,5 +1,5 @@
 ---
-description: Dark Hex Terminal — couleurs, typo, skill tree, HUD, interdictions UI
+description: Dark Hex Terminal — couleurs, typo, module tree, HUD, interdictions UI
 globs: src/ui/**/*,src/theme/**/*,src/index.css
 alwaysApply: false
 ---
@@ -18,9 +18,9 @@ Terminal de l'**Archive Zéro** en surcharge — pas UI « produit SaaS ».
 | Accents or | `#c5a059` |
 | Zone purge (Pixi) | `#e8b896` |
 
-Fichiers : `src/theme/darkHexTerminal.ts`, `src/ui/skillTreeTheme.ts`, `src/theme/typography.ts`.
+Fichiers : `src/theme/darkHexTerminal.ts`, `src/ui/moduleTreeTheme.ts`, `src/theme/typography.ts`.
 
-## Skill tree (MENU / UPGRADING)
+## Module tree (MENU / UPGRADING)
 
 - Nœuds **hexagonaux** ; connexions arête→arête ; arbre radial SVG.
 - Racine : **Node-0 Boot** (pas de sprite central PNG).

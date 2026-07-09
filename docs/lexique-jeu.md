@@ -33,15 +33,15 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 | Mot à utiliser | Terme UI (EN) | C’est quoi ? | Mot technique (agent) |
 |--------------|---------------|--------------|---------------------|
 | **Menu titre** / **menu principal** | New Game, Continue, Settings, Quit | Premier écran au lancement, avant le hub | `MAIN_MENU` · `MainMenuScreen` |
-| **Hub** / **écran entre les runs** | Zero Archive + skill tree | Grille d’upgrades, bouton Start Run, Hex Shards (coffre) | `MENU` |
-| **Écran upgrades** (post-run) | Skill Enhancements | Même hub mais après une run, titre « améliorations » | `UPGRADING` |
+| **Hub** / **écran entre les runs** | Zero Archive + module tree | Grille d’upgrades, bouton Start Run, Hex Shards (coffre) | `MENU` |
+| **Écran upgrades** (post-run) | Module Enhancements | Même hub mais après une run, titre « améliorations » | `UPGRADING` |
 | **Run** / **partie** / **arène** |, | Combat en direct, zone de purge (souris), ennemis, jauge | `PLAYING` |
 | **Pause** | SYSTEM HALT | Jeu figé, stats run, Reprendre / Abandonner | `PAUSED` |
 | **Fin de run** | Breach Contained / Meltdown | Victoire ou défaite, éclats gagnés | `RUN_END` |
 | **Réglages** | System Config / Settings | Volume, langue, retour menu | `SettingsPanel` · `SettingsOverlay` |
 | **Menu dev** | DEV | Outils debug (développement seulement) | `DevMenu` |
 
-**Flux habituel :** Menu titre → Hub → Start Run → Arène → Fin de run → Hub (ou skill tree upgrades).
+**Flux habituel :** Menu titre → Hub → Start Run → Arène → Fin de run → Hub (ou module tree upgrades).
 
 ---
 
@@ -57,9 +57,9 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 | **Processus corrompus** | Corrupted processes | Ennemis |
 | **Dissipation Nodes** | (nom technique ennemis) | Hex ennemis dans l’arène, OK de garder ce nom en interne |
 | **Quarantaine** | quarantine | Lore : bulle isolée où tourne Node-0 |
-| **Archive Zéro** / **Zero Archive** | Zero Archive | Nom du hub / skill tree |
+| **Archive Zéro** / **Zero Archive** | Zero Archive | Nom du hub / module tree |
 | **La Graine** / **the Seed** | the Seed | Objectif long terme (Uplink) |
-| **Heuristique ARCH** |, (implicite) | ARCH ne réagit **pas qu'à l'échec** : modèle heuristique **en continu** sur chaque run (victoire ou défaite). **Meltdown** = signal le plus critique → renforcement ciblé immédiat. Chaque run nourrit aussi des optimisations **plus lentes** (thermique, extraction, modélisation de la menace). **Skill tree** = corrections d'urgence + optimisation continue. **Même Node-0**, jamais remplacé. |
+| **Heuristique ARCH** |, (implicite) | ARCH ne réagit **pas qu'à l'échec** : modèle heuristique **en continu** sur chaque run (victoire ou défaite). **Meltdown** = signal le plus critique → renforcement ciblé immédiat. Chaque run nourrit aussi des optimisations **plus lentes** (thermique, extraction, modélisation de la menace). **Module tree** = corrections d'urgence + optimisation continue. **Même Node-0**, jamais remplacé. |
 | **Ton narratif** |, | Urgent, terminal, lien au personnage, pas heroic fantasy, **pas froid** |
 
 **À ne plus utiliser :** Heart / Cœur, WASD, sprite joueur en arène, gardien externe, « redirection de flux », ton **froid** ou distant pour ARCH.
@@ -70,11 +70,11 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 
 | Mot à utiliser | Terme UI (EN) | C’est quoi ? |
 |--------------|---------------|--------------|
-| **Éclats hex** / **Hex Shards** | Hex Shards | Monnaie unique : **drop au sol** quand un ennemi meurt, **ramassée** en passant la zone de purge à proximité ; créditée au coffre à la collecte ; dépensée sur le skill tree |
+| **Éclats hex** / **Hex Shards** | Hex Shards | Monnaie unique : **drop au sol** quand un ennemi meurt, **ramassée** en passant la zone de purge à proximité ; créditée au coffre à la collecte ; dépensée sur le module tree |
 | **Fragments d’ancre** | Anchor Fragments | 2e monnaie permanente, **+1 au premier clear boss d’un Cycle** (replays = shards seulement) ; modules « capstone » |
 | **Cycle** / **Cycles** | Cycle | Couche de progression hub : 10 vagues + boss par cycle ; scaling plus dur ; Cycle 2+ débloqué après 1er clear du cycle précédent |
 | **Coffre** / **vault** | vault | Où vont les Hex Shards après une run |
-| **Skill tree** / **arbre de compétences** | Skill tree | Arbre hex **radial** : somme des deux boucles ARCH (urgence Meltdown + optimisation continue) ; un seul nœud visible au départ, branches qui se révèlent |
+| **Module tree** / **arbre de modules** | Module tree | Arbre hex **radial** : somme des deux boucles ARCH (urgence Meltdown + optimisation continue) ; un seul nœud visible au départ, branches qui se révèlent |
 | **Node-0 Boot** / **amorçage Node-0** | Node-0 Boot | **Nœud racine** achetable, seul module visible au tout début |
 | **Révélation** (arbre) |, | Dès qu’un parent est acheté **1 fois**, ses enfants **apparaissent** (visible ≠ achetable) |
 | **Placeholder** / **module réservé** | Module pending (placeholder_XX) | Case grise « RESERVED », visible mais **non achetable** (contenu futur) |
@@ -85,20 +85,23 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 
 ---
 
-## 4. Branches du skill tree
+## 4. Branches du module tree
 
-Arbre radial v4 � **9 modules** actifs :
+Arbre radial v4 � **11 modules** actifs :
 
 | Mot à utiliser (FR) | Branche (agent) | Thème |
 |---------------------|-----------------|--------|
-| **Dégâts** | `degats` | **Purge Strike**, **Purge Cadence**, **Purge Reach** |
-| **Thermique** | `thermique` | **Node-0 Boot**, **Récupération d'éclats**, **Aimant d'éclats**, **Thread Coolant**, **Kill Vent**, **Meltdown Threshold** |
+| **Dégâts** | `degats` | **Purge Strike**, **Briseur d'élite**, **Purge Cadence**, **Purge Reach**, **Éclat de purge** |
+| **Thermique** | `thermique` | **Node-0 Boot**, **Récupération d'éclats**, **Rendement d'extraction**, **Aimant d'éclats**, **Thread Coolant**, **Kill Vent**, **Meltdown Threshold** |
 | **Flux** (icône hub) | `flux` | Icône **Node-0 Boot** uniquement |
 
 | Module (FR) | Terme UI (EN) | Position hex | Parent | Effet |
 |-------------|---------------|--------------|--------|-------|
-| **Récupération d'éclats** | Shard Salvage | (−1, 0) | Node-0 Boot | Plus d'Éclats hex à chaque kill |
+| **Récupération d'éclats** | Shard Salvage | (−1, 0) | Node-0 Boot | +1 Éclat hex fixe par kill |
+| **Rendement d'extraction** | Extraction Yield | (−2, 0) | Récupération d'éclats | +20 % / rang sur le rendement de base (5 rangs max) |
 | **Aimant d'éclats** | Shard Magnet | (−2, +1) | Récupération d'éclats | Collecte serrée au départ (20 px), aspiration dès le rang 1 ; monte jusqu'à 92 px / 200 px (rangs 0–3) |
+| **Briseur d'élite** | Elite Breaker | (0, +2) | Purge Strike | Frappe plus fort les processus lourds (élite / boss) |
+| **Éclat de purge** | Purge Splash | (+1, +2) | Portée de purge | Dégâts d'éclaboussure autour du point de purge (hors zone directe) |
 
 **Retir� (ancien arbre)** : `attackSpeed`, `purgeAoe`, `shards`, `enemies`.
 
@@ -109,14 +112,26 @@ Arbre radial v4 � **9 modules** actifs :
 | Mot à utiliser | Terme UI (EN) | C’est quoi ? | Fichiers / zone (agent) |
 |--------------|---------------|--------------|-------------------------|
 | **Zone de purge** | Purge zone | Zone sous la souris qui détruit les ennemis | `purgeZone` · `PurgeZoneEngine` |
+| **Shockwave Purge Splash** | Splash shockwave | Anneau cyan qui s’étend du bord purge au rayon max ; visible à **chaque purge hit** si Purge Splash est installé | `effects.ts` · `purgeZone.ts` · `EffectEngine.tsx` |
 | **Purge** | Purge | Attaque principale (pas des « projectiles » classiques) | `enemyCombat` · HUD |
 | **Overload** (jauge HUD) | Overload | Jauge en bas = Breach en % pendant la run | `HUD` · `breachProgress` |
-| **Overclock** | Overclock | Skill actif (Espace / bouton hex HUD), boost temporaire | `overclock` · `OverclockButton` |
+| **Overclock** | Overclock | Module actif (Espace / bouton hex HUD), boost temporaire | `overclock` · `OverclockButton` |
 | **Flux Drive** | Flux Drive | Toggle ×2 vitesse (si débloqué) | `fluxDrive` · HUD |
 | **Vagues** | Wave | Vagues d’ennemis | `WaveEngine` · `waveConfig` |
 | **Boss** / **Ancre de brèche** | Breach Anchor | Boss de fin | `wavePhase: boss` |
 | **Grille hex arène** |, | Fond hex pendant le combat | `ArenaHexOverlay` |
 | **Drop d’éclats** / **loot** | Loot pickup | Entité au sol après un kill (ou autre source) ; type `LootKind` (aujourd’hui `hexShard`) ; collecte par proximité zone de purge | `src/game/loot/` |
+
+---
+
+## 5b. Transitions d’écran (Terminal Boot)
+
+| Moment | ID technique | Déclencheur | Ressenti joueur |
+|--------|--------------|-------------|-----------------|
+| **Hub → Arène** | `hubToArena` | Start Run (hub ou fin de run) | Plein écran terminal : canal ARCH, lignes `>` à gauche, curseur, barre de progression |
+| **Arène → Hub** | `arenaToHub` | Module Tree (fin de run) ou abandon pause | Même feed terminal ; accent or (victoire), breach (meltdown) ou or atténué (abandon) |
+
+Fichiers : `src/ui/transitions/` · `src/store/useTransitionStore.ts` · i18n `transitions.*`
 
 ---
 
@@ -129,6 +144,16 @@ Arbre radial v4 � **9 modules** actifs :
 | Bouton **Overclock** | Bas droite | `overclock` |
 | **Flux Drive** | HUD | `flux-drive` |
 | Indicateur vague / boss | Haut centre | — |
+
+### Fiche stats Node-0 (hub)
+
+Bouton stats coin hub · `PlayerStatsPanel` · `getPlayerStatSheet()`.
+
+| Toujours visible (base Node-0) | Révélé si module acheté (≥ 1 rang) |
+|--------------------------------|-------------------------------------|
+| Dégâts purge, cadence, zone principale, Surcharge passive / s, seuil Meltdown | Éclat de purge (zone + dégâts), Rendement d'extraction, Évacuation de kill |
+
+Les tooltips module tree gardent les bonus par rang ; la fiche affiche les **totaux finaux**.
 
 ---
 
@@ -154,12 +179,12 @@ Arbre radial v4 � **9 modules** actifs :
 | Bienvenue ARCH | `welcome` |
 | Rôle de Node-0 | `node0_role` |
 | Contenir la Brèche / boucle mission | `mission_loop` |
-| Intro skill tree | `skill_tree_intro` |
+| Intro module tree | `module_tree_intro` |
 | Zone de purge | `purge_zone` |
 | Enjeu surcharge | `overload` |
 | Éclats hex (run + vault) | `run_shards` |
 | Overclock | `overclock` |
-| Arbre (achat) | `skill_tree` |
+| Arbre (achat) | `module_tree` |
 | Prestige | `prestige` |
 | Flux Drive | `flux_drive` |
 
@@ -200,7 +225,7 @@ Tu peux dire « touche **l’arène** » ou « touche **le hub** », l’agent s
 | Tu dis… | Dossier |
 |---------|---------|
 | Arène, combat, ennemis, 60 FPS | `src/game/` |
-| Menus, HUD, skill tree, écrans | `src/ui/` |
+| Menus, HUD, module tree, écrans | `src/ui/` |
 | Éclats, saves, upgrades, états jeu | `src/store/` |
 | Couleurs, thème | `src/theme/` |
 | Textes FR/EN | `src/i18n/locales/` |
@@ -274,9 +299,85 @@ Pour ajuster **PurgeHit** (tick de dégâts) et **PurgeKill** (ennemi détruit) 
 
 ---
 
+## 14. Pipeline ajout module (checklist agent)
+
+Quand tu demandes un **nouveau module** sur l'arbre, l'agent suit cette liste dans **une seule tâche**.
+
+### Étapes obligatoires
+
+| # | Zone | Fichier | Quoi faire |
+|---|------|---------|------------|
+| 1 | **Catalogue** | `src/store/upgradeCatalog.ts` | `UpgradeId`, niveaux, coûts, constantes d'effet |
+| 2 | **Arbre** | `src/store/moduleTree.ts` | Nœud graph, position hex, branche, `requires` |
+| 3 | **Effets** | `src/game/moduleEffects.ts` | Ligne dans `MODULE_EFFECT_REGISTRY` + formule dans `compute*` |
+| 4 | **Textes** | `src/i18n/locales/en.ts` + `fr.ts` + `types.ts` | Nom + description (les deux langues) |
+| 5 | **Tooltip** | `src/ui/upgradeTooltipStats.ts` | Stats affichées au survol du nœud |
+| 6 | **Lexique** | `docs/lexique-jeu.md` | §4 (module) + cette section si besoin |
+
+### Étapes optionnelles (selon le module)
+
+| Zone | Fichier | Quand |
+|------|---------|-------|
+| **Loot** | `src/game/loot/` | Module qui modifie drops ou collecte |
+| **Arène** | `src/game/` (moteur Pixi) | Mécanique active en run (pas seulement un bonus passif) |
+| **Dialogue** | `docs/dialogues.md` + i18n tutoriel | ARCH explique le module |
+
+### Registre des effets actuels
+
+Source de vérité code : `MODULE_EFFECT_REGISTRY` dans `src/game/moduleEffects.ts`.  
+Chaque entrée lie un `upgradeId` à des **cibles gameplay** (`runConfig.*`, `breach.*`, `loot.*`).
+
+| Module | Cible gameplay | Effet résumé |
+|--------|----------------|--------------|
+| Node-0 Boot | `runConfig.purgeHitDamage` | Active dégâts de base purge |
+| Récupération d'éclats | `runConfig.killBonusShards` | +1 éclat fixe / kill |
+| Rendement d'extraction | `runConfig.shardsMultiplier` | +20 % / rang sur éclats de base (max ×2) |
+| Aimant d'éclats | `loot.hexShardRadii` | Collecte / aspiration au sol |
+| Purge Strike | `runConfig.purgeHitDamage` | +dégâts purge |
+| Briseur d'élite | `purge.eliteDamageBonus` | +dégâts purge vs processus lourds |
+| Purge Cadence | `runConfig.purgeIntervalMs` | Purge plus rapide |
+| Purge Reach | `runConfig.purgeRadius` | Zone principale +2,5 % / rang |
+| Éclat de purge | `purge.splashRadius`, `purge.splashDamage` | Extension éclaboussure +50 / +75 / +100 % vs zone principale ; dégâts 15 / 30 / 45 % hors zone directe |
+| Thread Coolant | `runConfig.passiveHeatPerSec` | Moins d'Overload passive |
+| Kill Vent | `breach.killRelief` | Soulagement Breach par kill |
+| Meltdown Threshold | `breach.cap` | Cap Meltdown plus haut |
+
+### Système AOE purge (zone principale + dérivés)
+
+Source : `computePurgeAoeProfile()` dans `src/game/moduleEffects.ts`.
+
+| Couche | Module | Affichage joueur | Calcul interne |
+|--------|-------|------------------|----------------|
+| **Zone principale** | Portée de purge | `+X %` | `basePurgeRadius × (1 + reachBonus)` |
+| **Éclaboussure** | Éclat de purge | `+X %` vs zone principale | `mainRadius × (1 + splashBonus)` |
+
+Les futurs modules AOE doivent **dériver de la zone principale** (même scale), pas ajouter des bonus px isolés. Les px restent moteur uniquement, jamais dans les tooltips AOE.
+
+### Ce qui ne change pas
+
+- **Store Zustand** (`useGameStore`) : `purchaseUpgrade` est déjà générique, pas besoin de le modifier par module.
+- **Sauvegarde** : les niveaux sont dans `UpgradeLevels` ; ajouter un id met à jour la persistence automatiquement si le type est étendu.
+
+### Planchers de sécurité (soustractions linéaires)
+
+Les modules qui **soustraient** par rang (`subtractPerLevel` dans `moduleEffects.ts`) ont un **plancher absolu** pour éviter des valeurs 0 ou négatives si les niveaux max ou constantes évoluent :
+
+| Stat | Constante | Plancher | Module |
+|------|-----------|----------|--------|
+| Cadence purge | `MIN_PURGE_INTERVAL_MS` | **150 ms** | Purge Cadence |
+| Overload passive / s | `MIN_PASSIVE_HEAT_PER_SEC` | **0,5 / s** | Thread Coolant |
+
+Les stats affichées au tooltip reflètent ces planchers une fois le cap atteint.
+
+### Phrase type pour demander un module
+
+> « Ajoute le module **[nom FR]** sur la branche **[dégâts / thermique]**, parent **[module parent]**, effet **[en une phrase]**, coût **[idée de prix]**. »
+
+---
+
 ## 12. Mise à jour de ce document
 
-**Règle :** à chaque **nouvelle feature visible** (écran, bouton, mécanique, branche skill tree, étape tuto), l’agent doit **ajouter ou mettre à jour une ligne dans ce fichier** dans la même tâche.
+**Règle :** à chaque **nouvelle feature visible** (écran, bouton, mécanique, branche module tree, étape tuto), l’agent doit **ajouter ou mettre à jour une ligne dans ce fichier** dans la même tâche.
 
 Si tu inventes un nouveau mot pour quelque chose, dis : *« Ajoute ça au lexique »*, l’agent complétera la section adaptée.
 
@@ -287,7 +388,7 @@ Si tu inventes un nouveau mot pour quelque chose, dis : *« Ajoute ça au lexiqu
 | Terme FR | Voir section |
 |----------|--------------|
 | Arène / run | §1, §5 |
-| Arbre de compétences | §3, §4 |
+| Arbre de modules | §3, §4 |
 | Boutons menu titre | §1 |
 | Brèche / surcharge | §2, §5 |
 | Continue / sauvegarde | §3 |
@@ -310,6 +411,7 @@ Si tu inventes un nouveau mot pour quelque chose, dis : *« Ajoute ça au lexiqu
 | Sons purge (hit / kill) | §13 |
 | Réglages | §1 |
 | Révélation arbre | §3 |
-| Skill tree | §3, §4 |
+| Module tree | §3, §4, §14 |
+| Pipeline nouveau module | §14 |
 | ARCH / tutoriel | §7 |
 | Vagues / boss | §5 |

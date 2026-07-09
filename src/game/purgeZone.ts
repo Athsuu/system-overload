@@ -21,9 +21,13 @@ export function createPurgeVisualShake(): PurgeVisualShake {
 }
 
 export function triggerPurgeVisualShake(shake: PurgeVisualShake, intervalMs: number): void {
-  shake.durationMs = Math.min(SHAKE_MAX_MS, Math.max(SHAKE_MIN_MS, intervalMs * SHAKE_DURATION_RATIO));
+  shake.durationMs = resolvePurgeHitVisualDurationMs(intervalMs);
   shake.remainingMs = shake.durationMs;
   shake.angle = Math.random() * Math.PI * 2;
+}
+
+export function resolvePurgeHitVisualDurationMs(intervalMs: number): number {
+  return Math.min(SHAKE_MAX_MS, Math.max(SHAKE_MIN_MS, intervalMs * SHAKE_DURATION_RATIO));
 }
 
 export function tickPurgeVisualShake(shake: PurgeVisualShake, deltaMs: number): void {
@@ -68,6 +72,49 @@ export function isEnemyInPurgeZone(
   const dx = node.x - purgeX;
   const dy = node.y - purgeY;
   return Math.hypot(dx, dy) <= purgeRadius + enemyR;
+}
+
+export function isEnemyInSplashRing(
+  node: DissipationNode,
+  purgeX: number,
+  purgeY: number,
+  purgeRadius: number,
+  splashRadius: number,
+): boolean {
+  if (isEnemyInPurgeZone(node, purgeX, purgeY, purgeRadius)) return false;
+  const enemyR = getEnemyHexRadius(node.enemyClass);
+  const dx = node.x - purgeX;
+  const dy = node.y - purgeY;
+  return Math.hypot(dx, dy) <= splashRadius + enemyR;
+}
+
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
+/** Onde de choc splash — anneau cyan qui s'étend du bord purge vers le rayon max. */
+export function drawSplashShockwave(
+  graphics: Graphics,
+  x: number,
+  y: number,
+  innerRadius: number,
+  outerRadius: number,
+  elapsedMs: number,
+  durationMs: number,
+): void {
+  if (outerRadius <= innerRadius + 1 || durationMs <= 0) return;
+
+  const progress = Math.min(1, elapsedMs / durationMs);
+  const travelT = easeOutCubic(progress);
+  const ringRadius = innerRadius + (outerRadius - innerRadius) * travelT;
+  const alpha = (1 - progress) * 0.4;
+
+  graphics.circle(x, y, ringRadius);
+  graphics.stroke({
+    color: DARK_HEX_PIXI.purgeGlow,
+    width: 1 + (1 - progress) * 0.5,
+    alpha,
+  });
 }
 
 function drawPurgeScanlines(

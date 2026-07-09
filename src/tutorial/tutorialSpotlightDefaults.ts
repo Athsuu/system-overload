@@ -33,5 +33,5 @@ const CM_TO_PX = 96 / 2.54;
 export const START_RUN_CARD_OFFSET_LEFT_PX = Math.round(3 * CM_TO_PX);
 export const START_RUN_CARD_OFFSET_TOP_PX = Math.round(3 * CM_TO_PX);
 
-/** Skill tree intro — spotlight ellipse size on the hex grid (viewport center). */
-export const SKILL_TREE_SPOTLIGHT_SIZE = 720;
+/** Module tree intro — spotlight ellipse size on the hex grid (viewport center). */
+export const MODULE_TREE_SPOTLIGHT_SIZE = 720;

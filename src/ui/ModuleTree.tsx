@@ -1,27 +1,27 @@
 import { useGameStore } from '../store/useGameStore';
-import { getSkillState, type UpgradeId } from '../store/upgradeCatalog';
+import { getModuleState, type UpgradeId } from '../store/upgradeCatalog';
 import {
   NODE0_HUB_POSITION,
   getNodePosition,
   getRevealedGraphNodes,
-  getSkillGlyphId,
+  getModuleGlyphId,
   getUpgradeBranch,
   type TreeNodeId,
   TREE_CANVAS,
-} from '../store/skillTree';
+} from '../store/moduleTree';
 import {
   getHexagonEdgePoint,
   getNodeHexRadius,
   getNodeHexStartAngle,
-} from './skillTreeGeometry';
-import { SkillTreeNode } from './SkillTreeNode';
-import { SkillTreeHexGridOverlay } from './SkillTreeHexGridOverlay';
-import { getEdgeVisual } from './skillTreeTheme';
-import type { HexGridHoverInfo } from '../store/skillTreeHexGrid';
+} from './moduleTreeGeometry';
+import { ModuleTreeNode } from './ModuleTreeNode';
+import { ModuleTreeHexGridOverlay } from './ModuleTreeHexGridOverlay';
+import { getEdgeVisual } from './moduleTreeTheme';
+import type { HexGridHoverInfo } from '../store/moduleTreeHexGrid';
 
-interface SkillTreeProps {
+interface ModuleTreeProps {
   selectedId: TreeNodeId | null;
-  onSelectSkill: (id: TreeNodeId) => void;
+  onSelectModule: (id: TreeNodeId) => void;
   onClearSelection: () => void;
   showHexGrid?: boolean;
   onHexGridHover?: (info: HexGridHoverInfo | null, clientX: number, clientY: number) => void;
@@ -32,13 +32,13 @@ function resolveEdgeParentId(parentId: TreeNodeId | 'root'): TreeNodeId | 'core'
   return parentId;
 }
 
-export function SkillTree({
+export function ModuleTree({
   selectedId,
-  onSelectSkill,
+  onSelectModule,
   onClearSelection,
   showHexGrid = false,
   onHexGridHover,
-}: SkillTreeProps) {
+}: ModuleTreeProps) {
   const bankShards = useGameStore((state) => state.bankShards);
   const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
   const upgrades = useGameStore((state) => state.upgrades);
@@ -54,7 +54,7 @@ export function SkillTree({
       className="block select-none overflow-visible"
       onPointerDown={(event) => {
         const target = event.target as Element;
-        if (target.closest('[data-skill-node]') || target.closest('[data-skill-tooltip]')) return;
+        if (target.closest('[data-module-node]') || target.closest('[data-module-tooltip]')) return;
         onClearSelection();
       }}
     >
@@ -91,7 +91,7 @@ export function SkillTree({
       />
 
       {showHexGrid && onHexGridHover && (
-        <SkillTreeHexGridOverlay onHoverChange={onHexGridHover} />
+        <ModuleTreeHexGridOverlay onHoverChange={onHexGridHover} />
       )}
 
       {revealedNodes.map((node) => {
@@ -151,14 +151,14 @@ export function SkillTree({
         const upgradeId = node.id as UpgradeId;
         const branch = getUpgradeBranch(upgradeId);
         return (
-          <SkillTreeNode
+          <ModuleTreeNode
             key={node.id}
             x={node.position.x}
             y={node.position.y}
-            glyph={getSkillGlyphId(upgradeId, branch)}
+            glyph={getModuleGlyphId(upgradeId, branch)}
             level={upgrades[upgradeId]}
             isRoot={upgradeId === 'node0Boot'}
-            state={getSkillState(
+            state={getModuleState(
               upgradeId,
               bankShards,
               bankAnchorFragments,
@@ -166,7 +166,7 @@ export function SkillTree({
               node.requires,
             )}
             isSelected={selectedId === node.id}
-            onSelect={() => onSelectSkill(node.id)}
+            onSelect={() => onSelectModule(node.id)}
           />
         );
       })}

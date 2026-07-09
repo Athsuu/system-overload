@@ -24,9 +24,9 @@ Des **corrupted processes**, des threads instables spawnés par l'effondrement, 
 
 **ARCH**, *Archive Recovery & Containment Heuristic*, a tenté de sauvegarder la Graine avant que l'Archive ne se consume. Elle est **coincée dans le même effondrement** : elle conseille, **tu exécutes**.
 
-Entre les runs, le **Skill Tree** radial matérialise le travail d'**ARCH** sur **le même** Node-0, deux boucles cumulées :
+Entre les runs, le **Module Tree** radial matérialise le travail d'**ARCH** sur **le même** Node-0, deux boucles cumulées :
 
-- **Hex Shards**, monnaie gagnée à chaque kill en run (compteur live), transférée au coffre en fin de run ; dépensée sur le skill tree.
+- **Hex Shards**, monnaie gagnée à chaque kill en run (compteur live), transférée au coffre en fin de run ; dépensée sur le module tree.
 - **Anchor Fragments**, données d'ancrage extraites **uniquement** en tuant le **Breach Anchor** (boss) ; débloquent les modules **capstone**.
 
 ARCH ne **répare** pas seulement à l'échec : elle fait tourner un **modèle heuristique en continu** sur chaque run, victoire ou défaite. Le **Meltdown** est le signal le plus critique (renforcement ciblé immédiat) ; mais chaque run nourrit aussi des **optimisations plus lentes**, thermique, rendement d'extraction, modélisation de la menace.
@@ -47,7 +47,7 @@ Au départ, un seul module est visible : **Node-0 Boot**, l'initialisation du th
 | Question                          | Réponse canonique                                                                                                                                                            |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Qui suis-je ?                     | **Node-0**, processus enfant compilé par ARCH, en quarantaine.                                                                                                              |
-| Que fais-je ?                     | J'**exécute** : purge, survie ; la méta-progression via le skill tree = optimisations d'ARCH sur moi.                                                                        |
+| Que fais-je ?                     | J'**exécute** : purge, survie ; la méta-progression via le module tree = optimisations d'ARCH sur moi.                                                                        |
 | Qui me guide ?                    | **ARCH**, advisory seulement, ne peut pas agir à ma place ; modèle heuristique continu sur chaque run.                                                                      |
 | Que protège-t-on ?                | **La Graine**, code source originel et pur de l'Archive Zéro.                                                                                                               |
 | Que veux-je ?                     | **Contenir la Breach**, détruire le **Breach Anchor**, extraire des **Hex Shards** ; à terme, préparer l'**Uplink**.                                                         |
@@ -68,7 +68,7 @@ Pas d'histoire linéaire avec cinématiques. L'univers est **implicite**, lu à 
 - **Le terminal** : le joueur est *dans* l'interface de surcharge (Dark Hex Terminal).
 - **La Breach** : concept de rupture / surcharge de l'Archive.
 - **Overload** : jauge live en run (barre HUD), la pression montante vers Meltdown.
-- **Les Hex Shards** : fragments de données stables, gagnés par kill en run (compteur live), transférés au vault en fin de run, dépensés sur le skill tree.
+- **Les Hex Shards** : fragments de données stables, gagnés par kill en run (compteur live), transférés au vault en fin de run, dépensés sur le module tree.
 - **Anchor Fragments** : données d'ancrage du Breach Anchor, **+1 au premier clear boss de chaque Cycle** (replays du même cycle = shards uniquement).
 - **Quarantaine** : bulle d'exécution isolée par ARCH, Node-0 combat **depuis** la dernière zone tenable.
 - **Uplink** : objectif de fin de jeu (narratif), extraction / sauvetage de la Graine.
@@ -86,7 +86,7 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 
 | Monnaie              | Terme UI (EN)    | Comment on la gagne                                                                 | À quoi elle sert                       |
 | -------------------- | ---------------- | ----------------------------------------------------------------------------------- | -------------------------------------- |
-| **Hex Shards**       | Hex Shards       | Kills en run (compteur live) ; transférés au vault en fin de run                  | Presque tous les modules du skill tree |
+| **Hex Shards**       | Hex Shards       | Kills en run (compteur live) ; transférés au vault en fin de run                  | Presque tous les modules du module tree |
 | **Anchor Fragments** | Anchor Fragments | **Premier clear boss par Cycle** (+1) ; replays = shards seulement                           | Modules **capstone** marqués anchor      |
 
 
@@ -111,7 +111,7 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 | **Ton**                       | Urgent, professionnel, parental, attaché, *I compiled you*, pas mascotte, pas froid/distant                                                                                                                                                                                                                                                           |
 | **Improvise**                 | Pas de plan de réparation complet, protocoles jamais testés                                                                                                                                                                                                                                                                                           |
 | **Heuristique continue**      | ARCH fait tourner un **modèle heuristique en continu** sur chaque run, victoire ou défaite. Node-0 n'est **jamais remplacé** : c'est le même processus tout au long de la méta-progression.                                                                                                                                                           |
-| **Deux boucles → skill tree** | **Optimisation continue**, chaque run nourrit des ajustements plus lents (thermique, rendement d'extraction, modélisation de la menace). **Corrections d'urgence**, le **Meltdown** est le signal le plus critique et déclenche un renforcement ciblé immédiat. Le skill tree = **somme des deux**. Mécanisme **implicite** (pas de terme UI dédié). |
+| **Deux boucles → module tree** | **Optimisation continue**, chaque run nourrit des ajustements plus lents (thermique, rendement d'extraction, modélisation de la menace). **Corrections d'urgence**, le **Meltdown** est le signal le plus critique et déclenche un renforcement ciblé immédiat. Le module tree = **somme des deux**. Mécanisme **implicite** (pas de terme UI dédié). |
 
 
 **Présentation (1ère carte tuto)** :  
@@ -136,20 +136,20 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 | Terme                  | Usage                                                            |
 | ---------------------- | ---------------------------------------------------------------- |
 | **Node-0**             | Entité joueur (processus enfant)                                 |
-| **Node-0 Boot**        | Nœud racine du skill tree, initialisation du thread quarantaine |
+| **Node-0 Boot**        | Nœud racine du module tree, initialisation du thread quarantaine |
 | **Overload**           | Jauge de pression en run (barre HUD bas)                         |
 | **Breach**             | Concept de surcharge / rupture ; aussi stat pause                |
 | **Meltdown**           | Défaite, thread overloaded                                      |
 | **Breach Contained**   | Victoire, menace contenue                                       |
-| **Hex Shards**         | Monnaie unique, gagnée en run, stockée au vault, dépensée sur le skill tree |
+| **Hex Shards**         | Monnaie unique, gagnée en run, stockée au vault, dépensée sur le module tree |
 | **Anchor Fragments**   | Monnaie boss, modules capstone                                  |
 | **the Seed**           | Code source originel pur de l'Archive Zéro                       |
 | **Zero Archive**       | Le monde / la machine en collapse                                |
 | **Uplink**             | Objectif narratif fin de jeu, extraction de la Graine           |
-| **Skill Enhancements** | Titre écran UPGRADING                                            |
-| **Skill Tree**         | Arbre hex **radial** de meta-progression                         |
+| **Module Enhancements** | Titre écran UPGRADING                                            |
+| **Module Tree**         | Arbre hex **radial** de meta-progression                         |
 | **Start Run**          | Lancer une tentative                                             |
-| **Overclock**          | Skill actif (Space), purge accélérée                            |
+| **Overclock**          | Module actif (Space), purge accélérée                            |
 | **Flux Drive**         | Module capstone anchor, ×2 vitesse simulation                   |
 | **ARCH**               | Voix advisory, tutoriel et dialogues système                    |
 
@@ -180,13 +180,13 @@ Le code interne garde parfois `DissipationNode` / `nodes` ; l'UI et le lore parl
 
 
 
-## Skill Tree v4: arbre radial
+## Module Tree v4: arbre radial
 
 
 
 ### Principe narratif
 
-Le skill tree n'est **pas** une liste de réparations après crash. C'est la **somme de deux boucles** qu'ARCH nourrit sur **le même** Node-0 :
+Le module tree n'est **pas** une liste de réparations après crash. C'est la **somme de deux boucles** qu'ARCH nourrit sur **le même** Node-0 :
 
 1. **Optimisation continue**, chaque run (victoire ou défaite) alimente des ajustements plus lents : thermique, rendement d'extraction, modélisation de la menace.
 2. **Corrections d'urgence**, le **Meltdown** est le signal le plus critique et déclenche un renforcement ciblé immédiat.
@@ -217,7 +217,7 @@ Réécriture du code de Node-0 qui se déploie depuis le centre :
 
 ## Boucle narrative d'un run
 
-1. **Menu / Skill Tree**, ARCH expose les modules issus des deux boucles (urgence + optimisation).
+1. **Menu / Module Tree**, ARCH expose les modules issus des deux boucles (urgence + optimisation).
 2. **Start Run**, Node-0 s'initialise. La Breach monte vite.
 3. **Vagues 1–5**, Corrupted processes. Purge à la souris.
 4. **Montée d'Overload**, Pression vers Meltdown.
@@ -238,8 +238,8 @@ Tutoriel contextuel (cartes ARCH), screenplay Acte I :
 | ---------------------- | ----------------------------------- |
 | **ARCH** (intro)       | Présentation + quarantaine + Graine |
 | **NODE-0** | Tu es Node-0                        |
-| **Contain the Breach** | Boucle run → Hex Shards → skill tree    |
-| **Skill Tree**         | Modules permanents, ARCH improvise |
+| **Contain the Breach** | Boucle run → Hex Shards → module tree    |
+| **Module Tree**         | Modules permanents, ARCH improvise |
 
 
 - Label carte : `ARCH // ADVISORY CHANNEL`

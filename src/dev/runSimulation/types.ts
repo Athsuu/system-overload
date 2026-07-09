@@ -6,7 +6,7 @@ export interface SimParams {
   timeScale: number;
   arenaWidth: number;
   arenaHeight: number;
-  /** 0–1 : part des ticks purge qui touchent les ennemis (proxy skill joueur). */
+  /** 0–1 : part des ticks purge qui touchent les ennemis (proxy module joueur). */
   purgeCoverage: number;
   /** Distance moyenne spawn → sortie (px). */
   avgFlowDistancePx: number;

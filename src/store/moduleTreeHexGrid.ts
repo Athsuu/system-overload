@@ -2,9 +2,9 @@ import {
   HEX_FLAT_DIRECTIONS,
   NODE0_HUB_POSITION,
   positionFromAxial,
-  SKILL_TREE_GRAPH,
+  MODULE_TREE_GRAPH,
   type HexFlatDirection,
-} from './skillTree';
+} from './moduleTree';
 import type { UpgradeId } from './upgradeCatalog';
 
 /** Center-to-center step — matches HEX_FLAT_DIRECTIONS.up.dy magnitude. */
@@ -131,37 +131,37 @@ export function formatPathFromNode0(q: number, r: number): string {
   return `node0 → ${steps.map((step) => DIRECTION_LABEL_FR[step]).join(' → ')}`;
 }
 
-export function formatPathFromSkill(
-  skillId: UpgradeId,
-  skillAxial: AxialCoord,
+export function formatPathFromModule(
+  moduleId: UpgradeId,
+  moduleAxial: AxialCoord,
   target: AxialCoord,
 ): string | null {
-  const steps = findPathSteps(skillAxial, target);
+  const steps = findPathSteps(moduleAxial, target);
   if (!steps || steps.length === 0) return null;
-  return `${skillId} → ${steps.map((step) => DIRECTION_LABEL_FR[step]).join(' → ')}`;
+  return `${moduleId} → ${steps.map((step) => DIRECTION_LABEL_FR[step]).join(' → ')}`;
 }
 
-const SKILL_AXIAL_BY_ID = (() => {
+const MODULE_AXIAL_BY_ID = (() => {
   const map = new Map<UpgradeId, AxialCoord>();
-  for (const node of SKILL_TREE_GRAPH) {
+  for (const node of MODULE_TREE_GRAPH) {
     const axial = pixelToAxial(node.position.x, node.position.y);
     map.set(node.id, axial);
   }
   return map;
 })();
 
-export function getSkillAtAxial(q: number, r: number): UpgradeId | null {
-  for (const [id, axial] of SKILL_AXIAL_BY_ID) {
+export function getModuleAtAxial(q: number, r: number): UpgradeId | null {
+  for (const [id, axial] of MODULE_AXIAL_BY_ID) {
     if (axial.q === q && axial.r === r) return id;
   }
   return null;
 }
 
-export function getNearestSkillPathLabel(q: number, r: number): string | null {
+export function getNearestModulePathLabel(q: number, r: number): string | null {
   const target = { q, r };
   let best: { id: UpgradeId; steps: HexFlatDirection[] } | null = null;
 
-  for (const [id, axial] of SKILL_AXIAL_BY_ID) {
+  for (const [id, axial] of MODULE_AXIAL_BY_ID) {
     const steps = findPathSteps(axial, target);
     if (!steps || steps.length === 0) continue;
     if (!best || steps.length < best.steps.length) {
@@ -178,7 +178,7 @@ export interface HexGridHoverInfo {
   r: number;
   coordLabel: string;
   pathFromNode0: string;
-  pathFromNearestSkill: string | null;
+  pathFromNearestModule: string | null;
   occupantId: UpgradeId | null;
 }
 
@@ -188,8 +188,8 @@ export function getHexGridHoverInfo(q: number, r: number): HexGridHoverInfo {
     r,
     coordLabel: formatHexCoord(q, r),
     pathFromNode0: formatPathFromNode0(q, r),
-    pathFromNearestSkill: getNearestSkillPathLabel(q, r),
-    occupantId: getSkillAtAxial(q, r),
+    pathFromNearestModule: getNearestModulePathLabel(q, r),
+    occupantId: getModuleAtAxial(q, r),
   };
 }
 

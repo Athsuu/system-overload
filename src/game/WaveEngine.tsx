@@ -1,14 +1,17 @@
 import { useApplication, useTick } from '@pixi/react';
 import { useCallback, type MutableRefObject, type RefObject } from 'react';
+import { consumeDevWaveJump } from '../dev/devFlags';
 import { triggerRunEventSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
 import { getEnemyClassFromBossWave } from './enemyClass';
 import { spawnEnemyOnEdge } from './enemyMovement';
 import { pushSpawnFlash, type GameEffect } from './effects';
+import type { LootPickup } from './loot';
 import { getRunConfig, getCycleSpawnIntervalMs, getCycleSpawnQuota, getCycleWaveMaxAlive, getSpawnIntervalMs, getWaveMaxAlive } from './runConfig';
 import { scaleDeltaMs } from './runTimeScale';
 import type { DissipationNode } from './types';
+import { jumpToWaveIndex } from './waveJump';
 import { getWaveDefinition, getWaveSpawnCount, REGULAR_WAVE_COUNT } from './waveConfig';
 
 type WaveState = 'active' | 'intermission';
@@ -26,6 +29,7 @@ interface WaveEngineProps {
   isPlaying: boolean;
   nodesRef: RefObject<DissipationNode[]>;
   effectsRef: RefObject<GameEffect[]>;
+  pickupsRef: RefObject<LootPickup[]>;
   waveRuntimeRef: MutableRefObject<WaveRuntime>;
 }
 
@@ -71,6 +75,7 @@ export function WaveEngine({
   isPlaying,
   nodesRef,
   effectsRef,
+  pickupsRef,
   waveRuntimeRef,
 }: WaveEngineProps) {
   const { app } = useApplication();
@@ -84,6 +89,12 @@ export function WaveEngine({
 
       const store = useGameStore.getState();
       if (store.gameState !== 'PLAYING') return;
+
+      const pendingWave = consumeDevWaveJump();
+      if (pendingWave !== null) {
+        jumpToWaveIndex(pendingWave, waveRuntimeRef, nodesRef, effectsRef, pickupsRef);
+        return;
+      }
 
       const runtime = waveRuntimeRef.current;
       const waveDef = getWaveDefinition(runtime.waveIndex);
@@ -204,7 +215,7 @@ export function WaveEngine({
         }
       }
     },
-    [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef, waveRuntimeRef],
+    [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef, pickupsRef, waveRuntimeRef],
   );
 
   useTick({ callback: tick, isEnabled: isPlaying });

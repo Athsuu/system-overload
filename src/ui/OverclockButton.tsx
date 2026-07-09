@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { hexagonPoints } from './skillTreeGeometry';
+import { hexagonPoints } from './moduleTreeGeometry';
 
 const SIZE = 88;
 const CX = 44;

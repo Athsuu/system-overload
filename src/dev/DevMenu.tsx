@@ -6,6 +6,8 @@ import {
   devClearCycleFlags,
   devForceEndBreach,
   devForceVictoryBoss,
+  devGetMaxWaveIndex,
+  devJumpToWave,
   devMarkCycleCleared,
   devMaxAllUpgrades,
   devResetToNewPlayer,
@@ -17,7 +19,7 @@ import {
   devToggleInvincible,
   devTogglePrestigeUnlocked,
   devToggleShowEnemyHpBars,
-  devToggleSkillTreeHexGrid,
+  devToggleModuleTreeHexGrid,
   devToggleSpeed2x,
   devUnlockCycle,
   devWipeProgress,
@@ -65,6 +67,8 @@ export function DevMenu() {
   const selectedCycle = useGameStore((state) => state.selectedCycle);
   const activeCycle = useGameStore((state) => state.activeCycle);
   const cyclesCleared = useGameStore((state) => state.cyclesCleared);
+  const waveIndex = useGameStore((state) => state.waveIndex);
+  const maxWaveIndex = devGetMaxWaveIndex();
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -116,6 +120,7 @@ export function DevMenu() {
               Cycles : {selectedCycle}/{highestCycleUnlocked} (run {activeCycle}) · cleared [
               {cyclesCleared.join(', ') || '—'}]
             </p>
+            <p>Manche : {waveIndex > 0 ? waveIndex : '—'}</p>
             <p>Invincible : {invincible ? 'ON' : 'OFF'}</p>
             <p>Enemy HP : {enemyHpBars ? 'ON' : 'OFF'}</p>
             <p>Vitesse : {speed2x ? '×2' : '×1'}</p>
@@ -133,6 +138,24 @@ export function DevMenu() {
             <DevButton onClick={() => setSpeed2x(devToggleSpeed2x())}>
               Vitesse ×2 {speed2x ? 'ON' : 'OFF'}
             </DevButton>
+          </div>
+
+          <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Manches</p>
+          <p className="mb-2 text-[14px] text-white/30">
+            Saute à une manche en run (lance une run si besoin). Vide ennemis et loot au saut.
+          </p>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            {Array.from({ length: maxWaveIndex }, (_, index) => {
+              const wave = index + 1;
+              const isBoss = wave === maxWaveIndex;
+              const isCurrent = waveIndex === wave && (gameState === 'PLAYING' || gameState === 'PAUSED');
+              return (
+                <DevButton key={wave} onClick={() => devJumpToWave(wave)}>
+                  {isBoss ? `Boss (${wave})` : `Manche ${wave}`}
+                  {isCurrent ? ' ✓' : ''}
+                </DevButton>
+              );
+            })}
           </div>
 
           <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">État jeu</p>
@@ -193,7 +216,7 @@ export function DevMenu() {
 
           <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Progression</p>
           <p className="mb-2 text-[14px] text-white/30">
-            « Reset nouveau joueur » efface tout (Shards, skill tree, audio 50 %, vue skill tree).
+            « Reset nouveau joueur » efface tout (Shards, module tree, audio 50 %, vue module tree).
           </p>
           <div className="mb-4 flex flex-wrap gap-1.5">
             <DevButton onClick={() => devMaxAllUpgrades()}>Max upgrades</DevButton>
@@ -212,13 +235,13 @@ export function DevMenu() {
             <DevRunSimPanel />
           </div>
 
-          <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Skill Tree</p>
+          <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Module Tree</p>
           <p className="mb-2 text-[14px] text-white/30">
             Grille hex alignée sur node0 — survole une case pour lire sa coordonnée et le chemin
             (ex. threadCoolant → bas-droite).
           </p>
           <div className="mb-4 flex flex-wrap gap-1.5">
-            <DevButton onClick={() => setHexGrid(devToggleSkillTreeHexGrid())}>
+            <DevButton onClick={() => setHexGrid(devToggleModuleTreeHexGrid())}>
               Grille hex {hexGrid ? 'ON' : 'OFF'}
             </DevButton>
           </div>

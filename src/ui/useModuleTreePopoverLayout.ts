@@ -1,28 +1,28 @@
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
-import type { TreeNodeId } from '../store/skillTree';
+import type { TreeNodeId } from '../store/moduleTree';
 
-import { getNodeHexRadius } from './skillTreeGeometry';
+import { getNodeHexRadius } from './moduleTreeGeometry';
 
 import {
 
-  getSkillAnchorRect,
+  getModuleAnchorRect,
 
-  placeSkillTreePopover,
+  placeModuleTreePopover,
 
-  type SkillPopoverPlacement,
+  type ModulePopoverPlacement,
 
-  type SkillTreePanTransform,
+  type ModuleTreePanTransform,
 
-} from './skillTreePopoverPlacement';
+} from './moduleTreePopoverPlacement';
 
 
 
-interface UseSkillTreePopoverLayoutOptions {
+interface UseModuleTreePopoverLayoutOptions {
 
   viewportRef: RefObject<HTMLDivElement | null>;
 
-  transform: SkillTreePanTransform;
+  transform: ModuleTreePanTransform;
 
   canvasX: number;
 
@@ -38,9 +38,9 @@ interface UseSkillTreePopoverLayoutOptions {
 
 
 
-interface UseSkillTreePopoverLayoutResult {
+interface UseModuleTreePopoverLayoutResult {
 
-  placement: SkillPopoverPlacement | null;
+  placement: ModulePopoverPlacement | null;
 
   dialogRef: (node: HTMLDivElement | null) => void;
 
@@ -48,7 +48,7 @@ interface UseSkillTreePopoverLayoutResult {
 
 
 
-export function useSkillTreePopoverLayout({
+export function useModuleTreePopoverLayout({
 
   viewportRef,
 
@@ -64,9 +64,9 @@ export function useSkillTreePopoverLayout({
 
   popoverHeight,
 
-}: UseSkillTreePopoverLayoutOptions): UseSkillTreePopoverLayoutResult {
+}: UseModuleTreePopoverLayoutOptions): UseModuleTreePopoverLayoutResult {
 
-  const [placement, setPlacement] = useState<SkillPopoverPlacement | null>(null);
+  const [placement, setPlacement] = useState<ModulePopoverPlacement | null>(null);
 
   const [dialogNode, setDialogNode] = useState<HTMLDivElement | null>(null);
 
@@ -100,7 +100,7 @@ export function useSkillTreePopoverLayout({
 
       const height = measured && measured > 0 ? measured : popoverHeight;
 
-      const anchor = getSkillAnchorRect(
+      const anchor = getModuleAnchorRect(
 
         canvasX,
 
@@ -114,7 +114,7 @@ export function useSkillTreePopoverLayout({
 
       setPlacement(
 
-        placeSkillTreePopover(
+        placeModuleTreePopover(
 
           anchor,
 

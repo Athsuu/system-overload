@@ -8,7 +8,7 @@ import {
   getUpgradeCost,
   getUpgradeCurrency,
   getUpgradeDefinition,
-  isSkillUnlocked,
+  isModuleUnlocked,
   type UpgradeId,
   type UpgradeLevels,
 } from './upgradeCatalog';
@@ -19,7 +19,7 @@ import {
   MAX_CYCLES,
 } from './cycleTypes';
 import { getBreachCap } from '../game/runConfig';
-import { getSkillNode } from './skillTree';
+import { getModuleNode } from './moduleTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { clearRunArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 
@@ -64,7 +64,7 @@ interface GameStore {
   addBreachProgress: (delta: number) => void;
   addRunShards: (amount: number) => void;
   endRun: (outcome: RunOutcome) => void;
-  openSkillTree: () => void;
+  openModuleTree: () => void;
   purchaseUpgrade: (id: UpgradeId) => boolean;
   startRun: (cycle?: number) => void;
   setSelectedCycle: (cycle: number) => void;
@@ -163,9 +163,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addBreachProgress: (delta) =>
     set((state) => {
       const maxBreach = getBreachCap(state.upgrades);
-      return {
-        breachProgress: Math.min(maxBreach, Math.max(0, state.breachProgress + delta)),
-      };
+      const raw = Math.max(0, state.breachProgress + delta);
+      const breachProgress = raw >= maxBreach - 1e-6 ? maxBreach : Math.min(maxBreach, raw);
+      return { breachProgress };
     }),
   addRunShards: (amount) =>
     set((state) => {
@@ -221,14 +221,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         gameState: 'RUN_END' as const,
       };
     }),
-  openSkillTree: () => set({ gameState: 'UPGRADING' }),
+  openModuleTree: () => set({ gameState: 'UPGRADING' }),
   purchaseUpgrade: (id) => {
     const state = get();
     const definition = getUpgradeDefinition(id);
-    const skillNode = getSkillNode(id);
+    const moduleNode = getModuleNode(id);
     const level = state.upgrades[id];
 
-    if (!isSkillUnlocked(id, state.upgrades, skillNode.requires)) return false;
+    if (!isModuleUnlocked(id, state.upgrades, moduleNode.requires)) return false;
     if (level >= definition.maxLevel) return false;
 
     const cost = getUpgradeCost(definition, level);

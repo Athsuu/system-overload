@@ -27,7 +27,7 @@ L'agent est le **développeur expert** : il traduit ces intentions en code, arch
 3. [Résultat attendu]
 
 ## Zones modifiées
-[skill tree | arène | sauvegarde | etc.]
+[module tree | arène | sauvegarde | etc.]
 
 ## Avis
 [2–4 lignes : opinion créative / UX — ce qui marche, limite, piste optionnelle]
@@ -45,6 +45,7 @@ Textes joueur : **i18n** (minimum **anglais + français**).
 - **i18n** : tout texte joueur modifié → **toutes les langues** dans la même tâche (`src/i18n/locales/`).
 - **Dialogues** : toute modification de dialogue → synchroniser **`docs/dialogues.md`** en parallèle.
 - **Lexique** : nouvel écran, mécanique ou terme UI → mettre à jour **`docs/lexique-jeu.md`**.
+- **Module tree (nouveau module)** : suivre **`docs/lexique-jeu.md` §14** dans la même tâche. Effets gameplay → **`src/game/moduleEffects.ts`** (`MODULE_EFFECT_REGISTRY` + `compute*`). Ne pas toucher `useGameStore` par module (`purchaseUpgrade` est générique). Loot / mécanique active → `src/game/loot/` ou moteur Pixi si besoin. Inventaire fichiers : `MODULE_ADDITION_PIPELINE` dans `moduleEffects.ts`.
 - **Narratif** : joueur = **Node-0** ; conseil = **ARCH** ; pas Heart/Cœur/sprite joueur dans les nouveaux textes.
 - **Game feel** : « +X % » → calculer et écrire la **valeur finale** dans les constantes (pas de multiplicateur orphelin sauf demande PO).
 
@@ -79,13 +80,13 @@ Demande vague, plusieurs interprétations, valeurs manquantes, impact multi-zone
 | Zone | Dossier | Rôle |
 |------|---------|------|
 | Arène | `src/game/` | Purge, ennemis, vagues — 60 FPS PixiJS |
-| Interfaces | `src/ui/` | Menus, HUD, skill tree — React + Tailwind |
+| Interfaces | `src/ui/` | Menus, HUD, module tree — React + Tailwind |
 | Progression | `src/store/` | Shards, breach, upgrades, sauvegarde — Zustand |
 | Thème | `src/theme/` | Tokens visuels |
 | Dev | `src/dev/` | Menu debug (dev only) |
 | Entrée | `src/App.tsx` | Assemblage écrans |
 
-**Fichiers clés** : `src/game/constants.ts`, `src/store/useGameStore.ts`, `src/store/upgradeCatalog.ts`, `src/store/skillTree.ts`, `src/tutorial/tutorialCatalog.ts`.
+**Fichiers clés** : `src/game/constants.ts`, `src/game/moduleEffects.ts`, `src/store/useGameStore.ts`, `src/store/upgradeCatalog.ts`, `src/store/moduleTree.ts`, `src/tutorial/tutorialCatalog.ts`.
 
 ---
 
@@ -111,7 +112,7 @@ Commandes : `npm run dev` · `npm run build` · `npm run lint`
 - **Start Run** → action immédiate, pas de préparation.
 - Boucle : vagues → zone de purge → **Breach/Overload** → victoire (Breach Anchor) ou **Meltdown**.
 - Contrôle : **souris** (purge). **Overclock** et **Flux Drive** prévus mais **désactivés** dans le build actuel — vérifier le code avant de documenter comme actifs.
-- Méta : Hex Shards → skill tree radial permanent.
+- Méta : Hex Shards → module tree radial permanent.
 - Ressenti : nerveux, terminal en surcharge — pas fantasy biologique.
 
 ---
@@ -136,6 +137,7 @@ Commandes : `npm run dev` · `npm run build` · `npm run lint`
 - Sur-ingénierer une tâche simple ; expliquer le code ligne par ligne au PO.
 - Violer séparation UI/Game ; committer ou installer des libs sans validation.
 - Réintroduire Heart/Cœur, sprite joueur, redirection de flux sans accord PO.
+- Nouveau module module tree sans **`MODULE_EFFECT_REGISTRY`** ni checklist lexique **§14**.
 - Tutoriel sans **Skip**, fermeture auto gameplay, spotlight avec cadre coloré ou cut au lieu du **glide 350 ms**.
 - Carte ARCH hors écran ou superposée à la cible HUD.
 - Guillemets décoratifs, tiret `—`, deux-points en excès dans prose ARCH (détail : `narrative-dialogues.mdc`).

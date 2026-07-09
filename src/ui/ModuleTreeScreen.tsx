@@ -1,31 +1,31 @@
 import { useRef, useState } from 'react';
 import type { GameState } from '../store/useGameStore';
-import type { TreeNodeId } from '../store/skillTree';
+import type { TreeNodeId } from '../store/moduleTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { CycleRunLauncher } from './CycleRunLauncher';
 import { HubCornerControls } from './HubCornerControls';
-import { SkillTreeViewport } from './SkillTreeViewport';
+import { ModuleTreeViewport } from './ModuleTreeViewport';
 import { TerminalBackdrop } from './TerminalBackdrop';
 import { ArchGlitchLine } from './ArchGlitchText';
 
-interface SkillTreeScreenProps {
+interface ModuleTreeScreenProps {
   mode: Extract<GameState, 'MENU' | 'UPGRADING'>;
 }
 
-export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
+export function ModuleTreeScreen({ mode }: ModuleTreeScreenProps) {
   const screenRef = useRef<HTMLDivElement>(null);
   const [selectedId, setSelectedId] = useState<TreeNodeId | null>(null);
   const strings = useGameStrings();
   const isMenu = mode === 'MENU';
 
-  const toggleSkillSelection = (id: TreeNodeId) => {
-    markTutorialSignal('skillNodeSelected');
+  const toggleModuleSelection = (id: TreeNodeId) => {
+    markTutorialSignal('moduleNodeSelected');
     setSelectedId((current) => (current === id ? null : id));
   };
 
-  const clearSkillSelection = () => {
+  const clearModuleSelection = () => {
     setSelectedId(null);
   };
 
@@ -62,10 +62,10 @@ export function SkillTreeScreen({ mode }: SkillTreeScreenProps) {
       </div>
 
 
-      <SkillTreeViewport
+      <ModuleTreeViewport
         selectedId={selectedId}
-        onSelectSkill={toggleSkillSelection}
-        onClearSelection={clearSkillSelection}
+        onSelectModule={toggleModuleSelection}
+        onClearSelection={clearModuleSelection}
       />
 
       <div className="pointer-events-none absolute inset-0 z-10">

@@ -12,6 +12,7 @@ export {
   getShardMagnetMagnetRadius,
 } from './pickupRadii';
 export {
+  expandHexShardDrops,
   getLootPickupDrawY,
   getLootPickupHexRadius,
   spawnLootDrops,

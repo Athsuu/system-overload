@@ -1,19 +1,19 @@
 export type TutorialSignalKey =
   | 'runsStarted'
-  | 'skillNodeSelected'
+  | 'moduleNodeSelected'
   | 'upgradePurchased'
   | 'fluxDriveToggled';
 
 export interface TutorialSignals {
   runsStarted: number;
-  skillNodeSelected: boolean;
+  moduleNodeSelected: boolean;
   upgradePurchased: boolean;
   fluxDriveToggled: boolean;
 }
 
 const DEFAULT_SIGNALS: TutorialSignals = {
   runsStarted: 0,
-  skillNodeSelected: false,
+  moduleNodeSelected: false,
   upgradePurchased: false,
   fluxDriveToggled: false,
 };

@@ -1,36 +1,36 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import {
-  getSkillState,
+  getModuleState,
   getUpgradeCost,
   getUpgradeCurrency,
   getUpgradeDefinition,
   type UpgradeId,
 } from '../store/upgradeCatalog';
-import { getSkillNode, getParentRequirementLabel, getSkillGlyphId, getUpgradeBranch } from '../store/skillTree';
+import { getModuleNode, getParentRequirementLabel, getModuleGlyphId, getUpgradeBranch } from '../store/moduleTree';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { triggerSfx } from '../audio/sfxApi';
 import { getTooltipHeight, getUpgradeTooltipLines } from './upgradeTooltipStats';
 import { playOneShotAnimation } from './animations';
-import { SkillBranchIcon } from './skillTreeBranchIcons';
-import { SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { ModuleBranchIcon } from './moduleTreeBranchIcons';
+import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 
 const STAT_GREEN = '#4ade80';
-export const SKILL_TREE_TOOLTIP_TITLE_ID = 'skill-tree-popover-title';
+export const MODULE_TREE_TOOLTIP_TITLE_ID = 'module-tree-popover-title';
 
-export function getSkillTreeTooltipHeight(statLineCount: number): number {
+export function getModuleTreeTooltipHeight(statLineCount: number): number {
   return getTooltipHeight(statLineCount);
 }
 
-export const SKILL_TREE_POPOVER_WIDTH = 300;
+export const MODULE_TREE_POPOVER_WIDTH = 300;
 
 function getPurchaseButtonStyle(isAvailable: boolean, isAnchor: boolean): CSSProperties {
   if (isAvailable) {
     return {
-      borderColor: isAnchor ? `${DARK_HEX.breachGlow}88` : `${SKILL_TREE_VISUAL.edgeActive}88`,
+      borderColor: isAnchor ? `${DARK_HEX.breachGlow}88` : `${MODULE_TREE_VISUAL.edgeActive}88`,
       backgroundColor: '#2a0808',
-      boxShadow: `0 0 16px ${isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.edgeActive}33`,
+      boxShadow: `0 0 16px ${isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.edgeActive}33`,
     };
   }
   return { borderColor: '#5c1515', backgroundColor: '#120808' };
@@ -66,11 +66,11 @@ function StatRow({
   );
 }
 
-interface SkillTreeTooltipProps {
+interface ModuleTreeTooltipProps {
   selectedId: UpgradeId;
 }
 
-export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
+export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
   const bankShards = useGameStore((state) => state.bankShards);
   const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
   const upgrades = useGameStore((state) => state.upgrades);
@@ -78,17 +78,17 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
   const strings = useGameStrings();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const skillNode = getSkillNode(selectedId);
+  const moduleNode = getModuleNode(selectedId);
   const definition = getUpgradeDefinition(selectedId);
   const currency = getUpgradeCurrency(selectedId);
   const isAnchor = currency === 'anchor';
   const level = upgrades[selectedId];
-  const state = getSkillState(
+  const state = getModuleState(
     selectedId,
     bankShards,
     bankAnchorFragments,
     upgrades,
-    skillNode.requires,
+    moduleNode.requires,
   );
   const isMaxed = state === 'maxed';
   const isAvailable = state === 'available';
@@ -97,7 +97,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
   const costProgress = isMaxed ? 100 : Math.min(100, (balance / Math.max(cost, 1)) * 100);
   const statLines = getUpgradeTooltipLines(selectedId, upgrades);
   const branch = getUpgradeBranch(selectedId);
-  const glyph = getSkillGlyphId(selectedId, branch);
+  const glyph = getModuleGlyphId(selectedId, branch);
 
   useEffect(() => {
     playOneShotAnimation(panelRef.current, 'so-animate-slide-up');
@@ -112,11 +112,11 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
   return (
     <div
       ref={panelRef}
-      data-skill-tooltip
+      data-module-tooltip
       className="pointer-events-auto rounded border px-4 py-3 shadow-[0_0_32px_rgba(255,77,0,0.15)]"
       style={{
-        backgroundColor: SKILL_TREE_VISUAL.tooltipBg,
-        borderColor: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.tooltipBorder,
+        backgroundColor: MODULE_TREE_VISUAL.tooltipBg,
+        borderColor: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.tooltipBorder,
       }}
       onPointerDown={(event) => event.stopPropagation()}
     >
@@ -125,18 +125,18 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded border text-sm font-bold text-white"
               style={{
-                borderColor: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.goldMuted,
+                borderColor: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.goldMuted,
                 backgroundColor: '#2a0808',
               }}
             >
-              <SkillBranchIcon glyph={glyph} size={22} color="#ffffff" />
+              <ModuleBranchIcon glyph={glyph} size={22} color="#ffffff" />
             </div>
           )}
           <div className="min-w-0 flex-1">
             <p
-              id={SKILL_TREE_TOOLTIP_TITLE_ID}
+              id={MODULE_TREE_TOOLTIP_TITLE_ID}
               className="text-[14px] font-semibold tracking-[0.2em] uppercase"
-              style={{ color: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.gold }}
+              style={{ color: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.gold }}
             >
               {definition.name}
             </p>
@@ -168,7 +168,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
             {isMaxed ? strings.ui.fullyUpgraded : strings.ui.nextRankCost}
           </span>
           {!isMaxed && (
-            <span className="font-mono" style={{ color: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.gold }}>
+            <span className="font-mono" style={{ color: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.gold }}>
               {balance.toLocaleString()} / {cost.toLocaleString()}
             </span>
           )}
@@ -180,7 +180,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
               className="h-full rounded-full transition-all duration-300"
               style={{
                 width: `${costProgress}%`,
-                background: `linear-gradient(90deg, #5c1515, ${isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.edgeActive})`,
+                background: `linear-gradient(90deg, #5c1515, ${isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.edgeActive})`,
               }}
             />
           </div>
@@ -188,7 +188,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
 
         {state === 'locked' && (
           <p className="mt-2 text-[14px]" style={{ color: '#ff5533' }}>
-            {getParentRequirementLabel(skillNode.requires) ?? strings.ui.requirementsNotMet}
+            {getParentRequirementLabel(moduleNode.requires) ?? strings.ui.requirementsNotMet}
           </p>
         )}
 

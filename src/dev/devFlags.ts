@@ -51,21 +51,33 @@ export function devSetSpeed2x(enabled: boolean): void {
   devRunSpeedMultiplier = enabled ? DEV_RUN_SPEED_FAST : DEV_RUN_SPEED_NORMAL;
 }
 
-export const DEV_SKILL_TREE_HEX_GRID_EVENT = 'dev-skill-tree-hex-grid';
+export const DEV_MODULE_TREE_HEX_GRID_EVENT = 'dev-module-tree-hex-grid';
 
-let devShowSkillTreeHexGrid = false;
+let devShowModuleTreeHexGrid = false;
 
-export function isDevSkillTreeHexGridVisible(): boolean {
-  return devShowSkillTreeHexGrid;
+export function isDevModuleTreeHexGridVisible(): boolean {
+  return devShowModuleTreeHexGrid;
 }
 
-export function devToggleSkillTreeHexGrid(): boolean {
-  devShowSkillTreeHexGrid = !devShowSkillTreeHexGrid;
-  window.dispatchEvent(new CustomEvent(DEV_SKILL_TREE_HEX_GRID_EVENT));
-  return devShowSkillTreeHexGrid;
+export function devToggleModuleTreeHexGrid(): boolean {
+  devShowModuleTreeHexGrid = !devShowModuleTreeHexGrid;
+  window.dispatchEvent(new CustomEvent(DEV_MODULE_TREE_HEX_GRID_EVENT));
+  return devShowModuleTreeHexGrid;
 }
 
-export function devSetSkillTreeHexGridVisible(enabled: boolean): void {
-  devShowSkillTreeHexGrid = enabled;
-  window.dispatchEvent(new CustomEvent(DEV_SKILL_TREE_HEX_GRID_EVENT));
+export function devSetModuleTreeHexGridVisible(enabled: boolean): void {
+  devShowModuleTreeHexGrid = enabled;
+  window.dispatchEvent(new CustomEvent(DEV_MODULE_TREE_HEX_GRID_EVENT));
+}
+
+let devPendingWaveJump: number | null = null;
+
+export function devRequestWaveJump(waveIndex: number): void {
+  devPendingWaveJump = waveIndex;
+}
+
+export function consumeDevWaveJump(): number | null {
+  const waveIndex = devPendingWaveJump;
+  devPendingWaveJump = null;
+  return waveIndex;
 }

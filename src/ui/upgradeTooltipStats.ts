@@ -2,14 +2,21 @@ import {
   getUpgradeDefinition,
   MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL,
   PURGE_CADENCE_PERCENT_PER_LEVEL,
-  PURGE_REACH_AOE_PERCENT_PER_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
   SHARD_SALVAGE_BONUS_PER_LEVEL,
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
-import { BASE_BREACH_CAP, getKillBreachRelief, getRunConfig } from '../game/runConfig';
+import { BASE_BREACH_CAP, getKillBreachRelief, getRunConfig, getShardReward, resolvePurgeHitDamage } from '../game/runConfig';
+import {
+  getEliteBreakerDamageBonusPercent,
+  getPurgeReachBonusPercent,
+  getPurgeSplashDamagePercent,
+  getPurgeSplashRadiusBonusPercent,
+  getShardYieldBonusPercent,
+  resolvePurgeSplashDamage,
+} from '../game/moduleEffects';
 import { getLootPickupRadii, getShardMagnetMagnetRadius } from '../game/loot';
 import { getGameStrings } from '../i18n';
 
@@ -53,6 +60,29 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     return [line(labels.shardBonusPerKill, current, nextLevel, next)];
   }
 
+  if (id === 'shardYield') {
+    const exampleWave = 5;
+    const currentBonus = getShardYieldBonusPercent(level);
+    const nextBonus = nextLevel !== null ? getShardYieldBonusPercent(nextLevel) : null;
+    const currentPayout = getShardReward(getRunConfig(cur), exampleWave, 'normal');
+    const nextPayout =
+      nextLevel !== null ? getShardReward(getRunConfig(nxt!), exampleWave, 'normal') : null;
+    return [
+      line(
+        labels.shardYieldBonus,
+        `+${currentBonus}%`,
+        nextLevel,
+        nextBonus !== null ? `+${nextBonus}%` : null,
+      ),
+      line(
+        labels.shardBonusPerKill,
+        String(currentPayout),
+        nextLevel,
+        nextPayout !== null ? String(nextPayout) : null,
+      ),
+    ];
+  }
+
   if (id === 'shardMagnet') {
     const currentRadius = getLootPickupRadii(cur, 'hexShard').collectRadius;
     const nextRadius = nxt ? getLootPickupRadii(nxt, 'hexShard').collectRadius : null;
@@ -85,6 +115,28 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     ];
   }
 
+  if (id === 'eliteBreaker') {
+    const baseDamage = getRunConfig(cur).purgeHitDamage;
+    const nextBaseDamage = nxt ? getRunConfig(nxt).purgeHitDamage : baseDamage;
+    const currentBonus = getEliteBreakerDamageBonusPercent(level);
+    const nextBonus =
+      nextLevel !== null ? getEliteBreakerDamageBonusPercent(nextLevel) : null;
+    const eliteDamage = String(resolvePurgeHitDamage(baseDamage, 'elite', level));
+    const nextEliteDamage =
+      nextLevel !== null
+        ? String(resolvePurgeHitDamage(nextBaseDamage, 'elite', nextLevel))
+        : null;
+    return [
+      line(
+        labels.elitePurgeDamageBonus,
+        `+${currentBonus}%`,
+        nextLevel,
+        nextBonus !== null ? `+${nextBonus}%` : null,
+      ),
+      line(labels.elitePurgeHitDamage, eliteDamage, nextLevel, nextEliteDamage),
+    ];
+  }
+
   if (id === 'purgeCadence') {
     const current = `+${level * PURGE_CADENCE_PERCENT_PER_LEVEL}%`;
     const next =
@@ -93,18 +145,46 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   }
 
   if (id === 'purgeReach') {
-    const currentRadius = getRunConfig(cur).purgeRadius;
-    const nextRadius = nxt ? getRunConfig(nxt).purgeRadius : null;
-    const currentBonus = level * PURGE_REACH_AOE_PERCENT_PER_LEVEL;
-    const nextBonus =
-      nextLevel !== null ? nextLevel * PURGE_REACH_AOE_PERCENT_PER_LEVEL : null;
+    const currentBonus = getPurgeReachBonusPercent(level);
+    const nextBonus = nextLevel !== null ? getPurgeReachBonusPercent(nextLevel) : null;
     return [
-      line(labels.purgeReach, String(currentRadius), nextLevel, nextRadius !== null ? String(nextRadius) : null),
       line(
-        labels.purgeReachBonus,
+        labels.purgeReach,
         `+${currentBonus}%`,
         nextLevel,
         nextBonus !== null ? `+${nextBonus}%` : null,
+      ),
+    ];
+  }
+
+  if (id === 'purgeSplash') {
+    const baseDamage = getRunConfig(cur).purgeHitDamage;
+    const nextBaseDamage = nxt ? getRunConfig(nxt).purgeHitDamage : baseDamage;
+    const currentRadiusBonus = getPurgeSplashRadiusBonusPercent(level);
+    const nextRadiusBonus =
+      nextLevel !== null ? getPurgeSplashRadiusBonusPercent(nextLevel) : null;
+    const currentPercent = getPurgeSplashDamagePercent(level);
+    const nextPercent =
+      nextLevel !== null ? getPurgeSplashDamagePercent(nextLevel) : null;
+    const splashDamage = String(resolvePurgeSplashDamage(baseDamage, level));
+    const nextSplashDamage =
+      nextLevel !== null
+        ? String(resolvePurgeSplashDamage(nextBaseDamage, nextLevel))
+        : null;
+    return [
+      line(
+        labels.purgeSplashRadius,
+        `+${currentRadiusBonus}%`,
+        nextLevel,
+        nextRadiusBonus !== null ? `+${nextRadiusBonus}%` : null,
+      ),
+      line(
+        labels.purgeSplashDamage,
+        `${splashDamage} (${currentPercent}%)`,
+        nextLevel,
+        nextSplashDamage !== null && nextPercent !== null
+          ? `${nextSplashDamage} (${nextPercent}%)`
+          : null,
       ),
     ];
   }

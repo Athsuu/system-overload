@@ -11,7 +11,7 @@ alwaysApply: false
 - **Zero Archive** s'effondre sous des **processus corrompus**.
 - Le joueur **est Node-0** (pas un opérateur externe) : exécution via **zone de purge** (souris), pas de sprite joueur en arène.
 - **ARCH** compile Node-0 pour protéger **the Seed** ; objectif long terme **Uplink**.
-- Skill tree = optimisations ARCH (continue + urgence Meltdown).
+- Module tree = optimisations ARCH (continue + urgence Meltdown).
 
 **Références** : `docs/narrative.md`, `docs/lexique-jeu.md`, `docs/dialogues.md`.
 

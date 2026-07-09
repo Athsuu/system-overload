@@ -2,37 +2,37 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import {
   getPlaceholderNode,
-  getSkillNode,
+  getModuleNode,
   isPlaceholderId,
   type TreeNodeId,
-} from '../store/skillTree';
+} from '../store/moduleTree';
 import { type UpgradeId } from '../store/upgradeCatalog';
 import { getUpgradeTooltipLines } from './upgradeTooltipStats';
-import { SkillTree } from './SkillTree';
-import { SkillTreeGlitchOverlay } from './SkillTreeGlitchOverlay';
+import { ModuleTree } from './ModuleTree';
+import { ModuleTreeGlitchOverlay } from './ModuleTreeGlitchOverlay';
 import {
   PLACEHOLDER_TOOLTIP_TITLE_ID,
-  SkillTreePlaceholderTooltip,
-} from './SkillTreePlaceholderTooltip';
+  ModuleTreePlaceholderTooltip,
+} from './ModuleTreePlaceholderTooltip';
 import {
-  getSkillTreeTooltipHeight,
-  SKILL_TREE_TOOLTIP_TITLE_ID,
-  SkillTreeTooltip,
-} from './SkillTreeTooltip';
-import { SkillTreePopover } from './SkillTreePopover';
+  getModuleTreeTooltipHeight,
+  MODULE_TREE_TOOLTIP_TITLE_ID,
+  ModuleTreeTooltip,
+} from './ModuleTreeTooltip';
+import { ModuleTreePopover } from './ModuleTreePopover';
 import {
   PLACEHOLDER_POPOVER_HEIGHT,
   PLACEHOLDER_POPOVER_WIDTH,
-  SKILL_POPOVER_WIDTH,
-} from './skillTreePopoverPlacement';
-import { useSkillTreePan } from './useSkillTreePan';
-import { useDevSkillTreeHexGrid } from '../dev/useDevSkillTreeHexGrid';
-import type { HexGridHoverInfo } from '../store/skillTreeHexGrid';
-import { SkillTreeHexGridTooltip } from './SkillTreeHexGridTooltip';
+  MODULE_POPOVER_WIDTH,
+} from './moduleTreePopoverPlacement';
+import { useModuleTreePan } from './useModuleTreePan';
+import { useDevModuleTreeHexGrid } from '../dev/useDevModuleTreeHexGrid';
+import type { HexGridHoverInfo } from '../store/moduleTreeHexGrid';
+import { ModuleTreeHexGridTooltip } from './ModuleTreeHexGridTooltip';
 
-interface SkillTreeViewportProps {
+interface ModuleTreeViewportProps {
   selectedId: TreeNodeId | null;
-  onSelectSkill: (id: TreeNodeId) => void;
+  onSelectModule: (id: TreeNodeId) => void;
   onClearSelection: () => void;
 }
 
@@ -57,21 +57,21 @@ function ZoomButton({
   );
 }
 
-export function SkillTreeViewport({
+export function ModuleTreeViewport({
   selectedId,
-  onSelectSkill,
+  onSelectModule,
   onClearSelection,
-}: SkillTreeViewportProps) {
+}: ModuleTreeViewportProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const upgrades = useGameStore((state) => state.upgrades);
-  const showHexGrid = useDevSkillTreeHexGrid();
+  const showHexGrid = useDevModuleTreeHexGrid();
   const [hexHover, setHexHover] = useState<{
     info: HexGridHoverInfo;
     x: number;
     y: number;
   } | null>(null);
   const { transform, isGrabbing, onPointerDown, onPointerMove, onPointerUp, zoomIn, zoomOut, resetView } =
-    useSkillTreePan(viewportRef);
+    useModuleTreePan(viewportRef);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -106,15 +106,15 @@ export function SkillTreeViewport({
       };
     }
 
-    const node = getSkillNode(selectedId);
+    const node = getModuleNode(selectedId);
     const statLines = getUpgradeTooltipLines(selectedId, upgrades);
     return {
       canvasX: node.position.x,
       canvasY: node.position.y,
       nodeId: selectedId,
-      width: SKILL_POPOVER_WIDTH,
-      height: getSkillTreeTooltipHeight(statLines.length),
-      titleId: SKILL_TREE_TOOLTIP_TITLE_ID,
+      width: MODULE_POPOVER_WIDTH,
+      height: getModuleTreeTooltipHeight(statLines.length),
+      titleId: MODULE_TREE_TOOLTIP_TITLE_ID,
       kind: 'upgrade' as const,
       upgradeId: selectedId,
     };
@@ -124,10 +124,10 @@ export function SkillTreeViewport({
     <>
       <div
         ref={viewportRef}
-        data-tutorial-anchor="skill-tree"
+        data-tutorial-anchor="module-tree"
         className={`absolute inset-0 overflow-hidden ${isGrabbing ? 'cursor-grabbing' : 'cursor-grab'}`}
         onPointerDown={(event) => {
-          if ((event.target as Element).closest('[data-skill-node], [data-skill-tooltip], button')) {
+          if ((event.target as Element).closest('[data-module-node], [data-module-tooltip], button')) {
             return;
           }
           onClearSelection();
@@ -137,16 +137,16 @@ export function SkillTreeViewport({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <SkillTreeGlitchOverlay />
+        <ModuleTreeGlitchOverlay />
         <div
-          className="so-skill-tree-canvas absolute left-0 top-0 origin-top-left will-change-transform"
+          className="so-module-tree-canvas absolute left-0 top-0 origin-top-left will-change-transform"
           style={{
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}
         >
-          <SkillTree
+          <ModuleTree
             selectedId={selectedId}
-            onSelectSkill={onSelectSkill}
+            onSelectModule={onSelectModule}
             onClearSelection={onClearSelection}
             showHexGrid={showHexGrid}
             onHexGridHover={(info, clientX, clientY) => {
@@ -156,7 +156,7 @@ export function SkillTreeViewport({
         </div>
 
         {popoverConfig && (
-          <SkillTreePopover
+          <ModuleTreePopover
             viewportRef={viewportRef}
             transform={transform}
             canvasX={popoverConfig.canvasX}
@@ -168,11 +168,11 @@ export function SkillTreeViewport({
             onDismiss={onClearSelection}
           >
             {popoverConfig.kind === 'placeholder' ? (
-              <SkillTreePlaceholderTooltip placeholderId={popoverConfig.nodeId} />
+              <ModuleTreePlaceholderTooltip placeholderId={popoverConfig.nodeId} />
             ) : (
-              <SkillTreeTooltip selectedId={popoverConfig.upgradeId as UpgradeId} />
+              <ModuleTreeTooltip selectedId={popoverConfig.upgradeId as UpgradeId} />
             )}
-          </SkillTreePopover>
+          </ModuleTreePopover>
         )}
       </div>
 
@@ -190,7 +190,7 @@ export function SkillTreeViewport({
       </div>
 
       {showHexGrid && hexHover && (
-        <SkillTreeHexGridTooltip info={hexHover.info} x={hexHover.x} y={hexHover.y} />
+        <ModuleTreeHexGridTooltip info={hexHover.info} x={hexHover.x} y={hexHover.y} />
       )}
     </>
   );

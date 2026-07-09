@@ -1,9 +1,9 @@
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 import {
   getDomAnchorRect,
-  placeSkillTreePopover,
-  type SkillPopoverPlacement,
-} from './skillTreePopoverPlacement';
+  placeModuleTreePopover,
+  type ModulePopoverPlacement,
+} from './moduleTreePopoverPlacement';
 
 interface UseDomPopoverLayoutOptions {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -14,7 +14,7 @@ interface UseDomPopoverLayoutOptions {
 }
 
 interface UseDomPopoverLayoutResult {
-  placement: SkillPopoverPlacement | null;
+  placement: ModulePopoverPlacement | null;
   dialogRef: (node: HTMLDivElement | null) => void;
 }
 
@@ -25,7 +25,7 @@ export function useDomPopoverLayout({
   popoverHeight,
   active,
 }: UseDomPopoverLayoutOptions): UseDomPopoverLayoutResult {
-  const [placement, setPlacement] = useState<SkillPopoverPlacement | null>(null);
+  const [placement, setPlacement] = useState<ModulePopoverPlacement | null>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDivElement | null>(null);
 
   const dialogRef = useCallback((node: HTMLDivElement | null) => {
@@ -50,7 +50,7 @@ export function useDomPopoverLayout({
       const height = measured && measured > 0 ? measured : popoverHeight;
       const anchorRect = getDomAnchorRect(anchor, container);
       setPlacement(
-        placeSkillTreePopover(anchorRect, popoverWidth, height, {
+        placeModuleTreePopover(anchorRect, popoverWidth, height, {
           width: container.clientWidth,
           height: container.clientHeight,
         }),

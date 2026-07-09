@@ -15,7 +15,7 @@ import {
   SPOTLIGHT_VIEWPORT_MARGIN,
   START_RUN_CARD_OFFSET_LEFT_PX,
   START_RUN_CARD_OFFSET_TOP_PX,
-  SKILL_TREE_SPOTLIGHT_SIZE,
+  MODULE_TREE_SPOTLIGHT_SIZE,
 } from './tutorialSpotlightDefaults';
 
 export interface SpotlightRect {
@@ -122,9 +122,9 @@ const SPOTLIGHT_SPECS: Partial<Record<TutorialAnchor, SpotlightSpecWithFeather>>
     borderRadius: 8,
     feather: 2.2,
   },
-  'skill-tree': {
+  'module-tree': {
     mode: 'viewport-center',
-    size: SKILL_TREE_SPOTLIGHT_SIZE,
+    size: MODULE_TREE_SPOTLIGHT_SIZE,
     padding: 32,
     borderRadius: 0,
     feather: 2.4,
@@ -399,7 +399,7 @@ function getAnchorFixedCardPlacement(
     );
   }
 
-  if (anchor === 'skill-tree') {
+  if (anchor === 'module-tree') {
     return fitCardInViewport(
       32,
       (viewportH - cardHeight) / 2,
@@ -498,8 +498,8 @@ export function buildVignetteMask(): string {
 
 const ANCHORED_CARD_WIDTH: Partial<Record<TutorialAnchor, number>> = {
   'featured-center': 420,
-  'featured-skill-tree': 340,
-  'skill-tree': 280,
+  'featured-module-tree': 340,
+  'module-tree': 280,
   'vault-shards': 300,
   'hex-shards': 300,
   'run-shards': 300,
@@ -528,8 +528,8 @@ export function measureAnchoredCardPlacement(
         viewportW,
         viewportH,
       );
-    case 'featured-skill-tree':
-    case 'skill-tree':
+    case 'featured-module-tree':
+    case 'module-tree':
       return fitCardInViewport(32, (viewportH - cardHeight) / 2, maxWidth, cardHeight, viewportW, viewportH);
     case 'vault-shards':
     case 'hex-shards':

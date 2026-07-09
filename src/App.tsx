@@ -2,6 +2,7 @@ import { DevMenu } from './dev/DevMenu';
 import { isDevMenuEnabled } from './dev/isDevMenuEnabled';
 import { useHubAudio } from './audio/useHubAudio';
 import { GameCanvas } from './game/GameCanvas';
+import { useBreachEndWatcher } from './game/useBreachEndWatcher';
 import { useBreachWarningSound } from './game/useBreachWarningSound';
 import { useProgressAutosave } from './store/useProgressAutosave';
 import { useSettingsStore } from './store/useSettingsStore';
@@ -14,13 +15,15 @@ import { RunEndScreen } from './ui/RunEndScreen';
 import { ScreenTransition } from './ui/ScreenTransition';
 import { SettingsOverlay } from './ui/SettingsOverlay';
 import { MainMenuScreen } from './ui/MainMenuScreen';
-import { SkillTreeScreen } from './ui/SkillTreeScreen';
+import { ModuleTreeScreen } from './ui/ModuleTreeScreen';
+import { ScreenTransitionOverlay } from './ui/transitions/ScreenTransitionOverlay';
 import { TutorialCoach } from './ui/TutorialCoach';
 import { ArchAmbient } from './ui/ArchAmbient';
 import { usePauseHotkey } from './ui/usePauseHotkey';
 import { DARK_HEX } from './theme/darkHexTerminal';
 
 function App() {
+  useBreachEndWatcher();
   useBreachWarningSound();
   usePauseHotkey();
   const gameState = useGameStore((state) => state.gameState);
@@ -74,13 +77,14 @@ function App() {
         )}
         {isHub && (
           <ScreenTransition screenKey={`hub-${gameState}`} className="absolute inset-0">
-            <SkillTreeScreen mode={gameState} />
+            <ModuleTreeScreen mode={gameState} />
           </ScreenTransition>
         )}
       </div>
       {(showHubSettings || showMainMenuSettings) && <SettingsOverlay />}
       <TutorialCoach />
       <ArchAmbient />
+      <ScreenTransitionOverlay />
       {isDevMenuEnabled() && <DevMenu />}
     </div>
   );

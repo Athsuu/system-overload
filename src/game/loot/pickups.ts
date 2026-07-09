@@ -4,7 +4,9 @@ import {
   LOOT_PICKUP_BOB_SPEED,
   LOOT_PICKUP_HEX_RADIUS,
   LOOT_PICKUP_MAGNET_SPEED,
-  LOOT_PICKUP_SCATTER_RADIUS,
+  LOOT_PICKUP_SCATTER_JITTER,
+  LOOT_PICKUP_SCATTER_MAX,
+  LOOT_PICKUP_SCATTER_MIN,
 } from './constants';
 import type {
   CollectedLoot,
@@ -13,30 +15,33 @@ import type {
   LootPickupRadii,
 } from './types';
 
-function scatterOffset(index: number, total: number): { x: number; y: number } {
-  if (total <= 1) return { x: 0, y: 0 };
+function scatterOffset(): { x: number; y: number } {
+  const angle = Math.random() * Math.PI * 2;
+  const distance = LOOT_PICKUP_SCATTER_MIN + Math.random() * (LOOT_PICKUP_SCATTER_MAX - LOOT_PICKUP_SCATTER_MIN);
+  const jitterX = (Math.random() - 0.5) * LOOT_PICKUP_SCATTER_JITTER;
+  const jitterY = (Math.random() - 0.5) * LOOT_PICKUP_SCATTER_JITTER;
 
-  const angle = (index / total) * Math.PI * 2 + Math.random() * 0.35;
-  const distance = LOOT_PICKUP_SCATTER_RADIUS * (0.45 + Math.random() * 0.55);
   return {
-    x: Math.cos(angle) * distance,
-    y: Math.sin(angle) * distance,
+    x: Math.cos(angle) * distance + jitterX,
+    y: Math.sin(angle) * distance + jitterY,
   };
+}
+
+/** One world pickup per shard — loot feedback matches payout. */
+export function expandHexShardDrops(totalShards: number): LootDrop[] {
+  return Array.from({ length: totalShards }, () => ({ kind: 'hexShard' as const, amount: 1 }));
 }
 
 export function spawnLootDrops(
   pickups: LootPickup[],
   x: number,
   y: number,
-  drops: LootDrop[],
+  drops: readonly LootDrop[],
 ): void {
-  const validDrops = drops.filter((drop) => drop.amount > 0);
-  if (validDrops.length === 0) return;
+  for (const drop of drops) {
+    if (drop.amount <= 0) continue;
 
-  for (let index = 0; index < validDrops.length; index += 1) {
-    const drop = validDrops[index];
-    const offset = scatterOffset(index, validDrops.length);
-
+    const offset = scatterOffset();
     pickups.push({
       kind: drop.kind,
       x: x + offset.x,
@@ -49,8 +54,7 @@ export function spawnLootDrops(
 }
 
 export function getLootPickupHexRadius(kind: LootPickup['kind'], amount: number): number {
-  const base = LOOT_PICKUP_HEX_RADIUS[kind];
-  return base + Math.min(amount - 1, 3) * 1.4;
+  return LOOT_PICKUP_HEX_RADIUS[kind] + Math.min(amount - 1, 3) * 1.4;
 }
 
 export function getLootPickupDrawY(pickup: LootPickup): number {
@@ -76,18 +80,21 @@ export function tickLootPickups(
 
     if (!pointerActive) continue;
 
-    const dx = pointerX - pickup.x;
-    const dy = pointerY - pickup.y;
-    const distance = Math.hypot(dx, dy);
+    let dx = pointerX - pickup.x;
+    let dy = pointerY - pickup.y;
+    let distance = Math.hypot(dx, dy);
 
     if (distance <= radii.magnetRadius && distance > 0.001) {
       const step = Math.min(LOOT_PICKUP_MAGNET_SPEED * (deltaMs / 1000), distance * 0.7);
       pickup.x += (dx / distance) * step;
       pickup.y += (dy / distance) * step;
+
+      dx = pointerX - pickup.x;
+      dy = pointerY - pickup.y;
+      distance = Math.hypot(dx, dy);
     }
 
-    const collectDistance = Math.hypot(pointerX - pickup.x, pointerY - pickup.y);
-    if (collectDistance <= radii.collectRadius) {
+    if (distance <= radii.collectRadius) {
       collected.push({ kind: pickup.kind, amount: pickup.amount });
       pickups.splice(index, 1);
     }

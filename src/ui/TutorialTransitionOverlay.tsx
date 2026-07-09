@@ -20,7 +20,7 @@ interface TutorialTransitionOverlayProps {
   display: TutorialDisplay;
   navDirection: TutorialNavDirection;
   showCenterDim: boolean;
-  showSkillTreeGradient: boolean;
+  showModuleTreeGradient: boolean;
   children: ReactNode;
 }
 
@@ -37,7 +37,7 @@ export function TutorialTransitionOverlay({
   display,
   navDirection,
   showCenterDim,
-  showSkillTreeGradient,
+  showModuleTreeGradient,
   children,
 }: TutorialTransitionOverlayProps) {
   const { focusMetrics, cardPlacement, isInitial, spotlightActive } = useAnimatedTutorialLayout(
@@ -77,7 +77,7 @@ export function TutorialTransitionOverlay({
         />
       )}
 
-      {showSkillTreeGradient && (
+      {showModuleTreeGradient && (
         <div
           className={`so-animate-fade-in-slow pointer-events-none absolute inset-0 ${veilFadeClass}`}
           style={{

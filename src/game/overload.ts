@@ -3,9 +3,9 @@ import { playRunEventSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
 import { applyLeakBurstMultiplier, LEAK_BURST_WINDOW_MS } from './leakPenalty';
 import {
-  getBreachCap,
   getEffectivePassiveHeatPerSec,
   getLeakProgressPenalty,
+  isMeltdownReached,
   type RunConfig,
 } from './runConfig';
 
@@ -29,12 +29,15 @@ function tryTriggerMeltdown(): void {
   if (store.gameState !== 'PLAYING') return;
   if (isDevInvincible()) return;
 
-  const breachCap = getBreachCap(store.upgrades);
-  if (store.breachProgress < breachCap) return;
+  if (!isMeltdownReached(store.breachProgress, store.upgrades)) return;
 
   meltdownTriggeredThisRun = true;
-  playRunEventSfx('meltdown');
   store.endRun('defeat_breach');
+  try {
+    playRunEventSfx('meltdown');
+  } catch {
+    // L'audio ne doit jamais bloquer la fin de run.
+  }
 }
 
 export function addOverload(delta: number, _source: OverloadSource): void {

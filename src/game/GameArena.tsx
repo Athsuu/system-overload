@@ -138,6 +138,7 @@ export function GameArena() {
         isPlaying={isRunLive}
         nodesRef={nodesRef}
         effectsRef={effectsRef}
+        pickupsRef={pickupsRef}
         waveRuntimeRef={waveRuntimeRef}
       />
       <DissipationNodes nodesRef={nodesRef} effectsRef={effectsRef} isPlaying={isRunLive} />

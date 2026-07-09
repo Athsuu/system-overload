@@ -4,16 +4,16 @@ import {
   getHexGridCellRadius,
   getHexGridHoverInfo,
   type HexGridHoverInfo,
-} from '../store/skillTreeHexGrid';
-import { hexagonPoints } from './skillTreeGeometry';
+} from '../store/moduleTreeHexGrid';
+import { hexagonPoints } from './moduleTreeGeometry';
 
 const CELL_RADIUS = getHexGridCellRadius();
 
-interface SkillTreeHexGridOverlayProps {
+interface ModuleTreeHexGridOverlayProps {
   onHoverChange: (info: HexGridHoverInfo | null, clientX: number, clientY: number) => void;
 }
 
-export function SkillTreeHexGridOverlay({ onHoverChange }: SkillTreeHexGridOverlayProps) {
+export function ModuleTreeHexGridOverlay({ onHoverChange }: ModuleTreeHexGridOverlayProps) {
   const cells = useMemo(() => buildHexGridCells(), []);
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
@@ -32,7 +32,7 @@ export function SkillTreeHexGridOverlay({ onHoverChange }: SkillTreeHexGridOverl
   };
 
   return (
-    <g data-skill-hex-grid aria-hidden>
+    <g data-module-hex-grid aria-hidden>
       {cells.map((cell) => {
         const key = `${cell.q},${cell.r}`;
         const isActive = activeKey === key;

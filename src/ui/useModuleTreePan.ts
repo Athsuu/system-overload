@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { NODE0_HUB_POSITION } from '../store/skillTree';
+import { NODE0_HUB_POSITION } from '../store/moduleTree';
 
 const VIEWPORT_STORAGE_KEY = 'system-overload-tree-viewport';
 
-export function clearSkillTreeViewport(): void {
+export function clearModuleTreeViewport(): void {
   sessionStorage.removeItem(VIEWPORT_STORAGE_KEY);
 }
 
@@ -63,10 +63,10 @@ function getCoreCenteredTransform(
 
 function isPanBlockedTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
-  return Boolean(target.closest('[data-skill-node], [data-skill-tooltip], button'));
+  return Boolean(target.closest('[data-module-node], [data-module-tooltip], button'));
 }
 
-export function useSkillTreePan(viewportRef: React.RefObject<HTMLDivElement | null>) {
+export function useModuleTreePan(viewportRef: React.RefObject<HTMLDivElement | null>) {
   const [transform, setTransform] = useState<ViewportTransform>({ x: 0, y: 0, scale: 1 });
   const [isGrabbing, setIsGrabbing] = useState(false);
   const transformRef = useRef(transform);

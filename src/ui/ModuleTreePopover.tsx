@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
-import type { TreeNodeId } from '../store/skillTree';
-import { skillPopoverArrowStyle } from './popoverArrow';
+import type { TreeNodeId } from '../store/moduleTree';
+import { modulePopoverArrowStyle } from './popoverArrow';
 import {
-  type SkillTreePanTransform,
-} from './skillTreePopoverPlacement';
-import { useSkillTreePopoverLayout } from './useSkillTreePopoverLayout';
-interface SkillTreePopoverProps {
+  type ModuleTreePanTransform,
+} from './moduleTreePopoverPlacement';
+import { useModuleTreePopoverLayout } from './useModuleTreePopoverLayout';
+interface ModuleTreePopoverProps {
   viewportRef: RefObject<HTMLDivElement | null>;
-  transform: SkillTreePanTransform;
+  transform: ModuleTreePanTransform;
   canvasX: number;
   canvasY: number;
   nodeId: TreeNodeId | 'core';
@@ -18,7 +18,7 @@ interface SkillTreePopoverProps {
   children: ReactNode;
 }
 
-export function SkillTreePopover({  viewportRef,
+export function ModuleTreePopover({  viewportRef,
   transform,
   canvasX,
   canvasY,
@@ -28,9 +28,9 @@ export function SkillTreePopover({  viewportRef,
   titleId,
   onDismiss,
   children,
-}: SkillTreePopoverProps) {
+}: ModuleTreePopoverProps) {
   const focusRef = useRef<HTMLDivElement | null>(null);
-  const { placement, dialogRef: layoutDialogRef } = useSkillTreePopoverLayout({
+  const { placement, dialogRef: layoutDialogRef } = useModuleTreePopoverLayout({
     viewportRef,
     transform,
     canvasX,
@@ -69,7 +69,7 @@ export function SkillTreePopover({  viewportRef,
         aria-modal="false"
         aria-labelledby={titleId}
         tabIndex={-1}
-        data-skill-tooltip
+        data-module-tooltip
         className="pointer-events-auto relative outline-none"
         onKeyDown={(event) => {
           if (event.key === 'Escape') {
@@ -78,7 +78,7 @@ export function SkillTreePopover({  viewportRef,
           }
         }}
       >
-        <span aria-hidden className="absolute" style={skillPopoverArrowStyle(placement.side, placement.arrowOffset)} />
+        <span aria-hidden className="absolute" style={modulePopoverArrowStyle(placement.side, placement.arrowOffset)} />
         {children}
       </div>
     </div>

@@ -4,8 +4,9 @@ import { isCycleCleared } from '../store/cycleTypes';
 import { useGameStore } from '../store/useGameStore';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
 import { HexActionButton } from './HexActionButton';
+import { useScreenTransition } from './transitions/useScreenTransition';
 
 function CycleArrowButton({
   direction,
@@ -37,7 +38,7 @@ function CycleArrowButton({
       }`}
       style={{
         backgroundColor: disabled ? 'rgba(18, 8, 8, 0.4)' : 'rgba(18, 8, 8, 0.85)',
-        boxShadow: disabled ? undefined : `0 0 12px ${SKILL_TREE_VISUAL.edgeActive}22`,
+        boxShadow: disabled ? undefined : `0 0 12px ${MODULE_TREE_VISUAL.edgeActive}22`,
       }}
     >
       {label}
@@ -50,8 +51,8 @@ export function CycleRunLauncher() {
   const highestCycleUnlocked = useGameStore((state) => state.highestCycleUnlocked);
   const cyclesCleared = useGameStore((state) => state.cyclesCleared);
   const setSelectedCycle = useGameStore((state) => state.setSelectedCycle);
-  const startRun = useGameStore((state) => state.startRun);
   const strings = useGameStrings();
+  const { launchHubToArena, isTransitioning } = useScreenTransition();
 
   const canGoLeft = selectedCycle > 1;
   const canGoRight = selectedCycle < highestCycleUnlocked;
@@ -69,8 +70,9 @@ export function CycleRunLauncher() {
   };
 
   const handleStartRun = () => {
+    if (isTransitioning) return;
     markTutorialSignal('runsStarted');
-    startRun(selectedCycle);
+    launchHubToArena(selectedCycle);
   };
 
   return (
@@ -97,6 +99,7 @@ export function CycleRunLauncher() {
           size="hubRun"
           variant="primary"
           className="hover:scale-[1.03]"
+          disabled={isTransitioning}
         />
         <CycleArrowButton direction="right" disabled={!canGoRight} onClick={handleNext} />
       </div>

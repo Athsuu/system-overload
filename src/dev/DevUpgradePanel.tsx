@@ -5,34 +5,34 @@ import {
   type UpgradeId,
 } from '../store/upgradeCatalog';
 import {
-  getSkillGlyphId,
-  getSkillIconBranch,
-  getSkillIconBranchMeta,
-  getSkillNode,
-  SKILL_TREE_NODES,
-  type SkillGlyphId,
-} from '../store/skillTree';
+  getModuleGlyphId,
+  getModuleIconBranch,
+  getModuleIconBranchMeta,
+  getModuleNode,
+  MODULE_TREE_NODES,
+  type ModuleGlyphId,
+} from '../store/moduleTree';
 import { useGameStore } from '../store/useGameStore';
-import { SkillBranchIcon } from '../ui/skillTreeBranchIcons';
+import { ModuleBranchIcon } from '../ui/moduleTreeBranchIcons';
 import { devSetUpgradeLevel } from './devActions';
 import { DevFloatingTooltip } from './DevFloatingTooltip';
 
 function getGlyphAccentColor(
-  glyph: SkillGlyphId | null,
-  iconBranch: ReturnType<typeof getSkillIconBranch>,
+  glyph: ModuleGlyphId | null,
+  iconBranch: ReturnType<typeof getModuleIconBranch>,
 ): string {
-  if (!glyph) return getSkillIconBranchMeta()[iconBranch].color;
+  if (!glyph) return getModuleIconBranchMeta()[iconBranch].color;
   if (glyph === 'shard') return '#c5a059';
-  return getSkillIconBranchMeta()[iconBranch].color;
+  return getModuleIconBranchMeta()[iconBranch].color;
 }
 
-function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
+function DevModuleTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
   const upgrades = useGameStore((state) => state.upgrades);
-  const skillNode = getSkillNode(upgradeId);
+  const moduleNode = getModuleNode(upgradeId);
   const definition = getUpgradeDefinition(upgradeId);
-  const iconBranch = getSkillIconBranch(upgradeId, skillNode.branch);
-  const glyph = getSkillGlyphId(upgradeId, skillNode.branch);
-  const branch = getSkillIconBranchMeta()[iconBranch];
+  const iconBranch = getModuleIconBranch(upgradeId, moduleNode.branch);
+  const glyph = getModuleGlyphId(upgradeId, moduleNode.branch);
+  const branch = getModuleIconBranchMeta()[iconBranch];
   const glyphColor = getGlyphAccentColor(glyph, iconBranch);
   const level = upgrades[upgradeId];
   const nextCost = level < definition.maxLevel ? getUpgradeCost(definition, level) : null;
@@ -45,7 +45,7 @@ function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded border text-[15px] font-bold text-white"
             style={{ borderColor: `${branch.color}66`, backgroundColor: `${branch.color}18` }}
           >
-            <SkillBranchIcon glyph={glyph} size={18} color={glyphColor} />
+            <ModuleBranchIcon glyph={glyph} size={18} color={glyphColor} />
           </span>
         )}
         <div className="min-w-0">
@@ -74,12 +74,12 @@ function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
         <p className="text-white/30">id: {definition.id}</p>
       </div>
 
-      {skillNode.requires && skillNode.requires.length > 0 && (
+      {moduleNode.requires && moduleNode.requires.length > 0 && (
         <div className="mt-2 border-t border-white/8 pt-2">
           <p className="text-[13px] tracking-wider text-white/35 uppercase">Requires</p>
           <ul className="mt-1 space-y-0.5 text-[14px] text-white/50">
-            {skillNode.requires.map((req) => {
-              const reqDef = getSkillNode(req.id);
+            {moduleNode.requires.map((req) => {
+              const reqDef = getModuleNode(req.id);
               const reqLevel = upgrades[req.id];
               const met = reqLevel >= req.minLevel;
               return (
@@ -109,7 +109,7 @@ export function DevUpgradePanel() {
 
   const sortedTreeNodes = useMemo(
     () =>
-      [...SKILL_TREE_NODES].sort((a, b) => {
+      [...MODULE_TREE_NODES].sort((a, b) => {
         if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
         return getUpgradeDefinition(a.id).name.localeCompare(getUpgradeDefinition(b.id).name);
       }),
@@ -131,10 +131,10 @@ export function DevUpgradePanel() {
       <div className="max-h-32 overflow-y-auto rounded-lg border border-white/8 bg-black/30 pr-1">
         {sortedTreeNodes.map((treeNode) => {
           const definition = getUpgradeDefinition(treeNode.id);
-          const skillNode = getSkillNode(treeNode.id);
+          const moduleNode = getModuleNode(treeNode.id);
           const level = upgrades[treeNode.id];
-          const iconBranch = getSkillIconBranch(treeNode.id, skillNode.branch);
-          const glyph = getSkillGlyphId(treeNode.id, skillNode.branch);
+          const iconBranch = getModuleIconBranch(treeNode.id, moduleNode.branch);
+          const glyph = getModuleGlyphId(treeNode.id, moduleNode.branch);
           const glyphColor = getGlyphAccentColor(glyph, iconBranch);
           const isSelected = selectedId === treeNode.id;
 
@@ -165,10 +165,10 @@ export function DevUpgradePanel() {
                       color: glyphColor,
                     }}
                   >
-                    <SkillBranchIcon glyph={glyph} size={16} color={glyphColor} />
+                    <ModuleBranchIcon glyph={glyph} size={16} color={glyphColor} />
                   </span>
                 )}
-                <span className="min-w-0 flex-1 truncate text-[15px]">{skillNode.name}</span>
+                <span className="min-w-0 flex-1 truncate text-[15px]">{moduleNode.name}</span>
                 <span
                   className={`shrink-0 font-mono text-[14px] ${
                     level >= definition.maxLevel ? 'text-emerald-400/90' : 'text-white/40'
@@ -183,7 +183,7 @@ export function DevUpgradePanel() {
       </div>
 
       <DevFloatingTooltip open={hoveredId !== null} anchorRef={hoveredAnchorRef} anchorKey={hoveredId}>
-        {hoveredId && <DevSkillTooltipContent upgradeId={hoveredId} />}
+        {hoveredId && <DevModuleTooltipContent upgradeId={hoveredId} />}
       </DevFloatingTooltip>
 
       <div className="rounded-lg border border-white/8 bg-white/5 p-2">

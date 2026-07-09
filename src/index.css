@@ -148,6 +148,150 @@ body {
   animation: so-fade-in 400ms ease-out forwards;
 }
 
+.so-screen-transition {
+  --so-transition-accent: #ff6b2b;
+  animation: so-boot-overlay-in 180ms ease-out forwards;
+}
+
+.so-screen-transition__veil {
+  background:
+    radial-gradient(ellipse 90% 72% at 50% 44%, rgba(10, 10, 15, 0.42) 0%, rgba(10, 10, 15, 0.92) 72%),
+    rgba(10, 10, 15, 0.88);
+}
+
+.so-screen-transition--handoff .so-screen-transition__handoff-pulse {
+  animation: so-boot-handoff-pulse 240ms ease-out forwards;
+}
+
+.so-screen-transition--handoff .so-screen-transition__scanline {
+  animation: so-boot-scan-sweep 320ms ease-out forwards;
+}
+
+.so-screen-transition__handoff-pulse {
+  opacity: 0;
+  background: radial-gradient(
+    ellipse 88% 62% at 50% 46%,
+    color-mix(in srgb, var(--so-transition-accent) 28%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+.so-screen-transition__scanline {
+  opacity: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--so-transition-accent) 70%, white) 48%,
+    transparent
+  );
+  box-shadow: 0 0 18px color-mix(in srgb, var(--so-transition-accent) 55%, transparent);
+}
+
+.so-screen-transition--reveal {
+  animation: so-boot-overlay-out 280ms ease-in forwards;
+}
+
+.so-screen-transition__feed {
+  text-shadow: 0 0 24px rgba(0, 0, 0, 0.45);
+}
+
+.so-screen-transition__title {
+  text-shadow: 0 0 20px color-mix(in srgb, var(--so-transition-accent) 35%, transparent);
+}
+
+.so-screen-transition__line {
+  opacity: 0;
+  transform: translateX(-14px);
+  filter: blur(1px);
+  transition:
+    opacity 260ms ease-out,
+    transform 260ms ease-out,
+    filter 260ms ease-out;
+}
+
+.so-screen-transition__line--visible {
+  opacity: 1;
+  transform: translateX(0);
+  filter: blur(0);
+}
+
+.so-screen-transition__cursor {
+  color: var(--so-transition-accent);
+  animation: so-boot-cursor-blink 620ms steps(2, jump-none) infinite;
+}
+
+.so-screen-transition__progress-bar {
+  width: 100%;
+  animation-name: so-boot-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes so-boot-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes so-boot-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes so-boot-handoff-pulse {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes so-boot-scan-sweep {
+  0% {
+    opacity: 0;
+    transform: translateY(-12vh);
+  }
+  12% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(108vh);
+  }
+}
+
+@keyframes so-boot-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes so-boot-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .so-animate-slide-up {
   animation: so-slide-up 300ms ease-out forwards;
   opacity: 0;
@@ -570,7 +714,7 @@ body {
   color: rgba(125, 211, 252, 0.55);
 }
 
-/* Skill tree hub — terminal glitch (CSS only, no per-frame canvas) */
+/* Module tree hub — terminal glitch (CSS only, no per-frame canvas) */
 .so-hub-glitch-title .so-arch-glitch-inner {
   animation: so-hub-title-split 9s steps(1, end) infinite;
   font-family: 'Rajdhani', system-ui, sans-serif;
@@ -618,7 +762,7 @@ body {
   }
 }
 
-.so-skill-tree-glitch-slice {
+.so-module-tree-glitch-slice {
   position: absolute;
   left: -3%;
   width: 106%;
@@ -632,16 +776,16 @@ body {
     transparent 100%
   );
   mix-blend-mode: screen;
-  animation: so-skill-tree-glitch-slice-a 10.5s steps(1, end) infinite;
+  animation: so-module-tree-glitch-slice-a 10.5s steps(1, end) infinite;
 }
 
-.so-skill-tree-glitch-slice--alt {
+.so-module-tree-glitch-slice--alt {
   height: 5%;
-  animation-name: so-skill-tree-glitch-slice-b;
+  animation-name: so-module-tree-glitch-slice-b;
   animation-duration: 13s;
 }
 
-.so-skill-tree-glitch-chroma {
+.so-module-tree-glitch-chroma {
   position: absolute;
   inset: 0;
   opacity: 0;
@@ -653,10 +797,10 @@ body {
     rgba(34, 211, 238, 0.03) 100%
   );
   mix-blend-mode: screen;
-  animation: so-skill-tree-glitch-chroma 14s steps(1, end) infinite;
+  animation: so-module-tree-glitch-chroma 14s steps(1, end) infinite;
 }
 
-.so-skill-tree-glitch-scan {
+.so-module-tree-glitch-scan {
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
@@ -668,18 +812,18 @@ body {
   );
   opacity: 0.45;
   mix-blend-mode: overlay;
-  animation: so-skill-tree-glitch-scan 6s linear infinite;
+  animation: so-module-tree-glitch-scan 6s linear infinite;
 }
 
-.so-skill-tree-canvas {
-  animation: so-skill-tree-canvas-idle 12s steps(1, end) infinite;
+.so-module-tree-canvas {
+  animation: so-module-tree-canvas-idle 12s steps(1, end) infinite;
 }
 
-g.so-skill-tree-node--active {
-  animation: so-skill-tree-node-active 3.5s steps(1, end) infinite;
+g.so-module-tree-node--active {
+  animation: so-module-tree-node-active 3.5s steps(1, end) infinite;
 }
 
-@keyframes so-skill-tree-glitch-slice-a {
+@keyframes so-module-tree-glitch-slice-a {
   0%,
   91%,
   100% {
@@ -702,7 +846,7 @@ g.so-skill-tree-node--active {
   }
 }
 
-@keyframes so-skill-tree-glitch-slice-b {
+@keyframes so-module-tree-glitch-slice-b {
   0%,
   88%,
   100% {
@@ -720,7 +864,7 @@ g.so-skill-tree-node--active {
   }
 }
 
-@keyframes so-skill-tree-glitch-chroma {
+@keyframes so-module-tree-glitch-chroma {
   0%,
   86%,
   100% {
@@ -737,7 +881,7 @@ g.so-skill-tree-node--active {
   }
 }
 
-@keyframes so-skill-tree-glitch-scan {
+@keyframes so-module-tree-glitch-scan {
   0% {
     transform: translateY(0);
   }
@@ -746,7 +890,7 @@ g.so-skill-tree-node--active {
   }
 }
 
-@keyframes so-skill-tree-canvas-idle {
+@keyframes so-module-tree-canvas-idle {
   0%,
   94%,
   100% {
@@ -760,7 +904,7 @@ g.so-skill-tree-node--active {
   }
 }
 
-@keyframes so-skill-tree-node-active {
+@keyframes so-module-tree-node-active {
   0%,
   92%,
   100% {

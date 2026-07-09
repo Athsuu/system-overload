@@ -1,14 +1,14 @@
-import type { SkillGlyphId } from '../store/skillTree';
+import type { ModuleGlyphId } from '../store/moduleTree';
 
 const ICON_SIZE = 24;
 
-interface SkillGlyphIconProps {
-  glyph: SkillGlyphId;
+interface ModuleGlyphIconProps {
+  glyph: ModuleGlyphId;
   size?: number;
   color?: string;
 }
 
-function GlyphPaths({ glyph }: { glyph: SkillGlyphId }) {
+function GlyphPaths({ glyph }: { glyph: ModuleGlyphId }) {
   switch (glyph) {
     case 'degats':
       return (
@@ -43,6 +43,55 @@ function GlyphPaths({ glyph }: { glyph: SkillGlyphId }) {
           />
         </>
       );
+    case 'elite':
+      return (
+        <>
+          <polygon
+            points="12 4 17 7 17 17 12 20 7 17 7 7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeOpacity={0.9}
+          />
+          <polygon
+            points="12 8 14.5 9.5 14.5 14.5 12 16 9.5 14.5 9.5 9.5"
+            fill="currentColor"
+            fillOpacity={0.85}
+          />
+          <path
+            d="M12 2 V4 M12 20 V22"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeOpacity={0.55}
+          />
+        </>
+      );
+    case 'splash':
+      return (
+        <>
+          <circle cx="12" cy="12" r="2.75" fill="currentColor" fillOpacity={0.92} />
+          <circle
+            cx="12"
+            cy="12"
+            r="6.25"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.35}
+            strokeOpacity={0.78}
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="9.75"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1}
+            strokeOpacity={0.42}
+            strokeDasharray="2.5 3.5"
+          />
+        </>
+      );
     case 'shard':
       return (
         <>
@@ -61,6 +110,27 @@ function GlyphPaths({ glyph }: { glyph: SkillGlyphId }) {
             stroke="currentColor"
             strokeWidth={0.75}
             strokeOpacity={0.65}
+          />
+        </>
+      );
+    case 'yield':
+      return (
+        <>
+          <polygon
+            points="12 4 16 6.5 16 15.5 12 18 8 15.5 8 6.5"
+            fill="currentColor"
+            fillOpacity={0.22}
+            stroke="currentColor"
+            strokeWidth={1.1}
+            strokeOpacity={0.85}
+          />
+          <path
+            d="M12 9 V14 M9.5 11.5 L12 9 L14.5 11.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </>
       );
@@ -137,7 +207,7 @@ function GlyphPaths({ glyph }: { glyph: SkillGlyphId }) {
 }
 
 /** Icône pour tooltips / panneaux HTML. */
-export function SkillBranchIcon({ glyph, size = ICON_SIZE, color = 'currentColor' }: SkillGlyphIconProps) {
+export function ModuleBranchIcon({ glyph, size = ICON_SIZE, color = 'currentColor' }: ModuleGlyphIconProps) {
   return (
     <svg
       width={size}
@@ -152,16 +222,16 @@ export function SkillBranchIcon({ glyph, size = ICON_SIZE, color = 'currentColor
   );
 }
 
-interface SkillTreeBranchGlyphProps {
-  glyph: SkillGlyphId;
+interface ModuleTreeBranchGlyphProps {
+  glyph: ModuleGlyphId;
   x: number;
   y: number;
   color: string;
   scale?: number;
 }
 
-/** Glyphe SVG inline pour les nœuds du skill tree. */
-export function SkillTreeBranchGlyph({ glyph, x, y, color, scale }: SkillTreeBranchGlyphProps) {
+/** Glyphe SVG inline pour les nœuds du module tree. */
+export function ModuleTreeBranchGlyph({ glyph, x, y, color, scale }: ModuleTreeBranchGlyphProps) {
   const resolvedScale = scale ?? 0.85;
   const offset = (ICON_SIZE * resolvedScale) / 2;
   return (

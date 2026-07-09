@@ -2,14 +2,17 @@ import { useGameStrings } from '../i18n/useGameStrings';
 import { useGameStore } from '../store/useGameStore';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { HexActionButton } from './HexActionButton';
+import { useScreenTransition } from './transitions/useScreenTransition';
 
 export function PlayRunButton() {
-  const startRun = useGameStore((state) => state.startRun);
+  const selectedCycle = useGameStore((state) => state.selectedCycle);
   const strings = useGameStrings();
+  const { launchHubToArena, isTransitioning } = useScreenTransition();
 
   const handleStartRun = () => {
+    if (isTransitioning) return;
     markTutorialSignal('runsStarted');
-    startRun();
+    launchHubToArena(selectedCycle);
   };
 
   return (
@@ -21,6 +24,7 @@ export function PlayRunButton() {
         size="hubRun"
         variant="primary"
         className="hover:scale-[1.03]"
+        disabled={isTransitioning}
       />
     </div>
   );

@@ -2,26 +2,36 @@ import { getGameStrings } from '../i18n';
 
 export type UpgradeCurrency = 'shards' | 'anchor';
 
+/**
+ * Nouveau module module tree : suivre MODULE_ADDITION_PIPELINE dans src/game/moduleEffects.ts
+ * et la checklist docs/lexique-jeu.md §14.
+ */
 export type UpgradeId =
   | 'node0Boot'
   | 'shardSalvage'
+  | 'shardYield'
   | 'shardMagnet'
   | 'purgeStrike'
+  | 'eliteBreaker'
   | 'purgeCadence'
   | 'purgeReach'
+  | 'purgeSplash'
   | 'threadCoolant'
   | 'killBreachRelief'
   | 'meltdownThreshold';
 
-export type SkillState = 'locked' | 'available' | 'unaffordable' | 'maxed' | 'reserved';
+export type ModuleState = 'locked' | 'available' | 'unaffordable' | 'maxed' | 'reserved';
 
 export interface UpgradeLevels {
   node0Boot: number;
   shardSalvage: number;
+  shardYield: number;
   shardMagnet: number;
   purgeStrike: number;
+  eliteBreaker: number;
   purgeCadence: number;
   purgeReach: number;
+  purgeSplash: number;
   threadCoolant: number;
   killBreachRelief: number;
   meltdownThreshold: number;
@@ -53,6 +63,10 @@ export const SHARD_SALVAGE_MAX_LEVEL = 1;
 export const SHARD_SALVAGE_BONUS_PER_LEVEL = 1;
 export const COST_SHARD_SALVAGE = [100] as const;
 
+export const SHARD_YIELD_MAX_LEVEL = 5;
+/** Bonus multiplicatif sur les éclats de base par kill (+20 % / rang). */
+export const SHARD_YIELD_PERCENT_PER_LEVEL = 20;
+
 export const SHARD_MAGNET_MAX_LEVEL = 3;
 /** Rayon de collecte (px) aux rangs 0–3 de l'Aimant d'éclats. */
 export const SHARD_MAGNET_COLLECT_RADIUS_BY_LEVEL = [20, 44, 68, 92] as const;
@@ -70,11 +84,25 @@ function buildShardCostCurve(base: number, growth: number, levels: number): read
   return Array.from({ length: levels }, (_, index) => Math.ceil(base * growth ** index));
 }
 
+export const COST_SHARD_YIELD = buildShardCostCurve(110, 1.28, SHARD_YIELD_MAX_LEVEL);
+
 export const COST_PURGE_STRIKE = buildShardCostCurve(
   PURGE_STRIKE_COST_BASE,
   PURGE_STRIKE_COST_GROWTH,
   PURGE_STRIKE_MAX_LEVEL,
 );
+
+export const ELITE_BREAKER_MAX_LEVEL = 3;
+/** Bonus dégâts purge vs processus lourds (élite) aux rangs 1 / 2 / 3. */
+export const ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL = [25, 50, 75] as const;
+export const COST_ELITE_BREAKER = [150, 250, 400] as const;
+
+export const PURGE_SPLASH_MAX_LEVEL = 3;
+/** Extension du rayon d'éclaboussure au-delà de la zone principale (%) aux rangs 1 / 2 / 3. */
+export const PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL = [50, 75, 100] as const;
+/** Dégâts d'éclaboussure (% des dégâts purge) aux rangs 1 / 2 / 3 — hors zone directe. */
+export const PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL = [15, 30, 45] as const;
+export const COST_PURGE_SPLASH = COST_ELITE_BREAKER;
 
 export const PURGE_CADENCE_MAX_LEVEL = 10;
 export const PURGE_CADENCE_PERCENT_PER_LEVEL = 2.5;
@@ -128,10 +156,13 @@ export const COST_MELTDOWN_THRESHOLD = buildShardCostCurve(
 export const DEFAULT_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
   shardSalvage: 0,
+  shardYield: 0,
   shardMagnet: 0,
   purgeStrike: 0,
+  eliteBreaker: 0,
   purgeCadence: 0,
   purgeReach: 0,
+  purgeSplash: 0,
   threadCoolant: 0,
   killBreachRelief: 0,
   meltdownThreshold: 0,
@@ -158,6 +189,12 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     currency: 'shards',
   },
   {
+    id: 'shardYield',
+    maxLevel: SHARD_YIELD_MAX_LEVEL,
+    costByLevel: COST_SHARD_YIELD,
+    currency: 'shards',
+  },
+  {
     id: 'shardMagnet',
     maxLevel: SHARD_MAGNET_MAX_LEVEL,
     costByLevel: COST_SHARD_MAGNET,
@@ -170,6 +207,12 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     currency: 'shards',
   },
   {
+    id: 'eliteBreaker',
+    maxLevel: ELITE_BREAKER_MAX_LEVEL,
+    costByLevel: COST_ELITE_BREAKER,
+    currency: 'shards',
+  },
+  {
     id: 'purgeCadence',
     maxLevel: PURGE_CADENCE_MAX_LEVEL,
     costByLevel: COST_PURGE_CADENCE,
@@ -179,6 +222,12 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     id: 'purgeReach',
     maxLevel: PURGE_REACH_MAX_LEVEL,
     costByLevel: COST_PURGE_REACH,
+    currency: 'shards',
+  },
+  {
+    id: 'purgeSplash',
+    maxLevel: PURGE_SPLASH_MAX_LEVEL,
+    costByLevel: COST_PURGE_SPLASH,
     currency: 'shards',
   },
   {
@@ -234,7 +283,7 @@ export function getUpgradeCost(definition: UpgradeDefinition, level: number): nu
   return definition.costByLevel[level] ?? definition.costByLevel[definition.costByLevel.length - 1];
 }
 
-export function isSkillUnlocked(
+export function isModuleUnlocked(
   _id: UpgradeId,
   upgrades: UpgradeLevels,
   requirements: UpgradeRequirement[] | undefined,
@@ -243,17 +292,17 @@ export function isSkillUnlocked(
   return requirements.every((requirement) => upgrades[requirement.id] >= requirement.minLevel);
 }
 
-export function getSkillState(
+export function getModuleState(
   id: UpgradeId,
   bankShards: number,
   bankAnchorFragments: number,
   upgrades: UpgradeLevels,
   requirements: UpgradeRequirement[] | undefined,
-): SkillState {
+): ModuleState {
   const definition = getUpgradeDefinition(id);
   const level = upgrades[id];
 
-  if (!isSkillUnlocked(id, upgrades, requirements)) return 'locked';
+  if (!isModuleUnlocked(id, upgrades, requirements)) return 'locked';
   if (level >= definition.maxLevel) return 'maxed';
 
   const cost = getUpgradeCost(definition, level);

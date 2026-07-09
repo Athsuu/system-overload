@@ -1,14 +1,15 @@
 import {
+  devRequestWaveJump,
   devSetInvincible,
   devSetShowEnemyHpBars,
   devSetSpeed2x,
   devToggleInvincible,
   devToggleShowEnemyHpBars,
   devToggleSpeed2x,
-  devToggleSkillTreeHexGrid,
+  devToggleModuleTreeHexGrid,
   isDevInvincible,
   isDevShowEnemyHpBars,
-  isDevSkillTreeHexGridVisible,
+  isDevModuleTreeHexGridVisible,
   isDevSpeed2x,
 } from './devFlags';
 import { clearSave, saveGame } from '../store/persistence';
@@ -22,6 +23,7 @@ import {
 import { clearTutorialProgress } from '../tutorial/tutorialPersistence';
 import { clearArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 import { clearMeltdownArchRotation } from '../ui/meltdownArchRotation';
+import { clearVictoryArchRotation } from '../ui/victoryArchRotation';
 import { setTutorialRunSpotlightActive } from '../tutorial/tutorialRunSpotlight';
 import { resetTutorialSignals } from '../tutorial/tutorialSignals';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -32,7 +34,10 @@ import {
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
+import { getWaveDefinition, WAVE_DEFINITIONS } from '../game/waveConfig';
 import { useGameStore, type GameState } from '../store/useGameStore';
+
+const DEV_MAX_WAVE_INDEX = WAVE_DEFINITIONS[WAVE_DEFINITIONS.length - 1]?.wave ?? 11;
 
 function persist(state: ReturnType<typeof useGameStore.getState>): void {
   saveGame({
@@ -57,8 +62,8 @@ export {
   devToggleSpeed2x,
   devSetSpeed2x,
   isDevSpeed2x,
-  devToggleSkillTreeHexGrid,
-  isDevSkillTreeHexGridVisible,
+  devToggleModuleTreeHexGrid,
+  isDevModuleTreeHexGridVisible,
 };
 
 export function devAddBankShards(amount: number): void {
@@ -94,6 +99,25 @@ export function devForceVictoryBoss(): void {
   const state = useGameStore.getState();
   if (state.gameState !== 'PLAYING') return;
   state.endRun('victory_boss');
+}
+
+export function devJumpToWave(waveIndex: number): void {
+  const targetWave = Math.max(1, Math.min(DEV_MAX_WAVE_INDEX, Math.floor(waveIndex)));
+  if (!getWaveDefinition(targetWave)) return;
+
+  const state = useGameStore.getState();
+  if (state.gameState !== 'PLAYING' && state.gameState !== 'PAUSED') {
+    state.startRun();
+  }
+  if (useGameStore.getState().gameState === 'PAUSED') {
+    useGameStore.setState({ gameState: 'PLAYING' });
+  }
+
+  devRequestWaveJump(targetWave);
+}
+
+export function devGetMaxWaveIndex(): number {
+  return DEV_MAX_WAVE_INDEX;
 }
 
 export function devSetGameState(gameState: GameState): void {
@@ -189,7 +213,7 @@ export function devWipeProgress(): void {
 export function devResetToNewPlayer(): void {
   const confirmed = window.confirm(
     'Effacer toute la progression et les réglages ?\n\n' +
-      'Comme une première ouverture du jeu : 0 Shards, skill tree vide, audio à 50 %.',
+      'Comme une première ouverture du jeu : 0 Shards, module tree vide, audio à 50 %.',
   );
   if (!confirmed) return;
 
@@ -202,12 +226,13 @@ export function devResetArchDialogues(): void {
 }
 
 export function devResetTutorial(): void {
-  // Signals first — if progress is cleared while skillNodeSelected / upgradePurchased
+  // Signals first — if progress is cleared while moduleNodeSelected / upgradePurchased
   // are still true, useTutorialCoach auto-completes and instantly re-dismisses steps.
   resetTutorialSignals();
   clearTutorialProgress();
   clearArchAmbientHeard();
   clearMeltdownArchRotation();
+  clearVictoryArchRotation();
   setTutorialRunSpotlightActive(false);
 
   useSettingsStore.getState().closeSettings();

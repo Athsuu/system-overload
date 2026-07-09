@@ -7,6 +7,7 @@ import { DARK_HEX } from '../theme/darkHexTerminal';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { HexActionButton } from './HexActionButton';
 import { SettingsPanel } from './SettingsPanel';
+import { useScreenTransition } from './transitions/useScreenTransition';
 
 export function PauseScreen() {
   const breachProgress = useGameStore((state) => state.breachProgress);
@@ -15,9 +16,9 @@ export function PauseScreen() {
   const wavePhase = useGameStore((state) => state.wavePhase);
   const upgrades = useGameStore((state) => state.upgrades);
   const resumeRun = useGameStore((state) => state.resumeRun);
-  const abortRun = useGameStore((state) => state.abortRun);
   const isSettingsOpen = useSettingsStore((state) => state.isOpen);
   const openSettings = useSettingsStore((state) => state.openSettings);
+  const { launchArenaToHub, isTransitioning } = useScreenTransition();
 
   const [confirmAbort, setConfirmAbort] = useState(false);
   const breachPercent = Math.round(getBreachPercent(breachProgress, upgrades));
@@ -27,6 +28,12 @@ export function PauseScreen() {
   const waveDisplay = isBoss
     ? strings.ui.boss
     : `${Math.min(waveIndex, REGULAR_WAVE_COUNT)}/${REGULAR_WAVE_COUNT}`;
+
+  const handleAbortRun = () => {
+    if (isTransitioning) return;
+    setConfirmAbort(false);
+    launchArenaToHub('aborted');
+  };
 
   return (
     <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center">
@@ -101,10 +108,11 @@ export function PauseScreen() {
                 />
                 <HexActionButton
                   label={strings.pause.confirmYes}
-                  onClick={abortRun}
+                  onClick={handleAbortRun}
                   size="md"
                   variant="primary"
                   clickSound="uiConfirm"
+                  disabled={isTransitioning}
                 />
               </div>
             </div>

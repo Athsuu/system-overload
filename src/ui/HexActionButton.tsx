@@ -1,8 +1,8 @@
 import { useId } from 'react';
 import type { HubSfxId } from '../audio/types';
 import { triggerSfx } from '../audio/sfxApi';
-import { hexagonPoints } from './skillTreeGeometry';
-import { SKILL_TREE_VISUAL } from './skillTreeTheme';
+import { hexagonPoints } from './moduleTreeGeometry';
+import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
 
 interface HexActionButtonProps {
   label: string;
@@ -36,15 +36,15 @@ export function HexActionButton({
   const filterId = useId();
   const config = SIZE_CONFIG[size];
   const strokeOuter = disabled
-    ? SKILL_TREE_VISUAL.edgeLocked
+    ? MODULE_TREE_VISUAL.edgeLocked
     : variant === 'primary'
-      ? SKILL_TREE_VISUAL.gold
-      : SKILL_TREE_VISUAL.edgeLocked;
+      ? MODULE_TREE_VISUAL.gold
+      : MODULE_TREE_VISUAL.edgeLocked;
   const strokeInner = disabled
-    ? SKILL_TREE_VISUAL.edgeLocked
+    ? MODULE_TREE_VISUAL.edgeLocked
     : variant === 'primary'
-      ? SKILL_TREE_VISUAL.edgeActive
-      : SKILL_TREE_VISUAL.gold;
+      ? MODULE_TREE_VISUAL.edgeActive
+      : MODULE_TREE_VISUAL.gold;
   const lines = label.split('\n');
 
   const handleClick = () => {
@@ -95,7 +95,7 @@ export function HexActionButton({
       <span
         className={`relative font-bold tracking-[0.12em] text-white uppercase ${config.textClass}`}
         style={{
-          textShadow: disabled ? 'none' : `0 0 12px ${SKILL_TREE_VISUAL.edgeActive}66`,
+          textShadow: disabled ? 'none' : `0 0 12px ${MODULE_TREE_VISUAL.edgeActive}66`,
         }}
       >
         {lines.map((line, i) => (

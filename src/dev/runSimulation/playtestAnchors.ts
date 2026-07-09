@@ -5,10 +5,13 @@ import type { PlaytestMeltdownAnchor } from './types';
 export const PLAYTEST_FULL_MAX_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
   shardSalvage: 0,
+  shardYield: 0,
   shardMagnet: 0,
   purgeStrike: 10,
+  eliteBreaker: 0,
   purgeCadence: 10,
   purgeReach: 10,
+  purgeSplash: 0,
   threadCoolant: 10,
   killBreachRelief: 10,
   meltdownThreshold: 10,

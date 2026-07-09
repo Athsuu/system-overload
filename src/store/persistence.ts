@@ -18,9 +18,9 @@ export interface SaveData {
   selectedCycle: number;
   cyclesCleared: number[];
   economyV2?: boolean;
-  skillTreeV3?: boolean;
+  moduleTreeV3?: boolean;
   economyV4?: boolean;
-  skillTreeV4?: boolean;
+  moduleTreeV4?: boolean;
 }
 
 interface LegacySaveData {
@@ -34,8 +34,12 @@ interface LegacySaveData {
   selectedCycle?: number;
   cyclesCleared?: unknown;
   economyV2?: boolean;
+  moduleTreeV3?: boolean;
+  /** @deprecated legacy key — migrated to moduleTreeV3 */
   skillTreeV3?: boolean;
   economyV4?: boolean;
+  moduleTreeV4?: boolean;
+  /** @deprecated legacy key — migrated to moduleTreeV4 */
   skillTreeV4?: boolean;
 }
 
@@ -68,8 +72,16 @@ function sanitizeUpgrades(raw: LegacySaveData['upgrades']): UpgradeLevels {
   return upgrades;
 }
 
-function migrateSkillTreeV3(parsed: LegacySaveData): UpgradeLevels {
-  if (parsed.skillTreeV3) {
+function hasModuleTreeV3(parsed: LegacySaveData): boolean {
+  return Boolean(parsed.moduleTreeV3 ?? parsed.skillTreeV3);
+}
+
+function hasModuleTreeV4(parsed: LegacySaveData): boolean {
+  return Boolean(parsed.moduleTreeV4 ?? parsed.skillTreeV4);
+}
+
+function migrateModuleTreeV3(parsed: LegacySaveData): UpgradeLevels {
+  if (hasModuleTreeV3(parsed)) {
     return sanitizeUpgrades(parsed.upgrades);
   }
   return { ...DEFAULT_UPGRADES };
@@ -86,7 +98,7 @@ function migrateLegacyNode0Boot(upgrades: UpgradeLevels, raw: LegacySaveData['up
   return upgrades;
 }
 
-function migrateSkillTreeV4(upgrades: UpgradeLevels): UpgradeLevels {
+function migrateModuleTreeV4(upgrades: UpgradeLevels): UpgradeLevels {
   const totalLevels = Object.values(upgrades).reduce((sum, level) => sum + level, 0);
   if (totalLevels > 0 && upgrades.node0Boot < 1) {
     return { ...upgrades, node0Boot: 1 };
@@ -110,14 +122,19 @@ export function loadSave(): SaveData | null {
     if (rawBankShards === null) return null;
 
     const needsEconomyMigration = !parsed.economyV2;
-    const needsSkillTreeMigration = !parsed.skillTreeV3;
-    const needsV4Migration = !parsed.economyV4 || !parsed.skillTreeV4;
+    const needsModuleTreeMigration = !hasModuleTreeV3(parsed);
+    const needsV4Migration = !parsed.economyV4 || !hasModuleTreeV4(parsed);
+    const needsKeyRename =
+      parsed.skillTreeV3 !== undefined ||
+      parsed.skillTreeV4 !== undefined ||
+      parsed.moduleTreeV3 === undefined ||
+      parsed.moduleTreeV4 === undefined;
 
     let bankShards = migrateEconomyV2(rawBankShards, parsed);
-    let upgrades = migrateSkillTreeV3(parsed);
+    let upgrades = migrateModuleTreeV3(parsed);
     upgrades = migrateLegacyNode0Boot(upgrades, parsed.upgrades);
     if (needsV4Migration) {
-      upgrades = migrateSkillTreeV4(upgrades);
+      upgrades = migrateModuleTreeV4(upgrades);
     }
     const upgradesBeforeBaseline = upgrades;
     upgrades = ensureNode0BootBaseline(upgrades);
@@ -147,15 +164,16 @@ export function loadSave(): SaveData | null {
       selectedCycle,
       cyclesCleared,
       economyV2: true,
-      skillTreeV3: true,
+      moduleTreeV3: true,
       economyV4: true,
-      skillTreeV4: true,
+      moduleTreeV4: true,
     };
 
     if (
       needsEconomyMigration ||
-      needsSkillTreeMigration ||
+      needsModuleTreeMigration ||
       needsV4Migration ||
+      needsKeyRename ||
       upgradesBeforeBaseline !== upgrades
     ) {
       saveGame(saveData);
@@ -173,9 +191,9 @@ export function saveGame(data: SaveData): void {
     JSON.stringify({
       ...data,
       economyV2: true,
-      skillTreeV3: true,
+      moduleTreeV3: true,
       economyV4: true,
-      skillTreeV4: true,
+      moduleTreeV4: true,
     }),
   );
 }
