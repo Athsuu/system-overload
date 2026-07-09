@@ -4,6 +4,8 @@ import type { PlaytestMeltdownAnchor } from './types';
 /** Build full max utilisé lors du playtest juillet 2026. */
 export const PLAYTEST_FULL_MAX_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
+  shardSalvage: 0,
+  shardMagnet: 0,
   purgeStrike: 10,
   purgeCadence: 10,
   purgeReach: 10,

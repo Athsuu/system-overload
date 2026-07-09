@@ -4,6 +4,8 @@ export type UpgradeCurrency = 'shards' | 'anchor';
 
 export type UpgradeId =
   | 'node0Boot'
+  | 'shardSalvage'
+  | 'shardMagnet'
   | 'purgeStrike'
   | 'purgeCadence'
   | 'purgeReach'
@@ -15,6 +17,8 @@ export type SkillState = 'locked' | 'available' | 'unaffordable' | 'maxed' | 're
 
 export interface UpgradeLevels {
   node0Boot: number;
+  shardSalvage: number;
+  shardMagnet: number;
   purgeStrike: number;
   purgeCadence: number;
   purgeReach: number;
@@ -44,6 +48,17 @@ export const ANCHOR_FRAGMENTS_PER_BOSS = 1;
 export const BOSS_VICTORY_SHARD_BONUS = 25;
 
 export const COST_NODE0_BOOT = [5] as const;
+
+export const SHARD_SALVAGE_MAX_LEVEL = 1;
+export const SHARD_SALVAGE_BONUS_PER_LEVEL = 1;
+export const COST_SHARD_SALVAGE = [100] as const;
+
+export const SHARD_MAGNET_MAX_LEVEL = 3;
+/** Rayon de collecte (px) aux rangs 0–3 de l'Aimant d'éclats. */
+export const SHARD_MAGNET_COLLECT_RADIUS_BY_LEVEL = [20, 44, 68, 92] as const;
+/** Rayon d'attraction magnétique (px) aux rangs 0–3 — 0 = pas d'aspiration au départ. */
+export const SHARD_MAGNET_MAGNET_RADIUS_BY_LEVEL = [0, 72, 128, 200] as const;
+export const COST_SHARD_MAGNET = [130, 220, 350] as const;
 
 /** prix(n) = ceil(5 × 1.18^(n−1)) for n = 1…10 */
 export const PURGE_STRIKE_DAMAGE_PER_LEVEL = 3;
@@ -112,6 +127,8 @@ export const COST_MELTDOWN_THRESHOLD = buildShardCostCurve(
 
 export const DEFAULT_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
+  shardSalvage: 0,
+  shardMagnet: 0,
   purgeStrike: 0,
   purgeCadence: 0,
   purgeReach: 0,
@@ -132,6 +149,18 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     id: 'node0Boot',
     maxLevel: 1,
     costByLevel: COST_NODE0_BOOT,
+    currency: 'shards',
+  },
+  {
+    id: 'shardSalvage',
+    maxLevel: SHARD_SALVAGE_MAX_LEVEL,
+    costByLevel: COST_SHARD_SALVAGE,
+    currency: 'shards',
+  },
+  {
+    id: 'shardMagnet',
+    maxLevel: SHARD_MAGNET_MAX_LEVEL,
+    costByLevel: COST_SHARD_MAGNET,
     currency: 'shards',
   },
   {

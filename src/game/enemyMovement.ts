@@ -1,5 +1,6 @@
 import type { ScreenBounds, Vec2 } from './constants';
-import { getEnemyHexRadius } from './constants';
+import { getEnemyHexRadius } from './enemyClass';
+import type { EnemyClass } from './enemyClass';
 import {
   getEnemyMaxHp,
   getEnemySpeed,
@@ -90,7 +91,7 @@ function portalWrapEnemy(node: DissipationNode, bounds: ScreenBounds): void {
 
 export interface SpawnEnemyOptions {
   waveIndex: number;
-  isBoss?: boolean;
+  enemyClass?: EnemyClass;
 }
 
 function createFlowEnemy(
@@ -98,11 +99,11 @@ function createFlowEnemy(
   config: RunConfig,
   options: SpawnEnemyOptions,
 ): DissipationNode {
-  const { waveIndex, isBoss = false } = options;
-  const edgeInset = getEnemyHexRadius(waveIndex, isBoss) * 0.35;
+  const { waveIndex, enemyClass = 'normal' } = options;
+  const edgeInset = getEnemyHexRadius(enemyClass) * 0.35;
   const { spawn, exit } = pickFlowEndpoints(bounds, edgeInset);
-  const speed = getEnemySpeed(config, waveIndex, isBoss);
-  const maxHp = getEnemyMaxHp(config, waveIndex, isBoss);
+  const speed = getEnemySpeed(config, waveIndex, enemyClass);
+  const maxHp = getEnemyMaxHp(config, waveIndex, enemyClass);
   const flow = buildFlowVelocity(spawn, exit);
 
   return {
@@ -119,7 +120,7 @@ function createFlowEnemy(
     satelliteAngle: Math.random() * Math.PI * 2,
     hexAngle: Math.atan2(flow.vy, flow.vx),
     corruptSeed: Math.random() * 10000,
-    isBoss,
+    enemyClass,
     moveSpeed: speed,
   };
 }
@@ -130,21 +131,6 @@ export function spawnEnemyOnEdge(
   options: SpawnEnemyOptions,
 ): DissipationNode {
   return createFlowEnemy(bounds, config, options);
-}
-
-export function spawnStarterNodes(
-  count: number,
-  nodes: DissipationNode[],
-  bounds: ScreenBounds,
-  config: RunConfig,
-): void {
-  for (let index = 0; index < count; index += 1) {
-    nodes.push(
-      createFlowEnemy(bounds, config, {
-        waveIndex: 1,
-      }),
-    );
-  }
 }
 
 export function tickEnemyMovement(

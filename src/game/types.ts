@@ -1,3 +1,5 @@
+import type { EnemyClass } from './enemyClass';
+
 export interface DissipationNode {
   x: number;
   y: number;
@@ -12,6 +14,6 @@ export interface DissipationNode {
   satelliteAngle: number;
   hexAngle: number;
   corruptSeed: number;
-  isBoss?: boolean;
+  enemyClass: EnemyClass;
   moveSpeed: number;
 }

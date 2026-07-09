@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { applyAudioVolumes } from '../audio/hubAudio';
+import { applyAudioVolumes } from '../audio/sfxApi';
 import { initLanguageModeFromSettings, setLanguageMode as applyLanguageMode } from '../i18n';
 import type { LanguageMode } from '../i18n/types';
 import {

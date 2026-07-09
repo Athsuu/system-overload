@@ -91,7 +91,7 @@ export function RunEndScreen() {
         <div className="so-run-end-panel-scanlines pointer-events-none absolute inset-0" aria-hidden="true" />
 
         <p
-          className="so-animate-reveal-step-1 text-[9px] tracking-[0.34em] text-white/30 uppercase"
+          className="so-animate-reveal-step-1 text-[13px] tracking-[0.34em] text-white/30 uppercase"
         >
           {waveLine}
         </p>
@@ -103,22 +103,9 @@ export function RunEndScreen() {
           {title}
         </h2>
 
-        <p className="so-animate-reveal-step-1 mx-auto mt-2 max-w-sm text-[11px] leading-relaxed tracking-[0.06em] text-white/50">
+        <p className="so-animate-reveal-step-1 mx-auto mt-2 max-w-sm text-[15px] leading-relaxed tracking-[0.06em] text-white/50">
           {subtitle}
         </p>
-
-        {isVictory && (
-          <ArchRunEndRelay
-            lineKey="victory-arch"
-            text={strings.runEnd.victoryArch}
-          />
-        )}
-        {!isVictory && meltdownArchText && (
-          <ArchRunEndRelay
-            lineKey={`meltdown-arch-${meltdownArchText.slice(0, 12)}`}
-            text={meltdownArchText}
-          />
-        )}
 
         {showRewards && (
           <div className="so-animate-reveal-step-2 mt-6 border-t border-white/[0.06] pt-5">
@@ -135,19 +122,9 @@ export function RunEndScreen() {
                 +{displayAnchors.toLocaleString()} {strings.currency.anchorEarnedSuffix}
               </p>
             )}
-            <p className="mt-2 text-[10px] tracking-[0.25em] text-white/38 uppercase">
+            <p className="mt-2 text-[14px] tracking-[0.25em] text-white/38 uppercase">
               {strings.currency.transferredToVault}
             </p>
-          </div>
-        )}
-
-        {showFirstAnchorArch && (
-          <div className="so-animate-reveal-step-2 mx-auto mt-4 max-w-sm border-t border-white/[0.05] pt-4 text-left">
-            <ArchRunEndRelay
-              lineKey="first-anchor-arch"
-              text={strings.runEnd.firstAnchorArch}
-              compact
-            />
           </div>
         )}
 
@@ -157,9 +134,31 @@ export function RunEndScreen() {
             onClick={openSkillTree}
             variant="secondary"
           />
-          <HexActionButton label={strings.ui.startRun} onClick={handleStartRun} variant="primary" />
+          <HexActionButton
+            label={strings.ui.startRun}
+            onClick={handleStartRun}
+            clickSound="startRun"
+            variant="primary"
+          />
         </div>
       </div>
+
+      {(isVictory || meltdownArchText || showFirstAnchorArch) && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-[5rem] z-[23] flex flex-col items-center gap-8 px-6">
+          {isVictory && (
+            <ArchRunEndRelay lineKey="victory-arch" text={strings.runEnd.victoryArch} />
+          )}
+          {!isVictory && meltdownArchText && (
+            <ArchRunEndRelay
+              lineKey={`meltdown-arch-${meltdownArchText.slice(0, 12)}`}
+              text={meltdownArchText}
+            />
+          )}
+          {showFirstAnchorArch && (
+            <ArchRunEndRelay lineKey="first-anchor-arch" text={strings.runEnd.firstAnchorArch} />
+          )}
+        </div>
+      )}
     </div>
   );
 }

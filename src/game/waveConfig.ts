@@ -37,3 +37,11 @@ export const REGULAR_WAVE_COUNT = WAVE_DEFINITIONS.filter((wave) => !wave.isBoss
 export function getWaveDefinition(waveIndex: number): WaveDefinition | undefined {
   return WAVE_DEFINITIONS.find((wave) => wave.wave === waveIndex);
 }
+
+export function getWaveSpawnCount(
+  waveIndex: number,
+  groupCount: number,
+  starterNodes = 0,
+): number {
+  return waveIndex === 1 ? groupCount + starterNodes : groupCount;
+}

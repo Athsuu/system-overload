@@ -1,5 +1,7 @@
 import { getGameStrings } from '../i18n';
+import { getBreachPercent } from '../game/runConfig';
 import { BOSS_WAVE_INDEX } from '../game/waveScaling';
+import { BREACH_URGENT_THRESHOLD } from '../theme/darkHexTerminal';
 import type { ArchAmbientPersistScope } from './archAmbientPersistence';
 import { isArchAmbientHeard } from './archAmbientPersistence';
 import type { TutorialSnapshot } from './tutorialCatalog';
@@ -41,7 +43,7 @@ export function getArchAmbientLines(): ArchAmbientLine[] {
       screens: ['PLAYING'],
       requiresArchMet: true,
       persistScope: 'run',
-      unlockWhen: (s) => s.breachProgress >= 80,
+      unlockWhen: (s) => getBreachPercent(s.breachProgress, s.upgrades) >= BREACH_URGENT_THRESHOLD,
     },
     {
       id: 'boss_incoming',

@@ -70,7 +70,7 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 
 | Mot à utiliser | Terme UI (EN) | C’est quoi ? |
 |--------------|---------------|--------------|
-| **Éclats hex** / **Hex Shards** | Hex Shards | Monnaie unique, gagnée par kill en run (compteur live), transférée au coffre en fin de run, dépensée sur le skill tree |
+| **Éclats hex** / **Hex Shards** | Hex Shards | Monnaie unique : **drop au sol** quand un ennemi meurt, **ramassée** en passant la zone de purge à proximité ; créditée au coffre à la collecte ; dépensée sur le skill tree |
 | **Fragments d’ancre** | Anchor Fragments | 2e monnaie permanente, **+1 au premier clear boss d’un Cycle** (replays = shards seulement) ; modules « capstone » |
 | **Cycle** / **Cycles** | Cycle | Couche de progression hub : 10 vagues + boss par cycle ; scaling plus dur ; Cycle 2+ débloqué après 1er clear du cycle précédent |
 | **Coffre** / **vault** | vault | Où vont les Hex Shards après une run |
@@ -87,13 +87,18 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 
 ## 4. Branches du skill tree
 
-Arbre radial v4 � **4 modules** actifs :
+Arbre radial v4 � **9 modules** actifs :
 
 | Mot à utiliser (FR) | Branche (agent) | Thème |
 |---------------------|-----------------|--------|
-| **Dégâts** | `degats` | **Purge Strike** |
-| **Thermique** | `thermique` | **Node-0 Boot**, **Thread Coolant**, **Kill Vent** |
+| **Dégâts** | `degats` | **Purge Strike**, **Purge Cadence**, **Purge Reach** |
+| **Thermique** | `thermique` | **Node-0 Boot**, **Récupération d'éclats**, **Aimant d'éclats**, **Thread Coolant**, **Kill Vent**, **Meltdown Threshold** |
 | **Flux** (icône hub) | `flux` | Icône **Node-0 Boot** uniquement |
+
+| Module (FR) | Terme UI (EN) | Position hex | Parent | Effet |
+|-------------|---------------|--------------|--------|-------|
+| **Récupération d'éclats** | Shard Salvage | (−1, 0) | Node-0 Boot | Plus d'Éclats hex à chaque kill |
+| **Aimant d'éclats** | Shard Magnet | (−2, +1) | Récupération d'éclats | Collecte serrée au départ (20 px), aspiration dès le rang 1 ; monte jusqu'à 92 px / 200 px (rangs 0–3) |
 
 **Retir� (ancien arbre)** : `attackSpeed`, `purgeAoe`, `shards`, `enemies`.
 
@@ -111,6 +116,7 @@ Arbre radial v4 � **4 modules** actifs :
 | **Vagues** | Wave | Vagues d’ennemis | `WaveEngine` · `waveConfig` |
 | **Boss** / **Ancre de brèche** | Breach Anchor | Boss de fin | `wavePhase: boss` |
 | **Grille hex arène** |, | Fond hex pendant le combat | `ArenaHexOverlay` |
+| **Drop d’éclats** / **loot** | Loot pickup | Entité au sol après un kill (ou autre source) ; type `LootKind` (aujourd’hui `hexShard`) ; collecte par proximité zone de purge | `src/game/loot/` |
 
 ---
 
@@ -119,7 +125,7 @@ Arbre radial v4 � **4 modules** actifs :
 | Élément | Où c’est | Ancre tutoriel (`data-tutorial-anchor`) |
 |---------|----------|----------------------------------------|
 | Jauge **Overload** | Bas écran | `overload-bar` |
-| **Hex Shards** | Badge haut-droite (hub + run), total unique `bankShards`, monte à chaque kill en run | `hex-shards` |
+| **Hex Shards** | Badge haut-droite (hub + run), total unique `bankShards`, monte à chaque **collecte** d’éclat en run | `hex-shards` |
 | Bouton **Overclock** | Bas droite | `overclock` |
 | **Flux Drive** | HUD | `flux-drive` |
 | Indicateur vague / boss | Haut centre | — |
@@ -217,6 +223,57 @@ Tu peux dire « touche **l’arène** » ou « touche **le hub** », l’agent s
 
 ---
 
+## 13. Sons de purge — vocabulaire audio (Pack Warm Descent)
+
+Pour ajuster **PurgeHit** (tick de dégâts) et **PurgeKill** (ennemi détruit) sans jargon technique.  
+**Famille actuelle :** Warm Descent — chaleur terminal, contour **descendant** (contrairement au wave clear qui monte).
+
+### Les deux sons
+
+| Mot à utiliser | C’est quoi en jeu ? | Quand tu l’entends |
+|--------------|---------------------|-------------------|
+| **PurgeHit** / **hit de purge** | Impact quand la zone de purge touche un ennemi (sans le tuer) | Très souvent, en boucle pendant que tu purges |
+| **PurgeKill** / **kill de purge** | Même base que le hit + couche supplémentaire | Quand un processus corrompu est détruit |
+
+### Couches du son (comment décrire un changement)
+
+| Mot à utiliser | Rôle | PurgeHit | PurgeKill |
+|--------------|------|----------|-----------|
+| **Descente** / **couche descente** | Pop chaud qui **tombe** en hauteur (signature Warm Descent) | Oui (seule couche) | Oui (base commune) |
+| **Bloom** / **couche bloom** | 2e note un peu plus haute qui s’étire — sensation de « réussi » | Non | Oui (en plus de la descente) |
+
+### Paramètres que tu peux demander à modifier
+
+| Mot à utiliser | Effet si tu dis… | Exemples de phrases |
+|--------------|------------------|---------------------|
+| **Grave / aigu** | Plus **bas** ou plus **haut** dans le timbre | « Descente plus **grave** » · « Bloom un peu plus **aigu** » |
+| **Sec / long** | Plus **court** (sec) ou plus **étiré** | « Hit plus **sec** » · « Kill un peu plus **long** » |
+| **Fort / discret** | Volume perçu plus haut ou plus bas | « PurgeHit plus **discret** » · « Bloom kill un peu plus **fort** » |
+| **Chaud / froid** | Plus rond (sine doux) vs plus dur / métallique | « Plus **chaud**, comme les events run » |
+| **Variation** | Légères différences aléatoires d’une purge à l’autre | « Moins de **variation** entre les hits » |
+| **Filtre** | Son plus **boueux** (filtre fermé) ou plus **brillant** (ouvert) | « Descente plus **boueuse** » · « Plus **brillant** mais pas agressif » |
+
+### Contraste avec les autres sons (pour ne pas confondre)
+
+| Son | Gestuelle | Ne pas confondre avec… |
+|-----|-----------|------------------------|
+| **PurgeHit / PurgeKill** | Chute chaude **courte** | Wave clear (montée longue) |
+| **Hex Pulse** (clics UI) | Double pulse sec, tierce mineure | Purge (descente simple) |
+| **ARCH typing** | Tic d’écriture très léger | Purge |
+
+### Phrases types pour l’agent
+
+| Tu veux… | Phrase type |
+|----------|-------------|
+| Hit trop faible | « **PurgeHit** : descente un peu plus **forte**, rester **sec** » |
+| Kill pas assez satisfaisant | « **PurgeKill** : renforcer le **bloom**, un peu plus **long** » |
+| Trop proche du wave clear | « Garder Warm Descent mais descente plus **courte** et plus **grave** » |
+| Fatigue en spam | « **PurgeHit** plus **discret**, ne pas toucher au kill » |
+
+**Pack de design actuel :** Warm Descent (option 1). Alternatives documentées pour plus tard : Ember Double, Satin Friction.
+
+---
+
 ## 12. Mise à jour de ce document
 
 **Règle :** à chaque **nouvelle feature visible** (écran, bouton, mécanique, branche skill tree, étape tuto), l’agent doit **ajouter ou mettre à jour une ligne dans ce fichier** dans la même tâche.
@@ -249,7 +306,8 @@ Si tu inventes un nouveau mot pour quelque chose, dis : *« Ajoute ça au lexiqu
 | Pause | §1 |
 | Placeholder (arbre) | §3 |
 | Prestige | §3 |
-| Purge / zone de purge | §5 |
+| Purge / zone de purge | §5, §13 |
+| Sons purge (hit / kill) | §13 |
 | Réglages | §1 |
 | Révélation arbre | §3 |
 | Skill tree | §3, §4 |

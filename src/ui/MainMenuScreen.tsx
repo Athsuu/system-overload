@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
+import { ensureAudioUnlocked } from '../audio/sfxApi';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { canQuitApp, quitApp } from '../platform/canQuitApp';
 import { hasSave } from '../store/persistence';
@@ -34,7 +34,7 @@ export function MainMenuScreen() {
   }, []);
 
   const enterHub = () => {
-    ensureHubAudioUnlocked();
+    ensureAudioUnlocked();
     setGameState('MENU');
     persistCurrentProgress();
   };
@@ -60,7 +60,7 @@ export function MainMenuScreen() {
   const handleConfirmNewGame = () => {
     clearProgressionData();
     resetToFreshPlayer();
-    ensureHubAudioUnlocked();
+    ensureAudioUnlocked();
     setConfirmNewGame(false);
     setGameState('MENU');
   };
@@ -75,7 +75,7 @@ export function MainMenuScreen() {
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 py-16">
         <div className="flex flex-col items-center">
           <h1
-            className="so-font-display so-animate-reveal-title relative text-center text-[35px] font-semibold tracking-[0.22em] uppercase sm:text-[41px] md:text-[53px]"
+            className="so-font-display so-animate-reveal-title relative text-center text-[39px] font-semibold tracking-[0.22em] uppercase sm:text-[45px] md:text-[57px]"
             style={{ color: DARK_HEX.gold }}
           >
             <ArchGlitchLine
@@ -87,7 +87,7 @@ export function MainMenuScreen() {
             <span className="so-title-cursor-blink ml-1 text-white/70">|</span>
           </h1>
 
-          <p className="so-animate-reveal-step-1 mt-4 max-w-md text-center text-[10px] tracking-[0.18em] text-white/35">
+          <p className="so-animate-reveal-step-1 mt-4 max-w-md text-center text-[14px] tracking-[0.18em] text-white/35">
             {strings.tagline}
           </p>
         </div>
@@ -103,8 +103,14 @@ export function MainMenuScreen() {
             size={buttonSize}
             disabled={!saveExists}
             onClick={handleContinue}
+            clickSound="uiConfirm"
           />
-          <HexActionButton label={strings.mainMenu.settings} size={buttonSize} onClick={openSettings} />
+          <HexActionButton
+            label={strings.mainMenu.settings}
+            size={buttonSize}
+            onClick={openSettings}
+            clickSound="settingsOpen"
+          />
           <HexActionButton
             label={strings.mainMenu.quit}
             size={buttonSize}
@@ -112,6 +118,7 @@ export function MainMenuScreen() {
             disabled={!quitEnabled}
             title={quitEnabled ? undefined : strings.mainMenu.quitDisabledTooltip}
             onClick={handleQuit}
+            clickSound="uiBack"
           />
         </div>
       </div>

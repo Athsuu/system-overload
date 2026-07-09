@@ -183,7 +183,7 @@ export const FR_STRINGS: GameStrings = {
     overloadStakes: `${LORE.breach.overload} ${LORE.breach.meltdown}`,
     overloadGoal: 'Contiens la menace avant que la quarantaine ne cède.',
     hexShardsUnified:
-      "Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus pendant une run. Chaque kill augmente ton total. Dépense-les sur l'arbre de compétences pour te renforcer.",
+      "Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus. Ils tombent au sol quand tu purges une cible. Passe ta zone de purge dessus pour les ramasser. Dépense-les sur l'arbre de compétences pour te renforcer.",
     overclockRisk: LORE.combat.overclock,
     skillTreeLore: LORE.skillTree.betweenRuns,
     prestigeReveal: LORE.prestige.unlock,
@@ -208,31 +208,39 @@ export const FR_STRINGS: GameStrings = {
   upgrades: {
     node0Boot: {
       name: 'Amorçage Node-0',
-      description: 'Initialise le thread de quarantaine, 5 dégâts de purge de base',
+      description: 'Amorce le thread de quarantaine pour que Node-0 puisse purger les processus corrompus',
+    },
+    shardSalvage: {
+      name: 'Récupération d\'éclats',
+      description: 'Extrait plus d\'Éclats hex de chaque processus corrompu purgé',
+    },
+    shardMagnet: {
+      name: 'Aimant d\'éclats',
+      description: 'Attire les éclats au sol vers ta zone de purge, de plus loin',
     },
     purgeStrike: {
       name: 'Frappe de purge',
-      description: '+3 dégâts de purge par rang',
+      description: 'Augmente les dégâts de purge contre les processus corrompus',
     },
     purgeCadence: {
       name: 'Cadence de purge',
-      description: '+2,5 % de cadence de purge par rang',
+      description: 'Accélère la cadence de purge pour vider plus vite',
     },
     purgeReach: {
       name: 'Portée de purge',
-      description: '+2,5 % de zone de purge par rang',
+      description: 'Étend la couverture de la zone de purge sur l\'arène',
     },
     threadCoolant: {
       name: 'Refroidissement de thread',
-      description: '−0,14 de Surcharge passive / s par rang',
+      description: 'Réduit la montée passive de la Surcharge tant que la Brèche progresse',
     },
     killBreachRelief: {
       name: 'Évacuation de kill',
-      description: '−0,1 % de Brèche par kill par rang',
+      description: 'Chaque kill purgé soulage un peu la pression sur la Brèche',
     },
     meltdownThreshold: {
       name: 'Seuil de fusion',
-      description: '+8 % de plafond Surcharge par rang (max 180 %)',
+      description: 'Étire la marge de Surcharge avant la fusion',
     },
   },
   branches: {
@@ -243,6 +251,9 @@ export const FR_STRINGS: GameStrings = {
   tooltipStats: {
     purgeHitDamage: 'Dégâts de purge',
     purgeDamageBonus: 'Bonus dégâts purge',
+    shardBonusPerKill: 'Éclats hex / kill',
+    shardPickupRadius: 'Rayon de collecte',
+    shardPickupReachBonus: 'Rayon d\'attraction',
     purgeCadence: 'Cadence de purge',
     purgeReach: 'Rayon zone de purge',
     purgeReachBonus: 'Bonus zone de purge',

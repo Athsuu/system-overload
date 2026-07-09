@@ -1,6 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
-import { getEnemyHexRadius } from './constants';
+import { getEnemyHexRadius } from './enemyClass';
 import type { DissipationNode } from './types';
 
 const SHAKE_AMPLITUDE_PX = 9.5;
@@ -64,10 +64,10 @@ export function isEnemyInPurgeZone(
   purgeY: number,
   purgeRadius: number,
 ): boolean {
-  const enemyR = getEnemyHexRadius(node.waveIndex, node.isBoss ?? false);
+  const enemyR = getEnemyHexRadius(node.enemyClass);
   const dx = node.x - purgeX;
   const dy = node.y - purgeY;
-  return Math.hypot(dx, dy) <= purgeRadius + enemyR * 0.35;
+  return Math.hypot(dx, dy) <= purgeRadius + enemyR;
 }
 
 function drawPurgeScanlines(

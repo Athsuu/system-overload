@@ -44,7 +44,7 @@ export function OverclockButton({
       } ${ready ? 'so-overclock-ready' : ''}`}
     >
       <span
-        className="text-[10px] font-semibold tracking-[0.22em] uppercase"
+        className="text-[14px] font-semibold tracking-[0.22em] uppercase"
         style={{ color: active ? DARK_HEX.breachGlow : DARK_HEX.gold }}
       >
         {label}
@@ -122,7 +122,7 @@ export function OverclockButton({
         </span>
       </div>
 
-      <span className="text-[9px] tracking-[0.18em] text-white/30 uppercase">[Space]</span>
+      <span className="text-[13px] tracking-[0.18em] text-white/30 uppercase">[Space]</span>
     </button>
   );
 }

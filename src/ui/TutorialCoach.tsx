@@ -3,7 +3,8 @@ import { isTutorialCoachVisible } from '../tutorial/tutorialCoachVisibility';
 import { SPOTLIGHT_MOVE_DURATION_MS } from '../tutorial/tutorialSpotlightMotion';
 import { useTutorialCoach } from '../tutorial/useTutorialCoach';
 import { ArchChannelLabel, ArchChannelPanel, type ArchChannelGroupNav } from './ArchChannelPanel';
-import { ArchGlitchLine, ArchGlitchText } from './ArchGlitchText';
+import { ArchGlitchLine } from './ArchGlitchText';
+import { ArchTypewriterGlitchText } from './ArchTypewriterGlitchText';
 import {
   TutorialTransitionOverlay,
   type TutorialNavDirection,
@@ -47,11 +48,15 @@ function TutorialCard({
       >
         <ArchGlitchLine text={title} variant="title" intensity={glitchIntensity} glitchChance={titleGlitchChance} />
       </h2>
-      <p className={`mt-3 leading-relaxed text-white/65 ${featured ? 'text-[14px]' : 'text-[13px]'}`}>
-        <ArchGlitchText text={body} intensity={glitchIntensity} glitchChance={bodyGlitchChance} />
+      <p className={`mt-3 leading-relaxed text-white/65 ${featured ? 'text-[18px]' : 'text-[17px]'}`}>
+        <ArchTypewriterGlitchText
+          text={body}
+          glitchIntensity={glitchIntensity}
+          glitchChance={bodyGlitchChance}
+        />
       </p>
       {footnote && (
-        <p className="mt-3 text-[10px] tracking-[0.12em] text-white/35 uppercase">{footnote}</p>
+        <p className="mt-3 text-[14px] tracking-[0.12em] text-white/35 uppercase">{footnote}</p>
       )}
     </ArchChannelPanel>
   );

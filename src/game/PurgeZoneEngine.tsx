@@ -1,8 +1,8 @@
 import { useTick } from '@pixi/react';
 import { Container, Graphics } from 'pixi.js';
 import { useCallback, useLayoutEffect, useRef, type MutableRefObject, type RefObject } from 'react';
-import type { OverclockState } from './activeSkill';
-import { ensureGameAudioUnlocked, playGameSfx } from '../audio/gameAudio';
+import type { OverclockState } from './overclock';
+import { triggerGameSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
 import { FLASH_DURATION_MS } from './constants';
 import { handleEnemyKill } from './enemyCombat';
@@ -18,6 +18,7 @@ import {
 } from './purgeZone';
 import { getRunConfig } from './runConfig';
 import { scaleDeltaMs } from './runTimeScale';
+import type { LootPickup } from './loot';
 import type { DissipationNode } from './types';
 
 const OVERCLOCK_CADENCE_MULT = 1.4;
@@ -26,6 +27,7 @@ interface PurgeZoneEngineProps {
   isPlaying: boolean;
   nodesRef: RefObject<DissipationNode[]>;
   effectsRef: RefObject<GameEffect[]>;
+  pickupsRef: RefObject<LootPickup[]>;
   overclockRef: MutableRefObject<OverclockState>;
 }
 
@@ -48,6 +50,7 @@ export function PurgeZoneEngine({
   isPlaying,
   nodesRef,
   effectsRef,
+  pickupsRef,
   overclockRef,
 }: PurgeZoneEngineProps) {
   const graphicsRef = useRef<Graphics | null>(null);
@@ -78,6 +81,7 @@ export function PurgeZoneEngine({
       targets: DissipationNode[],
       damage: number,
       effects: GameEffect[],
+      pickups: LootPickup[],
       intervalMs: number,
     ) => {
       let kills = 0;
@@ -88,23 +92,22 @@ export function PurgeZoneEngine({
 
         node.hp -= damage;
         node.flashTimer = FLASH_DURATION_MS;
-        pushPurgeHit(effects, node.x, node.y, node.waveIndex, node.isBoss ?? false);
+        pushPurgeHit(effects, node.x, node.y, node.waveIndex, node.enemyClass);
 
         if (node.hp > 0) continue;
 
         kills += 1;
-        handleEnemyKill(node);
-        pushDeathEffect(effects, node.x, node.y, node.waveIndex, node.isBoss ?? false);
+        handleEnemyKill(node, pickups);
+        pushDeathEffect(effects, node.x, node.y, node.waveIndex, node.enemyClass);
         nodes.splice(index, 1);
       }
 
       if (targets.length > 0) {
         triggerPurgeVisualShake(shakeRef.current, intervalMs);
-        ensureGameAudioUnlocked();
-        playGameSfx('purgeHit');
+        triggerGameSfx('purgeHit');
       }
       for (let killIndex = 0; killIndex < kills; killIndex += 1) {
-        playGameSfx('purgeKill');
+        triggerGameSfx('purgeKill', killIndex * 0.032);
       }
     },
     [],
@@ -140,6 +143,7 @@ export function PurgeZoneEngine({
       const cadenceMult = overclockRef.current.active ? OVERCLOCK_CADENCE_MULT : 1;
       const intervalMs = config.purgeIntervalMs / cadenceMult;
       const effects = effectsRef.current ?? [];
+      const pickups = pickupsRef.current ?? [];
       const shake = getPurgeVisualShake(shakeRef.current);
 
       drawPurgeZone(graphics, pointer.x, pointer.y, config.purgeRadius, shake);
@@ -150,7 +154,7 @@ export function PurgeZoneEngine({
       if (instantHitReadyRef.current) {
         instantHitReadyRef.current = false;
         attackAccumulatorMsRef.current = 0;
-        applyPurgeHits(nodes, targets, config.purgeHitDamage, effects, intervalMs);
+        applyPurgeHits(nodes, targets, config.purgeHitDamage, effects, pickups, intervalMs);
         return;
       }
 
@@ -168,9 +172,9 @@ export function PurgeZoneEngine({
       );
       if (refreshedTargets.length === 0) return;
 
-      applyPurgeHits(nodes, refreshedTargets, config.purgeHitDamage, effects, intervalMs);
+      applyPurgeHits(nodes, refreshedTargets, config.purgeHitDamage, effects, pickups, intervalMs);
     },
-    [applyPurgeHits, effectsRef, nodesRef, overclockRef],
+    [applyPurgeHits, effectsRef, nodesRef, overclockRef, pickupsRef],
   );
 
   useTick({ callback: tick, isEnabled: isPlaying });

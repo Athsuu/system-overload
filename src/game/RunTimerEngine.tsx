@@ -1,15 +1,10 @@
 import { useTick } from '@pixi/react';
 import { useCallback, type MutableRefObject } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import {
-  getOverclockCooldownMs,
-  getOverclockDurationMs,
-  type OverclockState,
-} from './activeSkill';
-import { syncOverclockDisplay } from './overclockDisplay';
+import { consumeOverclockActivationRequest, tickOverclock, type OverclockState } from './overclock';
 import { applyTimeOverload } from './overload';
 import { getRunConfig } from './runConfig';
-import { scaleDeltaSeconds } from './runTimeScale';
+import { scaleDeltaMs, scaleDeltaSeconds } from './runTimeScale';
 
 interface RunTimerEngineProps {
   isPlaying: boolean;
@@ -21,6 +16,9 @@ export function RunTimerEngine({ isPlaying, overclockRef }: RunTimerEngineProps)
     (ticker: { deltaMS: number }) => {
       const store = useGameStore.getState();
       if (store.gameState !== 'PLAYING') return;
+
+      consumeOverclockActivationRequest(overclockRef);
+      tickOverclock(overclockRef, scaleDeltaMs(ticker.deltaMS));
 
       const config = getRunConfig(store.upgrades);
       const deltaSeconds = scaleDeltaSeconds(ticker.deltaMS / 1000);
@@ -34,28 +32,3 @@ export function RunTimerEngine({ isPlaying, overclockRef }: RunTimerEngineProps)
 
   return null;
 }
-
-export function tickOverclockFromStore(
-  overclockRef: MutableRefObject<OverclockState>,
-  deltaMs: number,
-): void {
-  const cooldownMs = getOverclockCooldownMs();
-
-  const state = overclockRef.current;
-  if (state.active) {
-    state.activeTimerMs -= deltaMs;
-    if (state.activeTimerMs <= 0) {
-      state.active = false;
-      state.cooldownTimerMs = cooldownMs;
-    }
-    return;
-  }
-
-  if (state.cooldownTimerMs > 0) {
-    state.cooldownTimerMs = Math.max(0, state.cooldownTimerMs - deltaMs);
-  }
-
-  syncOverclockDisplay(state.active, state.cooldownTimerMs, cooldownMs);
-}
-
-export { getOverclockDurationMs, getOverclockCooldownMs };

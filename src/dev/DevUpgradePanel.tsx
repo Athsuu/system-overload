@@ -5,45 +5,60 @@ import {
   type UpgradeId,
 } from '../store/upgradeCatalog';
 import {
+  getSkillGlyphId,
   getSkillIconBranch,
   getSkillIconBranchMeta,
   getSkillNode,
   SKILL_TREE_NODES,
+  type SkillGlyphId,
 } from '../store/skillTree';
 import { useGameStore } from '../store/useGameStore';
 import { SkillBranchIcon } from '../ui/skillTreeBranchIcons';
 import { devSetUpgradeLevel } from './devActions';
 import { DevFloatingTooltip } from './DevFloatingTooltip';
 
+function getGlyphAccentColor(
+  glyph: SkillGlyphId | null,
+  iconBranch: ReturnType<typeof getSkillIconBranch>,
+): string {
+  if (!glyph) return getSkillIconBranchMeta()[iconBranch].color;
+  if (glyph === 'shard') return '#c5a059';
+  return getSkillIconBranchMeta()[iconBranch].color;
+}
+
 function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
   const upgrades = useGameStore((state) => state.upgrades);
   const skillNode = getSkillNode(upgradeId);
   const definition = getUpgradeDefinition(upgradeId);
   const iconBranch = getSkillIconBranch(upgradeId, skillNode.branch);
+  const glyph = getSkillGlyphId(upgradeId, skillNode.branch);
   const branch = getSkillIconBranchMeta()[iconBranch];
+  const glyphColor = getGlyphAccentColor(glyph, iconBranch);
   const level = upgrades[upgradeId];
   const nextCost = level < definition.maxLevel ? getUpgradeCost(definition, level) : null;
 
   return (
     <>
       <div className="mb-2 flex items-center gap-2">
-        <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded border text-[11px] font-bold text-white"
-          style={{ borderColor: `${branch.color}66`, backgroundColor: `${branch.color}18` }}
-        >
-          <SkillBranchIcon branch={iconBranch} size={18} color={branch.color} />
-        </span>
+        {glyph && (
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded border text-[15px] font-bold text-white"
+            style={{ borderColor: `${branch.color}66`, backgroundColor: `${branch.color}18` }}
+          >
+            <SkillBranchIcon glyph={glyph} size={18} color={glyphColor} />
+          </span>
+        )}
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold text-white">{definition.name}</p>
-          <p className="text-[10px] tracking-wide uppercase" style={{ color: branch.color }}>
+          <p className="text-[14px] tracking-wide uppercase" style={{ color: branch.color }}>
             {branch.label} · permanent
           </p>
         </div>
       </div>
 
-      <p className="text-[11px] leading-relaxed text-white/65">{definition.description}</p>
+      <p className="text-[15px] leading-relaxed text-white/65">{definition.description}</p>
 
-      <div className="mt-2 space-y-1 border-t border-white/8 pt-2 font-mono text-[10px] text-white/45">
+      <div className="mt-2 space-y-1 border-t border-white/8 pt-2 font-mono text-[14px] text-white/45">
         <p>
           Level{' '}
           <span className="text-amber-300/90">
@@ -61,8 +76,8 @@ function DevSkillTooltipContent({ upgradeId }: { upgradeId: UpgradeId }) {
 
       {skillNode.requires && skillNode.requires.length > 0 && (
         <div className="mt-2 border-t border-white/8 pt-2">
-          <p className="text-[9px] tracking-wider text-white/35 uppercase">Requires</p>
-          <ul className="mt-1 space-y-0.5 text-[10px] text-white/50">
+          <p className="text-[13px] tracking-wider text-white/35 uppercase">Requires</p>
+          <ul className="mt-1 space-y-0.5 text-[14px] text-white/50">
             {skillNode.requires.map((req) => {
               const reqDef = getSkillNode(req.id);
               const reqLevel = upgrades[req.id];
@@ -119,7 +134,8 @@ export function DevUpgradePanel() {
           const skillNode = getSkillNode(treeNode.id);
           const level = upgrades[treeNode.id];
           const iconBranch = getSkillIconBranch(treeNode.id, skillNode.branch);
-          const branch = getSkillIconBranchMeta()[iconBranch];
+          const glyph = getSkillGlyphId(treeNode.id, skillNode.branch);
+          const glyphColor = getGlyphAccentColor(glyph, iconBranch);
           const isSelected = selectedId === treeNode.id;
 
           return (
@@ -140,19 +156,21 @@ export function DevUpgradePanel() {
                     : 'text-white/75 hover:bg-white/5 hover:text-white'
                 }`}
               >
+                {glyph && (
+                  <span
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded border text-[14px] font-bold"
+                    style={{
+                      borderColor: `${glyphColor}55`,
+                      backgroundColor: `${glyphColor}12`,
+                      color: glyphColor,
+                    }}
+                  >
+                    <SkillBranchIcon glyph={glyph} size={16} color={glyphColor} />
+                  </span>
+                )}
+                <span className="min-w-0 flex-1 truncate text-[15px]">{skillNode.name}</span>
                 <span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded border text-[10px] font-bold"
-                  style={{
-                    borderColor: `${branch.color}55`,
-                    backgroundColor: `${branch.color}12`,
-                    color: branch.color,
-                  }}
-                >
-                  <SkillBranchIcon branch={iconBranch} size={16} color={branch.color} />
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[11px]">{skillNode.name}</span>
-                <span
-                  className={`shrink-0 font-mono text-[10px] ${
+                  className={`shrink-0 font-mono text-[14px] ${
                     level >= definition.maxLevel ? 'text-emerald-400/90' : 'text-white/40'
                   }`}
                 >
@@ -170,8 +188,8 @@ export function DevUpgradePanel() {
 
       <div className="rounded-lg border border-white/8 bg-white/5 p-2">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="truncate text-[11px] font-medium text-white/85">{selectedDefinition.name}</p>
-          <span className="shrink-0 font-mono text-[10px] text-amber-300/90">
+          <p className="truncate text-[15px] font-medium text-white/85">{selectedDefinition.name}</p>
+          <span className="shrink-0 font-mono text-[14px] text-amber-300/90">
             LVL {currentLevel}/{selectedDefinition.maxLevel}
           </span>
         </div>
@@ -180,7 +198,7 @@ export function DevUpgradePanel() {
           <button
             type="button"
             onClick={() => setLevel(0)}
-            className="rounded border border-white/10 px-2 py-1 text-[10px] text-white/60 hover:border-white/25 hover:text-white"
+            className="rounded border border-white/10 px-2 py-1 text-[14px] text-white/60 hover:border-white/25 hover:text-white"
           >
             0
           </button>
@@ -203,13 +221,13 @@ export function DevUpgradePanel() {
           <button
             type="button"
             onClick={() => setLevel(selectedDefinition.maxLevel)}
-            className="rounded border border-white/10 px-2 py-1 text-[10px] text-white/60 hover:border-white/25 hover:text-white"
+            className="rounded border border-white/10 px-2 py-1 text-[14px] text-white/60 hover:border-white/25 hover:text-white"
           >
             Max
           </button>
         </div>
 
-        <p className="mt-2 text-[10px] leading-relaxed text-white/40">{selectedDefinition.description}</p>
+        <p className="mt-2 text-[14px] leading-relaxed text-white/40">{selectedDefinition.description}</p>
       </div>
     </div>
   );

@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { getBreachCap } from '../game/runConfig';
-import { overclockDisplayRef } from '../game/overclockDisplay';
+import { getBreachPercent } from '../game/runConfig';
+import { overclockDisplayRef, requestOverclockActivation } from '../game/overclock';
 import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { useGameStore } from '../store/useGameStore';
 import { isOverclockUnlocked } from '../store/upgradeCatalog';
 import { BREACH_URGENT_THRESHOLD, DARK_HEX } from '../theme/darkHexTerminal';
-import { requestOverclockActivation } from '../game/overclockInput';
 import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
 import { OverclockButton } from './OverclockButton';
 import { ArchRunDialogue } from './ArchRunDialogue';
@@ -44,7 +43,7 @@ function WaveCounter() {
       ) : (
         <p
           className={`tracking-[0.3em] uppercase ${
-            isBoss ? 'text-[10px]' : 'font-mono text-sm normal-case tracking-wide text-white/70'
+            isBoss ? 'text-[14px]' : 'font-mono text-sm normal-case tracking-wide text-white/70'
           }`}
           style={{ color: isBoss ? DARK_HEX.breach : DARK_HEX.goldMuted }}
         >
@@ -115,8 +114,7 @@ function OverloadBar() {
   const breachProgress = useGameStore((state) => state.breachProgress);
   const upgrades = useGameStore((state) => state.upgrades);
   const strings = useGameStrings();
-  const breachCap = getBreachCap(upgrades);
-  const progressPercent = breachCap > 0 ? (breachProgress / breachCap) * 100 : 0;
+  const progressPercent = getBreachPercent(breachProgress, upgrades);
   const isUrgent = progressPercent >= BREACH_URGENT_THRESHOLD;
   const { overloadLabel } = strings.hud;
 
@@ -127,7 +125,7 @@ function OverloadBar() {
     >
       <div className="relative mb-1.5">
         <span
-          className={`absolute top-1/2 left-0 -translate-y-1/2 text-[10px] font-semibold tracking-[0.25em] uppercase ${
+          className={`absolute top-1/2 left-0 -translate-y-1/2 text-[14px] font-semibold tracking-[0.25em] uppercase ${
             isUrgent ? 'so-animate-heat-label' : ''
           }`}
           style={{ color: isUrgent ? DARK_HEX.breachGlow : DARK_HEX.gold }}

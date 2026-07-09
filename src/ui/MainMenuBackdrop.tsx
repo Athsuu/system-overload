@@ -7,7 +7,7 @@ export function MainMenuBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0">
       <TerminalBackdrop patternId="mainMenuHexGrid" variant="menu" />
-      <p className="so-arch-channel-label absolute bottom-6 left-1/2 z-[1] -translate-x-1/2 font-mono text-[9px] tracking-[0.28em] text-white/25 uppercase">
+      <p className="so-arch-channel-label absolute bottom-6 left-1/2 z-[1] -translate-x-1/2 font-mono text-[13px] tracking-[0.28em] text-white/25 uppercase">
         {strings.mainMenu.statusUnstable}
       </p>
     </div>

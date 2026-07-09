@@ -1,21 +1,19 @@
 import { useApplication } from '@pixi/react';
 import { useEffect, useRef } from 'react';
-import { ensureGameAudioUnlocked } from '../audio/gameAudio';
-import { applyAudioVolumes } from '../audio/hubAudio';
+import { applyAudioVolumes, ensureAudioUnlocked } from '../audio/sfxApi';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
 import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
-import { createOverclockState, type OverclockState } from './activeSkill';
-import { consumeOverclockActivationRequest, requestOverclockActivation } from './overclockInput';
+import { createOverclockState, requestOverclockActivation, type OverclockState } from './overclock';
 import { isOverclockUnlocked } from '../store/upgradeCatalog';
 import { DissipationNodes } from './DissipationNodes';
 import { EffectEngine } from './EffectEngine';
 import type { GameEffect } from './effects';
 import { PurgeZoneEngine } from './PurgeZoneEngine';
+import { LootPickupEngine, type LootPickup } from './loot';
 import { purgePointerRef, resetPurgePointer } from './purgeInput';
-import { RunTimerEngine, tickOverclockFromStore } from './RunTimerEngine';
-import { scaleDeltaMs } from './runTimeScale';
-import { resetLeakBurstTracker } from './overload';
+import { RunTimerEngine } from './RunTimerEngine';
+import { resetLeakBurstTracker, resetMeltdownGuard } from './overload';
 import { resetWaveRuntime, WaveEngine } from './WaveEngine';
 import type { DissipationNode } from './types';
 
@@ -30,6 +28,7 @@ export function GameArena() {
   const { app } = useApplication();
   const nodesRef = useRef<DissipationNode[]>([]);
   const effectsRef = useRef<GameEffect[]>([]);
+  const pickupsRef = useRef<LootPickup[]>([]);
   const overclockRef = useRef<OverclockState>(createOverclockState());
   const waveRuntimeRef = useRef({
     state: 'active' as const,
@@ -53,10 +52,12 @@ export function GameArena() {
     if (isNewRun) {
       nodesRef.current = [];
       effectsRef.current = [];
+      pickupsRef.current = [];
       resetPurgePointer();
       overclockRef.current = createOverclockState();
       resetWaveRuntime(waveRuntimeRef);
       resetLeakBurstTracker();
+      resetMeltdownGuard();
       useGameStore.getState().setWaveIndex(1);
       useGameStore.getState().setWavePhase('spawning');
     }
@@ -71,6 +72,7 @@ export function GameArena() {
   useEffect(() => {
     if (!isPlaying) {
       effectsRef.current = [];
+      pickupsRef.current = [];
     }
   }, [isPlaying]);
 
@@ -92,7 +94,7 @@ export function GameArena() {
 
     const onPointerMove = (event: PointerEvent) => {
       if (tutorialRunSpotlightActive) return;
-      ensureGameAudioUnlocked();
+      ensureAudioUnlocked();
       updatePointer(event.clientX, event.clientY);
     };
 
@@ -120,36 +122,16 @@ export function GameArena() {
     };
   }, [app, isPlaying, tutorialRunSpotlightActive]);
 
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    let frameId = 0;
-    let lastTime = performance.now();
-
-    const loop = (time: number) => {
-      const deltaSeconds = Math.min(0.05, (time - lastTime) / 1000);
-      lastTime = time;
-
-      if (useGameStore.getState().gameState === 'PLAYING' && !tutorialRunSpotlightActive) {
-        consumeOverclockActivationRequest(overclockRef);
-        tickOverclockFromStore(overclockRef, scaleDeltaMs(deltaSeconds * 1000));
-      }
-
-      frameId = requestAnimationFrame(loop);
-    };
-
-    frameId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frameId);
-  }, [isPlaying, tutorialRunSpotlightActive]);
-
   return (
     <>
       <PurgeZoneEngine
         isPlaying={isRunLive}
         nodesRef={nodesRef}
         effectsRef={effectsRef}
+        pickupsRef={pickupsRef}
         overclockRef={overclockRef}
       />
+      <LootPickupEngine isPlaying={isRunLive} pickupsRef={pickupsRef} />
       <EffectEngine isPlaying={isRunLive} effectsRef={effectsRef} />
       <RunTimerEngine isPlaying={isRunLive} overclockRef={overclockRef} />
       <WaveEngine

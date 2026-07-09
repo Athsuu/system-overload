@@ -1,5 +1,4 @@
-import { playHubSfx } from '../audio/hubAudio';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
+import { triggerSfx } from '../audio/sfxApi';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { hexagonPoints } from './skillTreeGeometry';
@@ -13,8 +12,7 @@ export function PlayerStatsButton({ isOpen, onToggle }: PlayerStatsButtonProps) 
   const strings = useGameStrings();
 
   const handleToggle = () => {
-    ensureHubAudioUnlocked();
-    playHubSfx(isOpen ? 'settingsClose' : 'settingsOpen');
+    triggerSfx(isOpen ? 'settingsClose' : 'settingsOpen');
     onToggle();
   };
 

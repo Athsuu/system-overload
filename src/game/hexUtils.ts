@@ -16,18 +16,3 @@ export function getFlatTopHexVertices(cx: number, cy: number, radius: number): H
     };
   });
 }
-
-export function isPointInFlatTopHex(
-  px: number,
-  py: number,
-  cx: number,
-  cy: number,
-  radius: number,
-  padding = 0,
-): boolean {
-  const dx = Math.abs(px - cx);
-  const dy = Math.abs(py - cy);
-  const r = radius + padding;
-  if (dy > r * (Math.sqrt(3) / 2)) return false;
-  return dx <= r - dy / Math.sqrt(3);
-}

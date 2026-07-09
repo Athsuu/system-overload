@@ -18,6 +18,9 @@ export interface PlayerStatsStrings {
 export interface TooltipStatLabels {
   purgeHitDamage: string;
   purgeDamageBonus: string;
+  shardBonusPerKill: string;
+  shardPickupRadius: string;
+  shardPickupReachBonus: string;
   purgeCadence: string;
   purgeReach: string;
   purgeReachBonus: string;

@@ -11,6 +11,9 @@ export type BranchId = 'degats' | 'thermique';
 
 export type SkillIconBranch = BranchId | 'flux';
 
+/** Per-node glyph on the skill tree (branch defaults + dedicated marks). */
+export type SkillGlyphId = SkillIconBranch | 'shard' | 'magnet' | 'cadence' | 'reach';
+
 export type TreeNodeId = UpgradeId;
 export type TreeParentId = 'root' | TreeNodeId;
 
@@ -82,6 +85,8 @@ export function getSkillIconBranchMeta(): Record<SkillIconBranch, { label: strin
 
 const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   node0Boot: 'thermique',
+  shardSalvage: 'thermique',
+  shardMagnet: 'thermique',
   purgeStrike: 'degats',
   purgeCadence: 'degats',
   purgeReach: 'degats',
@@ -92,9 +97,11 @@ const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
 
 const NODE_ICONS: Record<UpgradeId, string> = {
   node0Boot: '0',
-  purgeStrike: '↑',
-  purgeCadence: '»',
-  purgeReach: '◎',
+  shardSalvage: '◆',
+  shardMagnet: '',
+  purgeStrike: '',
+  purgeCadence: '',
+  purgeReach: '',
   threadCoolant: '◌',
   killBreachRelief: '◇',
   meltdownThreshold: '▲',
@@ -106,6 +113,15 @@ const SKILL_ICON_BRANCH: Partial<Record<UpgradeId, SkillIconBranch>> = {
 
 export function getSkillIconBranch(id: UpgradeId, branch: BranchId): SkillIconBranch {
   return SKILL_ICON_BRANCH[id] ?? branch;
+}
+
+export function getSkillGlyphId(id: UpgradeId, branch: BranchId): SkillGlyphId | null {
+  if (id === 'purgeStrike') return 'degats';
+  if (id === 'purgeCadence') return 'cadence';
+  if (id === 'purgeReach') return 'reach';
+  if (id === 'shardSalvage') return 'shard';
+  if (id === 'shardMagnet') return 'magnet';
+  return getSkillIconBranch(id, branch);
 }
 
 export interface SkillTreeGraphNode {
@@ -142,6 +158,8 @@ export interface PlaceholderNodeDef {
 }
 
 const NODE0_BOOT_POS = NODE0_HUB_POSITION;
+const SHARD_SALVAGE_POS = positionFromAxial(-1, 0);
+const SHARD_MAGNET_POS = positionFromAxial(-2, 1);
 const PURGE_STRIKE_POS = positionFromParent(NODE0_BOOT_POS, 'up');
 const THREAD_COOLANT_POS = positionFromParent(NODE0_BOOT_POS, 'downRight');
 const PURGE_CADENCE_POS = positionFromParent(PURGE_STRIKE_POS, 'upLeft');
@@ -157,6 +175,22 @@ export const SKILL_TREE_GRAPH: SkillTreeGraphNode[] = [
     parentId: 'root',
     position: NODE0_BOOT_POS,
     branch: 'thermique',
+  },
+  {
+    id: 'shardSalvage',
+    kind: 'upgrade',
+    parentId: 'node0Boot',
+    position: SHARD_SALVAGE_POS,
+    branch: 'thermique',
+    requires: requireLevel('node0Boot', 1),
+  },
+  {
+    id: 'shardMagnet',
+    kind: 'upgrade',
+    parentId: 'shardSalvage',
+    position: SHARD_MAGNET_POS,
+    branch: 'thermique',
+    requires: requireLevel('shardSalvage', 1),
   },
   {
     id: 'purgeStrike',

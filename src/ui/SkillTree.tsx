@@ -4,7 +4,7 @@ import {
   NODE0_HUB_POSITION,
   getNodePosition,
   getRevealedGraphNodes,
-  getSkillIconBranch,
+  getSkillGlyphId,
   getUpgradeBranch,
   type TreeNodeId,
   TREE_CANVAS,
@@ -155,7 +155,7 @@ export function SkillTree({
             key={node.id}
             x={node.position.x}
             y={node.position.y}
-            branch={getSkillIconBranch(upgradeId, branch)}
+            glyph={getSkillGlyphId(upgradeId, branch)}
             level={upgrades[upgradeId]}
             isRoot={upgradeId === 'node0Boot'}
             state={getSkillState(

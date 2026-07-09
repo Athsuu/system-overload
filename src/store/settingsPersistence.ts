@@ -12,8 +12,8 @@ export interface SettingsData {
 
 export const DEFAULT_SETTINGS: SettingsData = {
   masterVolume: 50,
-  musicVolume: 50,
-  sfxVolume: 50,
+  musicVolume: 42,
+  sfxVolume: 58,
   fluxDriveEnabled: false,
   languageMode: 'auto',
 };

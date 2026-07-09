@@ -1,5 +1,4 @@
-import { playHubSfx } from '../audio/hubAudio';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
+import { triggerSfx } from '../audio/sfxApi';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { isCycleCleared } from '../store/cycleTypes';
 import { useGameStore } from '../store/useGameStore';
@@ -19,11 +18,17 @@ function CycleArrowButton({
 }) {
   const label = direction === 'left' ? '◀' : '▶';
 
+  const handleClick = () => {
+    if (disabled) return;
+    triggerSfx('nodeSelect');
+    onClick();
+  };
+
   return (
     <button
       type="button"
       disabled={disabled}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : handleClick}
       aria-label={direction === 'left' ? 'Previous cycle' : 'Next cycle'}
       className={`flex h-11 w-11 items-center justify-center rounded-sm border text-sm transition ${
         disabled
@@ -55,21 +60,15 @@ export function CycleRunLauncher() {
 
   const handlePrev = () => {
     if (!canGoLeft) return;
-    ensureHubAudioUnlocked();
-    playHubSfx('startRun');
     setSelectedCycle(selectedCycle - 1);
   };
 
   const handleNext = () => {
     if (!canGoRight) return;
-    ensureHubAudioUnlocked();
-    playHubSfx('startRun');
     setSelectedCycle(selectedCycle + 1);
   };
 
   const handleStartRun = () => {
-    ensureHubAudioUnlocked();
-    playHubSfx('startRun');
     markTutorialSignal('runsStarted');
     startRun(selectedCycle);
   };
@@ -78,13 +77,13 @@ export function CycleRunLauncher() {
     <div data-tutorial-anchor="start-run" className="flex flex-col items-center gap-2">
       <div className="flex flex-col items-center gap-0.5">
         <p
-          className="so-font-display text-[11px] font-semibold tracking-[0.42em] uppercase"
+          className="so-font-display text-[15px] font-semibold tracking-[0.42em] uppercase"
           style={{ color: DARK_HEX.gold }}
         >
           {cycleLabel}
         </p>
         {cleared && (
-          <span className="text-[9px] tracking-[0.2em] text-white/30 uppercase" title="Cycle cleared">
+          <span className="text-[13px] tracking-[0.2em] text-white/30 uppercase" title="Cycle cleared">
             ✓
           </span>
         )}
@@ -94,6 +93,7 @@ export function CycleRunLauncher() {
         <HexActionButton
           label={strings.ui.startRun}
           onClick={handleStartRun}
+          clickSound="startRun"
           size="hubRun"
           variant="primary"
           className="hover:scale-[1.03]"

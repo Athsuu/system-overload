@@ -23,7 +23,7 @@ function DevButton({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/80 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200"
+      className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[15px] font-medium text-white/80 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200"
     >
       {children}
     </button>
@@ -32,7 +32,7 @@ function DevButton({
 
 function OutcomeBlock({ title, outcome }: { title: string; outcome: SimOutcome }) {
   return (
-    <div className="rounded-lg border border-white/8 bg-black/30 px-2.5 py-2 text-[10px] text-white/70">
+    <div className="rounded-lg border border-white/8 bg-black/30 px-2.5 py-2 text-[14px] text-white/70">
       <p className="mb-1 font-semibold text-amber-300/90">{title}</p>
       <p>{formatOutcomeShort(outcome)}</p>
       <p className="mt-1 text-white/45">
@@ -81,7 +81,7 @@ export function DevRunSimPanel() {
 
   return (
     <div className="space-y-3">
-      <p className="text-[10px] leading-relaxed text-white/40">
+      <p className="text-[14px] leading-relaxed text-white/40">
         Modèle rapide calibré sur tes repères playtest (breach passive + rythme des vagues).
       </p>
 
@@ -103,7 +103,7 @@ export function DevRunSimPanel() {
       </div>
 
       {calibration && (
-        <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-2 font-mono text-[10px] text-cyan-100/80">
+        <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-2 font-mono text-[14px] text-cyan-100/80">
           <p className="mb-1 text-cyan-300/90">Calibration</p>
           <p>Coverage purge : {(calibration.purgeCoverage * 100).toFixed(0)}%</p>
           <p>Durée vague × : {calibration.waveDurationMult.toFixed(2)}</p>
@@ -128,7 +128,7 @@ export function DevRunSimPanel() {
         <div className="space-y-2">
           <OutcomeBlock title="Simulation ×1" outcome={lastRun.x1} />
           <OutcomeBlock title="Simulation ×2" outcome={lastRun.x2} />
-          <div className="rounded-lg border border-white/5 bg-white/5 px-2.5 py-2 text-[10px] text-white/50">
+          <div className="rounded-lg border border-white/5 bg-white/5 px-2.5 py-2 text-[14px] text-white/50">
             <p className="mb-1 font-semibold text-white/70">Repères playtest réels</p>
             <p>×1 → fin manche 5 (meltdown)</p>
             <p>×2 → début manche 5 (meltdown)</p>

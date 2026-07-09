@@ -1,0 +1,60 @@
+---
+description: Narratif Zero Archive, i18n EN/FR, prose ARCH, sync docs dialogues
+globs: src/i18n/**/*,docs/dialogues.md,docs/lexique-jeu.md,docs/narrative.md,docs/lore-screenplay.html,src/ui/gameNarrative.ts,src/ui/RunEndScreen.tsx,src/ui/PauseScreen.tsx,src/store/upgradeCatalog.ts
+alwaysApply: false
+---
+
+# Narratif & dialogues
+
+## Canon (v0.7)
+
+- **Zero Archive** s'effondre sous des **processus corrompus**.
+- Le joueur **est Node-0** (pas un opérateur externe) : exécution via **zone de purge** (souris), pas de sprite joueur en arène.
+- **ARCH** compile Node-0 pour protéger **the Seed** ; objectif long terme **Uplink**.
+- Skill tree = optimisations ARCH (continue + urgence Meltdown).
+
+**Références** : `docs/narrative.md`, `docs/lexique-jeu.md`, `docs/dialogues.md`.
+
+## Terminologie UI (anglais)
+
+| Concept | Terme canonique | À ne plus utiliser |
+|---------|-----------------|-------------------|
+| Joueur | **Node-0** | Heart, Cœur, Kernel (nouveaux textes) |
+| Conseil | **ARCH** | — |
+| Défaite / victoire | **Meltdown** / **Breach Contained** | — |
+| Ennemis | **Corrupted processes** | — |
+| Monnaie | **Hex Shards**, **Run Shards**, **Anchor Fragments** | TFLOPS, Cycles |
+
+Legacy code (`core`, `HEART`, `kernelBoot` en save) : acceptable en interne — **pas** dans nouveaux textes joueur.
+
+## Ton ARCH
+
+- Urgent, terminal, attaché — pas heroic fantasy.
+- **Première personne** quand ARCH parle d'elle-même (`I` / `Je`).
+- Pas froide ni distante (*I compiled you*).
+
+## i18n (obligatoire)
+
+- Tout texte joueur modifié → **toutes les langues** (`src/i18n/locales/en.ts`, `fr.ts`, `types.ts`) dans la **même tâche**.
+- Ne jamais laisser une langue en retard.
+
+## Prose dialogue (obligatoire)
+
+| Règle | Détail |
+|-------|--------|
+| Guillemets décoratifs | **Interdits** autour des dialogues ARCH/tutos (`quote={false}` sur glitch/typewriter) |
+| Tiret cadratin `—` | **Interdit** en lore/dialogue joueur — virgule ou point. Exception : glitch `tutorial.signalHandshake` (`noi—se`, etc.) |
+| Deux-points `:` | Limiter en prose — virgules/points. OK : libellés terminal (`ARCH // ADVISORY CHANNEL`) |
+
+## Sync documentation
+
+Toute modification de dialogue ou feature visible joueur :
+
+1. Mettre à jour `docs/dialogues.md` (clé i18n, EN/FR, déclencheur).
+2. Mettre à jour `docs/lexique-jeu.md` si nouveau terme/écran/mécanique.
+
+**Ne jamais** modifier les locales sans synchroniser `docs/dialogues.md`.
+
+## Lore interdit (sans demande PO explicite)
+
+Heart/Cœur, sprite joueur visible, gardien externe, redirection de flux, Cycles, draft entre vagues, Flux Bolts.

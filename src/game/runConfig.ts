@@ -5,9 +5,11 @@ import {
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
   KILL_BREACH_RELIEF_PER_LEVEL,
   MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL,
+  SHARD_SALVAGE_BONUS_PER_LEVEL,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
 import { getCycleEnemyHpMult, getCyclePressureMult, getScalingWaveIndex } from './cycleScaling';
+import type { EnemyClass } from './enemyClass';
 import { useGameStore } from '../store/useGameStore';
 import {
   getWaveHpMultiplier,
@@ -20,6 +22,12 @@ export const BASE_BREACH_CAP = 100;
 
 export function getBreachCap(upgrades: UpgradeLevels): number {
   return BASE_BREACH_CAP + upgrades.meltdownThreshold * MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL;
+}
+
+/** Overload affiché en % (0–100+), relatif au cap Meltdown du run. */
+export function getBreachPercent(breachProgress: number, upgrades: UpgradeLevels): number {
+  const breachCap = getBreachCap(upgrades);
+  return breachCap > 0 ? (breachProgress / breachCap) * 100 : 0;
 }
 
 export interface RunConfig {
@@ -59,7 +67,7 @@ export function getRunConfig(upgrades: UpgradeLevels): RunConfig {
     starterNodes: BASE_RUN_CONFIG.starterNodes,
     baseEnemyHp: BASE_RUN_CONFIG.baseEnemyHp,
     shardsMultiplier: 1,
-    killBonusShards: 0,
+    killBonusShards: upgrades.shardSalvage * SHARD_SALVAGE_BONUS_PER_LEVEL,
     spawnIntervalMult: 1,
     maxAliveReduction: 0,
     baseEnemySpeed: BASE_RUN_CONFIG.baseEnemySpeed,
@@ -100,13 +108,13 @@ export function getEffectivePassiveHeatPerSec(config: RunConfig): number {
 export function getEnemyMaxHp(
   config: RunConfig,
   localWaveIndex: number,
-  isBoss = false,
+  enemyClass: EnemyClass = 'normal',
 ): number {
   const cycle = resolveActiveCycle();
   const scalingIndex = getScalingWaveIndex(cycle, localWaveIndex);
   const hp =
     config.baseEnemyHp *
-    getWaveHpMultiplier(scalingIndex, isBoss) *
+    getWaveHpMultiplier(scalingIndex, enemyClass) *
     getCycleEnemyHpMult(cycle);
   return Math.round(hp);
 }
@@ -114,20 +122,20 @@ export function getEnemyMaxHp(
 export function getEnemySpeed(
   config: RunConfig,
   localWaveIndex: number,
-  isBoss = false,
+  enemyClass: EnemyClass = 'normal',
 ): number {
   const scalingIndex = resolveScalingWaveIndex(localWaveIndex);
-  const speed = config.baseEnemySpeed * getWaveSpeedMultiplier(scalingIndex, isBoss);
+  const speed = config.baseEnemySpeed * getWaveSpeedMultiplier(scalingIndex, enemyClass);
   return Math.min(config.maxEnemySpeed, speed);
 }
 
 export function getShardReward(
   config: RunConfig,
   localWaveIndex: number,
-  isBoss = false,
+  enemyClass: EnemyClass = 'normal',
 ): number {
   const scalingIndex = resolveScalingWaveIndex(localWaveIndex);
-  const base = getWaveShardReward(scalingIndex, isBoss);
+  const base = getWaveShardReward(scalingIndex, enemyClass);
   return Math.floor(base * config.shardsMultiplier) + config.killBonusShards;
 }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getBreachCap } from '../game/runConfig';
+import { getBreachPercent } from '../game/runConfig';
 import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
@@ -20,8 +20,7 @@ export function PauseScreen() {
   const openSettings = useSettingsStore((state) => state.openSettings);
 
   const [confirmAbort, setConfirmAbort] = useState(false);
-  const breachCap = getBreachCap(upgrades);
-  const breachPercent = Math.round((breachProgress / breachCap) * 100);
+  const breachPercent = Math.round(getBreachPercent(breachProgress, upgrades));
 
   const strings = useGameStrings();
   const isBoss = wavePhase === 'boss' || waveIndex > REGULAR_WAVE_COUNT;
@@ -68,28 +67,28 @@ export function PauseScreen() {
             {strings.pause.title}
           </h2>
 
-          <p className="so-animate-reveal-step-1 mt-2 text-[10px] italic leading-relaxed tracking-[0.06em] text-white/45">
+          <p className="so-animate-reveal-step-1 mt-2 text-[14px] italic leading-relaxed tracking-[0.06em] text-white/45">
             {strings.pause.subtitle}
           </p>
 
-          <div className="so-animate-reveal-step-2 mt-6 flex justify-center gap-6 font-mono text-[10px] tracking-wider text-white/40 uppercase">
+          <div className="so-animate-reveal-step-2 mt-6 flex justify-center gap-6 font-mono text-[14px] tracking-wider text-white/40 uppercase">
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] text-white/30">{strings.pause.statBreach}</span>
+              <span className="text-[13px] text-white/30">{strings.pause.statBreach}</span>
               <span className="text-sm text-white/70">{breachPercent}%</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] text-white/30">{strings.pause.statCycle}</span>
+              <span className="text-[13px] text-white/30">{strings.pause.statCycle}</span>
               <span className="text-sm text-white/70">{activeCycle}</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] text-white/30">{strings.pause.statWave}</span>
+              <span className="text-[13px] text-white/30">{strings.pause.statWave}</span>
               <span className="text-sm text-white/70">{waveDisplay}</span>
             </div>
           </div>
 
           {confirmAbort ? (
             <div className="so-animate-reveal-step-3 mt-8">
-              <p className="mb-4 text-[10px] leading-relaxed tracking-[0.06em] text-white/50">
+              <p className="mb-4 text-[14px] leading-relaxed tracking-[0.06em] text-white/50">
                 {strings.pause.confirmPrompt}
               </p>
               <div className="flex items-center justify-center gap-4">
@@ -98,12 +97,14 @@ export function PauseScreen() {
                   onClick={() => setConfirmAbort(false)}
                   size="md"
                   variant="secondary"
+                  clickSound="uiBack"
                 />
                 <HexActionButton
                   label={strings.pause.confirmYes}
                   onClick={abortRun}
                   size="md"
                   variant="primary"
+                  clickSound="uiConfirm"
                 />
               </div>
             </div>
@@ -121,6 +122,7 @@ export function PauseScreen() {
                   onClick={resumeRun}
                   size="md"
                   variant="primary"
+                  clickSound="uiConfirm"
                 />
               </div>
               <HexActionButton
@@ -128,11 +130,12 @@ export function PauseScreen() {
                 onClick={openSettings}
                 size="md"
                 variant="secondary"
+                clickSound="settingsOpen"
               />
             </div>
           )}
 
-          <p className="mt-6 text-[9px] tracking-[0.2em] text-white/25 uppercase">{strings.pause.escHint}</p>
+          <p className="mt-6 text-[13px] tracking-[0.2em] text-white/25 uppercase">{strings.pause.escHint}</p>
         </div>
       )}
     </div>

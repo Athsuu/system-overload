@@ -12,7 +12,7 @@ interface PlayerStatsPanelProps {
 
 function StatLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 text-[11px]">
+    <div className="flex items-baseline justify-between gap-3 text-[15px]">
       <span className="shrink-0 text-white/45">{label}</span>
       <span className="text-right font-mono text-white/85">{value}</span>
     </div>
@@ -67,7 +67,7 @@ export function PlayerStatsPanel({ isOpen, onClose, anchorRef }: PlayerStatsPane
         }}
       />
       <p
-        className="so-font-display mb-3 text-[9px] font-semibold tracking-[0.28em] uppercase"
+        className="so-font-display mb-3 text-[13px] font-semibold tracking-[0.28em] uppercase"
         style={{ color: DARK_HEX.gold }}
       >
         {strings.playerStats.title}

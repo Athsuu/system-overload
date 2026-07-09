@@ -1,3 +1,5 @@
+import type { EnemyClass } from './enemyClass';
+
 export type GameEffectKind = 'death' | 'purgeHit' | 'spawn' | 'flowEscape';
 
 export interface GameEffect {
@@ -5,7 +7,7 @@ export interface GameEffect {
   x: number;
   y: number;
   waveIndex: number;
-  isBoss: boolean;
+  enemyClass: EnemyClass;
   elapsedMs: number;
   durationMs: number;
   rotation: number;
@@ -13,7 +15,7 @@ export interface GameEffect {
 
 export const PURGE_HIT_DURATION_MS = 220;
 export const DEATH_DURATION_MS = 250;
-export const BOSS_DEATH_DURATION_MS = 400;
+export const ELITE_DEATH_DURATION_MS = 400;
 export const SPAWN_FLASH_DURATION_MS = 200;
 export const FLOW_ESCAPE_FLASH_MS = 180;
 
@@ -28,7 +30,7 @@ export function pushPurgeHit(
   x: number,
   y: number,
   waveIndex: number,
-  isBoss: boolean,
+  enemyClass: EnemyClass,
 ): void {
   effects.push(
     createEffect({
@@ -36,7 +38,7 @@ export function pushPurgeHit(
       x,
       y,
       waveIndex,
-      isBoss,
+      enemyClass,
       elapsedMs: 0,
       durationMs: PURGE_HIT_DURATION_MS,
       rotation: 0,
@@ -49,7 +51,7 @@ export function pushDeathEffect(
   x: number,
   y: number,
   waveIndex: number,
-  isBoss: boolean,
+  enemyClass: EnemyClass,
 ): void {
   effects.push(
     createEffect({
@@ -57,9 +59,9 @@ export function pushDeathEffect(
       x,
       y,
       waveIndex,
-      isBoss,
+      enemyClass,
       elapsedMs: 0,
-      durationMs: isBoss ? BOSS_DEATH_DURATION_MS : DEATH_DURATION_MS,
+      durationMs: enemyClass === 'elite' ? ELITE_DEATH_DURATION_MS : DEATH_DURATION_MS,
     }),
   );
 }
@@ -69,7 +71,7 @@ export function pushSpawnFlash(
   x: number,
   y: number,
   waveIndex: number,
-  isBoss: boolean,
+  enemyClass: EnemyClass,
 ): void {
   effects.push(
     createEffect({
@@ -77,7 +79,7 @@ export function pushSpawnFlash(
       x,
       y,
       waveIndex,
-      isBoss,
+      enemyClass,
       elapsedMs: 0,
       durationMs: SPAWN_FLASH_DURATION_MS,
     }),
@@ -96,7 +98,7 @@ export function pushFlowEscapeFlash(
       x,
       y,
       waveIndex,
-      isBoss: false,
+      enemyClass: 'normal',
       elapsedMs: 0,
       durationMs: FLOW_ESCAPE_FLASH_MS,
     }),

@@ -1,15 +1,16 @@
 import { ARENA_PADDING } from '../../game/constants';
+import { getEnemyClassFromBossWave } from '../../game/enemyClass';
+import { sumLeakPenalties } from '../../game/leakPenalty';
 import {
+  getBreachCap,
   getEnemyMaxHp,
   getKillBreachRelief,
   getLeakProgressPenalty,
   getRunConfig,
   getSpawnIntervalMs,
 } from '../../game/runConfig';
-import { getWaveDefinition } from '../../game/waveConfig';
+import { getWaveDefinition, getWaveSpawnCount } from '../../game/waveConfig';
 import type { SimOutcome, SimParams, SimWaveSnapshot } from './types';
-
-const LEAK_BURST_MULT = 1.5;
 
 function estimateWaveActiveSec(
   waveIndex: number,
@@ -22,9 +23,9 @@ function estimateWaveActiveSec(
   const group = waveDef.spawns[0];
   if (!group) return 12;
 
-  const count = waveIndex === 1 ? group.count + config.starterNodes : group.count;
+  const count = getWaveSpawnCount(waveIndex, group.count, config.starterNodes);
   const spawnSpanSec = (Math.max(0, count - 1) * getSpawnIntervalMs(group.intervalMs, config)) / 1000;
-  const hp = getEnemyMaxHp(config, waveIndex, waveDef.isBoss ?? false);
+  const hp = getEnemyMaxHp(config, waveIndex, getEnemyClassFromBossWave(waveDef.isBoss));
   const purgeDps = config.purgeHitDamage > 0 ? config.purgeHitDamage / (config.purgeIntervalMs / 1000) : 0;
   const killSec =
     purgeDps > 0
@@ -46,7 +47,7 @@ function estimateLeaksForWave(
   const group = waveDef.spawns[0];
   if (!group) return 0;
 
-  const count = waveIndex === 1 ? group.count + config.starterNodes : group.count;
+  const count = getWaveSpawnCount(waveIndex, group.count, config.starterNodes);
   const missRate = Math.max(0, 1 - params.purgeCoverage);
   return missRate * missRate * count * params.leakFactor;
 }
@@ -60,15 +61,9 @@ function applyLeaks(
 ): { breach: number; added: number } {
   if (leakCount <= 0) return { breach, added: 0 };
 
-  let added = 0;
-  let next = breach;
-  for (let index = 0; index < leakCount; index += 1) {
-    let penalty = getLeakProgressPenalty(config, waveIndex) * leakStress;
-    if (index >= 1) penalty *= LEAK_BURST_MULT;
-    next += penalty;
-    added += penalty;
-  }
-  return { breach: next, added };
+  const basePenalty = getLeakProgressPenalty(config, waveIndex) * leakStress;
+  const added = sumLeakPenalties(basePenalty, leakCount);
+  return { breach: breach + added, added };
 }
 
 export function estimateRunTimelineSec(
@@ -94,6 +89,7 @@ export function estimateRunTimelineSec(
 
 export function simulateRun(params: SimParams): SimOutcome {
   const config = getRunConfig(params.upgrades);
+  const breachCap = getBreachCap(params.upgrades);
   const timeScale = Math.max(0.1, params.timeScale);
   const leakStress = timeScale > 1 ? params.speedLeakStress : 1;
   const passivePerSec = config.passiveHeatPerSec;
@@ -107,16 +103,14 @@ export function simulateRun(params: SimParams): SimOutcome {
   let totalLeaks = 0;
   const waves: SimWaveSnapshot[] = [];
 
+  const isMeltdown = (value: number) => value >= breachCap;
+
   for (let waveIndex = 1; waveIndex <= 11; waveIndex += 1) {
     const waveDef = getWaveDefinition(waveIndex);
     if (!waveDef) break;
 
     const group = waveDef.spawns[0];
-    const count = group
-      ? waveIndex === 1
-        ? group.count + config.starterNodes
-        : group.count
-      : 0;
+    const count = group ? getWaveSpawnCount(waveIndex, group.count, config.starterNodes) : 0;
 
     const waveStart = gameTimeSec;
     const breachStart = breach;
@@ -135,7 +129,7 @@ export function simulateRun(params: SimParams): SimOutcome {
       gameTimeSec += deltaSec;
       waveProgress = (step + 1) / steps;
 
-      if (breach >= 100) {
+      if (isMeltdown(breach)) {
         waves.push({
           waveIndex,
           startTimeSec: waveStart,
@@ -189,7 +183,7 @@ export function simulateRun(params: SimParams): SimOutcome {
       breachEnd: breach,
     });
 
-    if (breach >= 100) {
+    if (isMeltdown(breach)) {
       return {
         result: 'meltdown',
         waveIndex,
@@ -228,7 +222,7 @@ export function simulateRun(params: SimParams): SimOutcome {
       breachFromPassive += passiveDelta;
       gameTimeSec += intermissionSec;
 
-      if (breach >= 100) {
+      if (isMeltdown(breach)) {
         return {
           result: 'meltdown',
           waveIndex: waveIndex + 1,

@@ -24,12 +24,12 @@ export function SkillTreePlaceholderTooltip({ placeholderId }: SkillTreePlacehol
     >
       <p
         id={PLACEHOLDER_TOOLTIP_TITLE_ID}
-        className="text-[10px] font-semibold tracking-[0.2em] text-white/40 uppercase"
+        className="text-[14px] font-semibold tracking-[0.2em] text-white/40 uppercase"
       >
         {strings.skillTree.placeholderTitle}
       </p>
       <p className="mt-2 font-mono text-xs text-white/55">{node.id}</p>
-      <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+      <p className="mt-2 text-[15px] leading-relaxed text-white/35">
         {strings.skillTree.placeholderBody}
       </p>
     </div>

@@ -52,14 +52,14 @@ export function CurrencyLoreTooltip({
         <div className="min-w-0 flex-1">
           <p
             id={titleId}
-            className="text-[13px] font-semibold tracking-[0.2em] uppercase"
+            className="text-[17px] font-semibold tracking-[0.2em] uppercase"
             style={{ color: accentColor }}
           >
             {title}
           </p>
         </div>
       </div>
-      <p className="mt-2.5 text-[14px] leading-relaxed text-white/45">{lore}</p>
+      <p className="mt-2.5 text-[18px] leading-relaxed text-white/45">{lore}</p>
     </div>
   );
 }

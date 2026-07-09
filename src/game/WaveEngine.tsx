@@ -1,13 +1,15 @@
 import { useApplication, useTick } from '@pixi/react';
 import { useCallback, type MutableRefObject, type RefObject } from 'react';
+import { triggerRunEventSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
+import { getEnemyClassFromBossWave } from './enemyClass';
 import { spawnEnemyOnEdge } from './enemyMovement';
 import { pushSpawnFlash, type GameEffect } from './effects';
 import { getRunConfig, getCycleSpawnIntervalMs, getCycleSpawnQuota, getCycleWaveMaxAlive, getSpawnIntervalMs, getWaveMaxAlive } from './runConfig';
 import { scaleDeltaMs } from './runTimeScale';
 import type { DissipationNode } from './types';
-import { getWaveDefinition, REGULAR_WAVE_COUNT } from './waveConfig';
+import { getWaveDefinition, getWaveSpawnCount, REGULAR_WAVE_COUNT } from './waveConfig';
 
 type WaveState = 'active' | 'intermission';
 
@@ -58,9 +60,9 @@ function trySpawnFromGroup(
 
   const spawned = spawnEnemyOnEdge(bounds, config, {
     waveIndex: runtime.waveIndex,
-    isBoss: waveDef.isBoss,
+    enemyClass: getEnemyClassFromBossWave(waveDef.isBoss),
   });
-  pushSpawnFlash(effects, spawned.x, spawned.y, spawned.waveIndex, spawned.isBoss ?? false);
+  pushSpawnFlash(effects, spawned.x, spawned.y, spawned.waveIndex, spawned.enemyClass);
   nodes.push(spawned);
   runtime.spawnedInGroup += 1;
 }
@@ -93,15 +95,14 @@ export function WaveEngine({
 
       const spawnGroup = waveDef.spawns[runtime.spawnGroupIndex];
       const scaleSpawns = !waveDef.isBoss;
-      const waveSpawnQuota =
-        spawnGroup && runtime.waveIndex === 1
-          ? (scaleSpawns ? getCycleSpawnQuota(spawnGroup.count) : spawnGroup.count) +
-            config.starterNodes
-          : spawnGroup
-            ? scaleSpawns
-              ? getCycleSpawnQuota(spawnGroup.count)
-              : spawnGroup.count
-            : 0;
+      const baseSpawnCount = spawnGroup
+        ? scaleSpawns
+          ? getCycleSpawnQuota(spawnGroup.count)
+          : spawnGroup.count
+        : 0;
+      const waveSpawnQuota = spawnGroup
+        ? getWaveSpawnCount(runtime.waveIndex, baseSpawnCount, config.starterNodes)
+        : 0;
 
       if (runtime.state === 'intermission') {
         runtime.intermissionMs -= scaleDeltaMs(ticker.deltaMS);
@@ -116,6 +117,11 @@ export function WaveEngine({
           store.setWaveIndex(runtime.waveIndex);
           store.setWavePhase(nextWave?.isBoss ? 'boss' : 'spawning');
           store.setShowWaveClear(false);
+          if (nextWave?.isBoss) {
+            triggerRunEventSfx('bossIncoming');
+          } else {
+            triggerRunEventSfx('waveResume');
+          }
         }
         return;
       }
@@ -181,6 +187,7 @@ export function WaveEngine({
 
         if (groupComplete && nodes.length === 0) {
           if (waveDef.isBoss) {
+            triggerRunEventSfx('victory');
             store.endRun('victory_boss');
             return;
           }
@@ -192,6 +199,7 @@ export function WaveEngine({
           runtime.state = 'intermission';
           runtime.intermissionMs = waveDef.interWaveMs;
           store.setWavePhase('intermission');
+          triggerRunEventSfx('waveClear');
           store.setShowWaveClear(true);
         }
       }

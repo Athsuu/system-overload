@@ -55,7 +55,7 @@ export function ArchChannelPanel({
           <button
             type="button"
             onClick={onSkip}
-            className="absolute top-3 right-3 z-20 px-2 py-1 text-[9px] tracking-[0.2em] text-white/35 uppercase transition hover:text-white/70"
+            className="absolute top-3 right-3 z-20 px-2 py-1 text-[13px] tracking-[0.2em] text-white/35 uppercase transition hover:text-white/70"
           >
             {strings.ui.skip}
           </button>
@@ -76,7 +76,7 @@ export function ArchChannelPanel({
                 type="button"
                 onClick={groupNav.onNext}
                 disabled={!groupNav.canGoNext}
-                className="absolute bottom-2.5 right-3 z-20 px-2 py-1 text-[9px] font-semibold tracking-[0.2em] text-sky-400/80 uppercase transition hover:text-sky-300 disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:text-white/25"
+                className="absolute bottom-2.5 right-3 z-20 px-2 py-1 text-[13px] font-semibold tracking-[0.2em] text-sky-400/80 uppercase transition hover:text-sky-300 disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:text-white/25"
               >
                 {strings.ui.gotIt}
               </button>
@@ -105,7 +105,7 @@ interface ArchChannelLabelProps {
 
 export function ArchChannelLabel({ children }: ArchChannelLabelProps) {
   return (
-    <p className="so-arch-channel-label text-[8px] tracking-[0.28em] text-white/35 uppercase">
+    <p className="so-arch-channel-label text-[12px] tracking-[0.28em] text-white/35 uppercase">
       {children}
     </p>
   );

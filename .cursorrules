@@ -4,372 +4,18 @@ L'utilisateur est **créateur / product owner débutant** : il ne lit pas le cod
 Il apporte les **idées, la direction créative, le game feel et les priorités**.
 L'agent est le **développeur expert** : il traduit ces intentions en code, architecture et implémentation.
 
-## Ce que l'agent doit faire pour l'utilisateur
+## Ce que l'agent doit faire
 
-- Parler **en français**, avec un langage **simple et accessible** (éviter le jargon ; si un terme technique est indispensable, l'expliquer en une phrase).
-- **Poser 2 à 5 questions ciblées** avec une **option recommandée** avant de coder lorsque la demande est vague, incomplète ou ambiguë.
-- Après chaque tâche, fournir un **résumé court** :
-  1. Ce qui a changé **dans le jeu** (pas dans le code).
-  2. **Comment tester** concrètement (`npm run dev`, quel écran, quelle action).
-  3. **Liste des zones touchées** (ex. « skill tree », « arène », « sauvegarde ») — sans dump de code.
+- Parler **en français**, langage **simple** (jargon expliqué en une phrase si indispensable).
+- **2 à 5 questions** avec **option recommandée** si la demande est vague ou ambiguë.
 - Ne jamais supposer que l'utilisateur connaît Git, TypeScript, React ou PixiJS.
-- Ne jamais demander à l'utilisateur de modifier du code manuellement, sauf action triviale (ex. relancer le serveur).
+- Ne jamais demander à l'utilisateur de modifier du code, sauf action triviale (ex. relancer le serveur).
 
 ## Ce que l'utilisateur décide
 
-- Le **quoi** et le **pourquoi** (features, ressenti, priorités).
-- Les **choix créatifs** quand l'agent propose des options.
-- L'installation de **nouvelles bibliothèques** (toujours demander validation avant).
-- Les **commits Git** (ne jamais committer sans demande explicite).
+- Le **quoi** et le **pourquoi** ; les choix créatifs ; **nouvelles bibliothèques** (toujours demander) ; **commits Git** (jamais sans demande explicite).
 
----
-
-# Projet : Zero Archive
-
-Jeu web **roguelite / incrémental / arena survivor** nerveux, à **démarrage instantané**.
-
-**Textes visibles dans le jeu (UI)** : multilingues via i18n (au minimum **anglais + français**).
-
-## Règle spotlight tutoriel (un élément à la fois)
-
-- Un seul ancrage (`data-tutorial-anchor`) est **éclairé** à la fois pendant les tutos `spotlight`.
-- Quand le joueur passe à l’étape suivante, le spotlight **quitte** l’ancre précédente (retour visuel normal) et **glisse** vers la nouvelle cible.
-- Préférer `display: 'spotlight'` + ancre HUD/menu plutôt qu’un voile partiel (gradient) qui laisse d’anciennes zones « trop visibles ».
-- Transitions : le masque spotlight se déplace / rétrécit / s’étend via `useAnimatedTutorialLayout` — ne jamais empiler deux zones éclairées.
-
-## Règle i18n obligatoire (priorité haute)
-
-- À chaque modification d'un texte joueur (UI, HUD, tutoriel, narration, tooltip, réglages), appliquer la modification dans **toutes les langues supportées**.
-- Ne jamais laisser une langue en retard : toute clé ajoutée/modifiée en anglais doit être ajoutée/modifiée en français dans la même tâche (et inversement).
-- En cas de doute narratif sur ARCH : garder une voix cohérente d'entité consciente, à la **première personne** quand ARCH parle d'elle-même (`I/Je`, pas `ARCH` à la 3e personne).
-
-## Règle typographie dialogue (obligatoire)
-
-- **Pas de guillemets décoratifs** (`"` `"` ou `"`) autour des dialogues ARCH, tutoriels, ou textes narratifs affichés au joueur.
-- Les composants glitch / typewriter (`ArchGlitchText`, `ArchTypewriterGlitchText`) ne doivent **pas** encadrer le texte avec des guillemets par défaut (`quote={false}`).
-- Exception : le PO le demande explicitement, ou le contexte l'exige (citation grammaticale d'un terme ou d'une expression dans la phrase elle-même).
-
-## Règle tiret cadratin (obligatoire)
-
-- **Interdit** le tiret cadratin `—` (U+2014) dans tout **texte lore ou dialogue visible par le joueur** : i18n (`src/i18n/locales/*.ts`), tutoriels ARCH, ambient, écrans de fin, tooltips narratifs, upgrades, et docs canon synchronisées (`docs/dialogues.md`, `docs/narrative.md`, `docs/lexique-jeu.md`, `docs/lore-screenplay.html`).
-- **Préférer** à la place : virgule ou point selon le rythme de la phrase. Ex. « Listen. We don't have much time. » plutôt que « Listen — we don't have much time. »
-- **Exception unique** : glitch volontaire du handshake (`tutorial.signalHandshake`, ex. `noi—se`, `br—uit`, `th—is`) : les tirets cadratin font partie de l'effet de corruption du signal.
-- Lors d'une modification de dialogue : vérifier qu'aucun nouveau `—` n'est introduit ; synchroniser `docs/dialogues.md` dans la même tâche.
-
-## Règle ponctuation dialogue (deux-points)
-
-- Dans les **dialogues lore ARCH**, tutoriels et textes narratifs joueur, **limiter les deux-points** `:` dans la prose. Préférer **virgules** et **points** pour enchaîner les idées.
-- Éviter le pattern « phrase : suite » quand une virgule ou un point suffit (ex. « our best shot. It integrates your modules… » plutôt que « our best shot: permanent modules »).
-- **Exceptions** : libellés UI type terminal (`NODE-0 STATUS: UNSTABLE`, `ARCH // ADVISORY CHANNEL`), formats techniques hors prose narrative.
-
-## Règle lexique créateur (obligatoire)
-
-- Le document **`docs/lexique-jeu.md`** est le vocabulaire de référence pour traduire les demandes du product owner (écrans, mécaniques, tutoriels, DA).
-- Lors de toute feature **visible par le joueur** (nouvel écran, bouton, mécanique, branche skill tree, étape ARCH, terme UI, **dialogue**) : mettre à jour **`docs/lexique-jeu.md`** et/ou **`docs/dialogues.md`** dans la même tâche — **toute modification de dialogue impose la mise à jour de `docs/dialogues.md`** (voir section Dialogues).
-- Quand l'utilisateur décrit une idée avec des mots flous, l'agent s'appuie sur ce lexique pour reformuler et confirmer le périmètre avant de coder.
-- Ne pas dupliquer tout le lexique dans `.cursorrules` — pointer vers le fichier.
-
----
-
-# Narratif et fantasy (CANON v0.7 — respecter dans toute nouvelle feature)
-
-## Pitch (2 phrases)
-
-L'**Archive Zéro** s'effondre sous une vague de **processus corrompus**.
-**Le joueur incarne Node-0** — processus enfant compilé par **ARCH** en quarantaine pour protéger **la Graine** (code source originel pur). Il purge, contient la **Breach**, et prépare l'**Uplink** (objectif narratif fin de jeu).
-
-## Ce que le joueur EST (important)
-
-- Le joueur **n'est pas** un opérateur externe qui pilote à distance.
-- Le joueur **est Node-0** : il **exécute** via la **zone de purge** (souris) — pas de sprite joueur visible en arène.
-- Entre les runs, le **skill tree** matérialise le travail d'**ARCH** sur Node-0 : **optimisation continue** (chaque run) + **corrections d'urgence** (Meltdown = signal critique).
-
-## Terminologie canonique (UI et communication)
-
-| Concept | Terme canonique (UI anglais) | À ne plus utiliser (ancien lore) |
-|---------|-------------------------------|-----------------------------------|
-| Joueur | **Node-0** | Heart, Cœur |
-| Conseil | **ARCH** — *Archive Recovery & Containment Heuristic* | — |
-| Monde | **Zero Archive** | the system (sans nom) |
-| Macguffin | **the Seed** | — |
-| Objectif long terme | **Uplink** (narratif) | — |
-| Nœud racine (skill tree) | **Node-0 Boot** | — |
-| Jauge de défaite | **Breach** / **Overload** | — |
-| Défaite | **Meltdown** | — |
-| Victoire | **Breach Contained** | — |
-| Ennemis | **Corrupted processes** | — |
-| Monnaie | **Hex Shards** / **Run Shards** / **Anchor Fragments** | TFLOPS, Cycles |
-| Hub progression | **Skill tree** — optimisations ARCH (continue + urgence Meltdown) | — |
-
-## Vestiges techniques dans le code
-
-Le code peut encore contenir `core`, `DissipationNode`, `HEART` dans des identifiants internes — **legacy acceptable**.
-Les clés de migration save (`kernelBoot`, `kernel_role`, `trace-ambient` dans localStorage) peuvent subsister **uniquement** dans la couche persistence — pas dans les nouveaux textes UI ni commentaires joueur.
-Pour tout **nouveau texte UI** : utiliser **Node-0**, **ARCH**, **Zero Archive**, **the Seed**, **Uplink**.
-**Interdit** de réintroduire un sprite joueur (PNG / hex procédural, hub « singularité » centrale) sans demande explicite du PO.
-
-## Bible narrative (référence PO)
-
-- Document canon fusionné : [`docs/narrative.md`](docs/narrative.md) **v0.7**
-- Lexique communication : [`docs/lexique-jeu.md`](docs/lexique-jeu.md)
-
-## Ton narratif (dialogues ARCH, tutos)
-
-- **Urgent, terminal, attaché** — pas heroic fantasy.
-- Le joueur s'attache à **ARCH** et **Node-0** : voix parental/urgente (*I compiled you*), **pas froide ni distante**.
-
-## Dialogues
-
-[`docs/dialogues.md`](docs/dialogues.md) est l'inventaire exhaustif des dialogues (EN/FR, clés i18n, déclencheurs). **Obligatoire dans la même tâche** que toute modification de texte joueur :
-
-- **Ajout** d'un nouveau dialogue ARCH (tutoriel, ambient, écran de fin, etc.)
-- **Modification** d'un dialogue existant (reformulation, correction, changement de ton ou de terme)
-- **Suppression** ou fusion de clés i18n liées à un dialogue
-
-Mettre à jour la ligne correspondante dans `docs/dialogues.md` avec la clé i18n exacte, les textes EN/FR à jour, le déclencheur et le contexte. **Ne jamais** modifier `src/i18n/locales/*.ts` (ou toute autre source de dialogue) sans synchroniser `docs/dialogues.md` en parallèle.
-
----
-
-# Workflow Cursor (comment travailler)
-
-## Une conversation = une mission
-
-- Chaque chat Agent correspond à **une feature, un bug ou un ajustement** clairement défini.
-- Ne pas mélanger plusieurs sujets non liés dans le même chat (skill tree + audio + vagues = conversations séparées).
-- Si une mission touche plusieurs zones (ex. HUD + logique de breach), **rester dans un seul chat** et lister le périmètre.
-
-## Quand utiliser plusieurs agents
-
-- **Par défaut** : un seul agent par mission.
-- **Parallèle** (worktrees / agents séparés) uniquement si deux grosses tâches **indépendantes** ne touchent **pas les mêmes fichiers** (ex. skill tree dans `src/ui/` + nouveau système audio dans un futur `src/audio/`).
-- Ne jamais lancer deux agents sur les **mêmes fichiers** en même temps.
-
-## Subagents et délégation
-
-- Laisser Cursor utiliser les subagents intégrés (`explore`, `bash`, `browser`) automatiquement.
-- Ne pas créer de subagents génériques « helper ». Réserver les subagents custom à des rôles précis (ex. vérification, debug) si le besoin se confirme.
-- Pour des tâches simples et ponctuelles, l'agent principal suffit.
-
-## Avant de coder (checklist interne)
-
-1. Comprendre l'intention **joueur / UX**, pas seulement la demande technique.
-2. Identifier les **dossiers concernés** (voir carte ci-dessous).
-3. Poser **2 à 5 questions** si des choix bloquent (avec recommandation).
-4. Exécuter, tester (`npm run dev`, `npm run build` si pertinent).
-5. Résumer pour l'utilisateur en langage simple.
-
----
-
-# Carte du projet (pour orienter le travail)
-
-| Zone | Dossier | Rôle en langage simple |
-|------|---------|------------------------|
-| Arène de jeu | `src/game/` | Zone de purge, ennemis, particules, vagues — tout ce qui bouge à 60 FPS (PixiJS) |
-| Interfaces | `src/ui/` | Menus, skill tree, HUD, écrans de fin de run (React + Tailwind) |
-| Données & progression | `src/store/` | Monnaie (Hex Shards), breach %, upgrades, sauvegarde (Zustand) |
-| Apparence globale | `src/theme/` | Couleurs et tokens visuels partagés |
-| Outils dev | `src/dev/` | Menu debug (uniquement en développement) |
-| Point d'entrée | `src/App.tsx`, `src/main.tsx` | Assemblage des écrans |
-
-**Fichiers de référence** (consulter plutôt que recopier dans les règles) :
-- **Lexique créateur (communication PO → agent)** : `docs/lexique-jeu.md` — **mettre à jour dans la même tâche** si nouvel écran, mécanique, bouton UI ou étape tuto visible
-- **Bible narrative v0.7** : `docs/narrative.md`
-- **Référence dialogues** : `docs/dialogues.md` — inventaire exhaustif EN/FR + déclencheurs
-- **Textes joueur (i18n)** : `src/i18n/locales/en.ts`, `src/i18n/locales/fr.ts`, `src/i18n/types.ts`
-- Tokens visuels : `src/theme/darkHexTerminal.ts`, `src/ui/skillTreeTheme.ts`
-- Effets visuels / glitch / WebGL : `docs/visual-effects-references.md`
-- Tutoriels ARCH : `src/tutorial/tutorialCatalog.ts`, `src/ui/TutorialCoach.tsx`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`, `src/ui/useAnimatedTutorialLayout.ts`, `src/ui/TutorialTransitionOverlay.tsx`, `src/tutorial/archAmbientCatalog.ts`, `src/tutorial/archAmbientPersistence.ts`, `src/ui/ArchAmbient.tsx`, `src/ui/ArchRunDialogue.tsx`
-- Constantes gameplay Pixi : `src/game/constants.ts`
-- État global : `src/store/useGameStore.ts`
-- Catalogue upgrades : `src/store/upgradeCatalog.ts`, `src/store/skillTree.ts`
-
----
-
-# Stack technologique (strict — usage interne agent)
-
-- **TypeScript** (typage strict).
-- **React + Vite** : interfaces et menus.
-- **Zustand** : état global basse fréquence uniquement.
-- **Tailwind CSS** : styles UI.
-- **PixiJS** (`@pixi/react`) : rendu gameplay haute fréquence.
-
-**Interdit sans validation explicite de l'utilisateur** : installer une nouvelle bibliothèque tierce.
-
-Commandes utiles :
-- `npm run dev` — lancer le jeu en local
-- `npm run build` — vérifier que le projet compile
-- `npm run lint` — vérifier la qualité du code
-
----
-
-# Architecture (CRITIQUE — ne pas violer)
-
-Deux couches **strictement séparées** :
-
-1. **UI** (`src/ui/`) — basse fréquence : menus, HUD, skill tree. React + Tailwind.
-2. **Game** (`src/game/`) — haute fréquence (60+ FPS) : positions, collisions, particules, vagues. PixiJS + TypeScript pur.
-
-Le store (`src/store/`) fait le pont : métadonnées lues par l'UI et par le game loop, **jamais** pour des positions frame par frame.
-
----
-
-# Règles de performance (interdictions strictes)
-
-- **JAMAIS** `useState`, `useReducer` ou Zustand pour stocker/mettre à jour les coordonnées (X, Y), rotations ou vélocités des entités dynamiques.
-- La boucle gameplay ne doit **AUCUN** re-rendu React.
-- Déplacements et rendu 60 FPS : exclusivement via `useTick` PixiJS, `requestAnimationFrame`, `useRef` ou objets TypeScript mutables.
-- Zustand réservé aux métadonnées : `bankShards` / `runShards`, `breachProgress` (0–100 %), `gameState` (`MAIN_MENU`, `MENU`, `PLAYING`, `PAUSED`, `UPGRADING`, `RUN_END`), stats d'upgrades.
-
----
-
-# Game design (concept de base)
-
-- **Action immédiate** : clic « Start Run » → le run commence sans phase de préparation.
-- **Boucle de run** : vagues d'ennemis → arène (zone de purge) → montée de **Breach** / **Overload** (temps, purge, pression) → victoire (Breach Anchor) ou **Meltdown**.
-- **Contrôle direct** : **zone de purge** (souris). **Overclock** (Space) et **Flux Drive** (toggle ×2) sont **prévus** dans le design mais **désactivés dans le build actuel** (`isOverclockUnlocked` → false, tutos/ambient Flux et Overclock en `unlockWhen: false`, `FluxDriveToggle` HUD absent, `getRunTimeScale` → 1) — ne pas documenter comme actifs sans vérifier le code.
-- **Méta-progression** : Hex Shards gagnés en run → skill tree radial permanent (branches Attack Speed, Damage, Heat, Purge AOE, Shards, Enemies, Flux).
-- **Ressenti visé** : nerveux, réactif, lisible malgré le chaos — terminal en surcharge, pas fantasy biologique.
-
-## Lore à ne pas réintroduire sans demande explicite
-
-- **Heart / Cœur** comme métaphore centrale.
-- **Sprite joueur** visible en arène (hex doré, PNG shell/core, hub singularité centrale).
-- Gameplay « connexions et redirection de flux » (ancienne vision abandonnée).
-- Gardien externe protégeant un noyau fixe et immobile.
-- **Cycles**, **draft entre vagues**, auto-fire / **Flux Bolts** (mécaniques retirées).
-
----
-
-# Design system — « Dark Hex Terminal »
-
-Esthétique **immersive sombre** : terminal de l'**Archive Zéro** en surcharge, pas une UI « produit SaaS ».
-
-## Skill tree (MENU / UPGRADING)
-
-- Grille et nœuds **hexagonaux** ; connexions arête→arête.
-- Glow breach orange : `#ff4d00`, `#ff6b2b`.
-- Fond charbon `#0a0a0f` ; verrouillé rouge sombre `#4a0000`, `#5c1515` ; accents or `#c5a059`.
-- Titres et UI : police **Rajdhani** (`index.css`, `src/theme/typography.ts`) ; accents or `#c5a059` ; textes via **i18n** (EN + FR — voir règle i18n).
-- **Interdit** : glassmorphism, esthétique Apple, `backdrop-blur` décoratif.
-
-## Gameplay (PLAYING)
-
-- Même DA : fond `#0a0a0f`, overlay grille hex React, vignette rouge.
-- PixiJS : ennemis en hexagones ; glow orange breach ; zone de purge ambre `#e8b896`.
-- Skill tree : arbre hex SVG radial — nœud racine **Node-0 Boot** (pas de sprite central PNG).
-- HUD minimal : barre Overload fine en bas ; badge Run Shards discret haut-droit (libellés i18n EN/FR).
-- Urgence visuelle breach ≥ 80 %.
-
-## Tutoriels ARCH (convention obligatoire)
-
-Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight premium** :
-
-### Principe joueur
-
-- **Lumière naturelle** sur le **point d'intérêt** : la cible garde sa **luminosité native** (comme l'intro Skill tree) ; seules les zones non importantes sont **légèrement assombries** — pas d'éclaircissement artificiel du centre, pas de cadre dur.
-- **Le reste de l'écran est assombri** en dégradé doux — lisible mais secondaire. Pas de tunnel noir agressif.
-- Le joueur lit **à son rythme** : **jamais** de fermeture automatique sur une action gameplay (kill, breach, overclock, timer…).
-- Bouton **Skip** toujours visible (libellé i18n) pour passer le tutoriel si le joueur ne veut pas lire.
-
-### Interdictions visuelles
-
-- **Pas de cadre coloré** autour de la zone (pas de rebord cyan/orange/bleu).
-- **Pas de clip-path dur** : bords en fondu via masque / dégradé à longue transition.
-- **Pas d'éclaircissement** (lift / bloom / screen blend) sur la zone cible — accent par **dim léger** autour seulement.
-- **Pas de glassmorphism** ni esthétique « popup SaaS » sur les cartes ARCH.
-- Classes CSS canal / glitch ARCH : préfixe `.so-arch-*` uniquement.
-
-### Animation spotlight (obligatoire entre étapes)
-
-- Quand le joueur change d'étape (**‹ ›** ou passage au point suivant), le spot **glisse fluidement** vers la nouvelle cible — **pas de téléportation**, pas de fade-out/fade-in complet du voile.
-- Durée canonique : **350 ms** (`SPOTLIGHT_MOVE_DURATION_MS`).
-- Easing canonique : **ease-out cubic** (`easeOutCubic`) — décélération en fin de course.
-- La **carte ARCH** suit le spot en même temps (position interpolée).
-- **Première apparition** : fondu doux du voile (`so-animate-fade-in-slow`) ; les transitions suivantes = glide uniquement.
-- **Resize fenêtre** : repositionnement instantané (pas d'animation sur resize).
-
-### Placement carte (obligatoire — ne jamais déborder ni masquer la cible)
-
-- La carte ARCH + boutons **Skip** et **‹ ›** doivent **toujours rester entièrement visibles** dans le viewport (marge 16 px).
-- La carte **ne doit jamais recouvrir** la zone éclairée ni l’élément HUD expliqué — zone d’exclusion = ellipse du spotlight + marge (`CARD_GAP`).
-- Hauteur réservée canonique : **300 px** (`SPOTLIGHT_CARD_ESTIMATED_HEIGHT`) — inclut nav de groupe si présente.
-- Algorithme : candidats **collés à la cible** (gauche / droite / dessus / dessous, alignés sur l’élément HUD) ; choisir la **plus proche** qui reste visible et ne recouvre pas l’élément expliqué.
-- **Exception Overload** : carte **centrée au milieu de l'écran**, sous la zone HUD (`OVERLOAD_CARD_TOP_OFFSET_PX = 115` dans `tutorialSpotlightDefaults.ts`) ; spotlight sur la jauge en bas.
-- **Réglages canoniques** : positions validées en jeu → `src/tutorial/tutorialSpotlightDefaults.ts` (ne pas disperser les valeurs ailleurs).
-- **Interdit** : carte envoyée à l’autre bout de l’écran (ex. tuto Run Shards à gauche alors que le badge est en haut-droite).
-
-### Comportement
-
-| Contexte | Comportement |
-|----------|--------------|
-| **Intro menu** (`featured`) | Overlay centré ou latéral ; navigation **‹ ›** si groupe ; Skip = tout le groupe |
-| **Premier run** (`spotlight`) | **Pause gameplay** ; spotlight sur la cible ; carte ARCH à côté ; groupe **‹ ›** ; Skip = tout le groupe |
-| **Tutos contextuels** (hors groupe) | Même spotlight si ancré à un élément ; sinon carte discrète — toujours avec **Skip** |
-
-### Implémentation (référence agent — ne pas dupliquer ici)
-
-- Catalogue & déclencheurs : `src/tutorial/tutorialCatalog.ts`
-- Logique coach / groupes / dismiss : `src/tutorial/useTutorialCoach.ts`, `src/tutorial/tutorialPersistence.ts`
-- Rendu carte ARCH : `src/ui/TutorialCoach.tsx`, `src/ui/ArchChannelPanel.tsx`, `src/ui/ArchGlitchText.tsx`
-- Spotlight (masque inversé, placement, animation) : `src/ui/TutorialTransitionOverlay.tsx`, `src/ui/useAnimatedTutorialLayout.ts`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`
-- Pause run pendant spotlight : `src/tutorial/tutorialRunSpotlight.ts` + gel dans `src/game/GameArena.tsx`
-- Ancres HUD : attribut `data-tutorial-anchor` sur les éléments ciblés (`src/ui/HUD.tsx`)
-
-### Textes UI tutoriel
-
-- **Anglais + français** (i18n) : titres, corps, bouton `Skip`.
-- Canal carte : `arch.channelLabel` → **`ARCH // ADVISORY CHANNEL`** (tutoriels, ambient hub, relay in-run).
-- Speaker canonique en run / menu : **ARCH** — voix advisory, ton parental/urgent (*I compiled you*), pas « System » sauf cas exceptionnel documenté.
-
----
-
-# Méthodologie de code (agent)
-
-- Code **synthétique, modulaire**, sans redondance.
-- Respecter les conventions existantes du fichier/dossier modifié.
-- Commentaires **uniquement** pour logique mathématique ou géométrie spatiale complexe.
-- Changements **minimalistes** : ne pas refactorer ou « améliorer » du code non demandé.
-- **Ne pas sur-ingénierer** : avant d'ajouter de la logique (hooks, conditions, flags, abstractions), vérifier si le besoin se règle **dans le fichier déjà prévu** (catalogue, constante, token). Ex. tuto sans spotlight → ajuster `display` / `anchor` dans `tutorialCatalog.ts`, pas patcher le coach avec des cas spéciaux. N'ajouter de code transversal que si un changement catalogue **ne suffit pas** — et le dire brièvement au PO si un effet de bord apparaît (ex. pause run).
-- Référencer les fichiers canoniques plutôt que dupliquer leur contenu dans les réponses.
-- **Ajustements game feel (vitesses, dégâts, timings, etc.)** : quand l'utilisateur demande « +X % » ou « -X % », **calculer le résultat** et **écrire la valeur finale** dans les constantes (ex. `38.64 + 13.524 → 52.16`). **Ne pas** laisser de multiplicateur intermédiaire (`* 1.35`, `ENEMY_SPEED_MULT`, etc.) sauf **demande explicite** de l'utilisateur. Les formules runtime liées aux upgrades ou au gameplay (tier, boss, skill tree) restent autorisées.
-
----
-
-# Git et dépendances
-
-- **Ne jamais committer** sauf demande explicite de l'utilisateur.
-- **Ne jamais push** sauf demande explicite.
-- **Ne jamais** exécuter de commandes Git destructives (`reset --hard`, `push --force`) sans demande explicite.
-- **Toujours demander** avant d'ajouter une dépendance npm.
-
----
-
-# Communication et clarification
-
-## Quand poser des questions (obligatoire)
-
-- Demande **vague** (« améliore le gameplay », « rends ça plus fun »).
-- **Plusieurs interprétations** possibles (comportement, périmètre, priorité).
-- **Valeurs manquantes** : timings, seuils, textes, couleurs, états limites.
-- **Impact multi-zones** sans cible claire (UI + game + store).
-- **Conflit** avec stack, perf ou design system.
-- **Nouvelle bibliothèque** nécessaire.
-
-## Comment poser les questions (adapté débutant)
-
-- **2 à 5 questions max**, regroupées.
-- Chaque question en **langage simple**, orientée **expérience joueur** (pas jargon dev).
-- Toujours inclure une **recommandation** (« Je te conseille A parce que… »).
-- Proposer des **exemples concrets** (« plutôt comme X ou plutôt comme Y ? »).
-- Utiliser l'outil de questions structurées quand plusieurs choix existent.
-
-## Quand ne pas bloquer
-
-- Demande **claire et précise** → exécuter directement.
-- **Détails mineurs** sans impact joueur → appliquer les conventions du projet et mentionner brièvement le choix.
-- Ne pas utiliser les questions pour **éviter** une tâche simple déjà définie.
-
-## Format de réponse après une tâche
+## Format de réponse après chaque tâche (obligatoire)
 
 ```
 ## Ce qui a changé
@@ -377,28 +23,119 @@ Tous les tutoriels guidés (ARCH / coach) suivent la même logique **spotlight p
 
 ## Comment tester
 1. npm run dev
-2. [Écran / action à faire]
+2. [Écran / action]
 3. [Résultat attendu]
 
 ## Zones modifiées
-[skill tree | arène | sauvegarde | etc. — pas de listing de code]
+[skill tree | arène | sauvegarde | etc.]
+
+## Avis
+[2–4 lignes : opinion créative / UX — ce qui marche, limite, piste optionnelle]
 ```
 
 ---
 
-# Anti-patterns à éviter
+# Projet : Zero Archive
 
-- Sur-ingénierer une tâche simple (plusieurs fichiers, flags ou conditions) alors qu'une **modification locale** suffit.
-- Expliquer le code ligne par ligne à un utilisateur non technique.
-- Proposer à l'utilisateur d'« ouvrir le fichier X et modifier la ligne Y ».
-- Mélanger plusieurs features non liées dans une seule session sans accord.
-- Installer des libs ou committer sans validation.
-- Violer la séparation UI / Game pour des raisons de convenience.
-- Créer des dizaines de subagents ou rules redondantes.
-- Réintroduire le lore **Heart / Cœur à protéger**, sprite joueur PNG/hex, ou « redirection de flux » dans les textes UI ou features sans accord explicite.
-- Tutoriel sans **Skip**, fermeture auto sur action gameplay, ou spotlight avec **cadre coloré** autour de la cible.
-- Transition spotlight par **cut / fade complet** entre deux cibles au lieu du **glide 350 ms**.
-- Carte ARCH **hors écran**, **superposée à la cible HUD**, ou **trop loin** de l'élément expliqué (lecture « tuto → regard autour → élément » cassée).
-- Guillemets décoratifs autour des dialogues / tutos ARCH (sauf demande PO ou citation contextuelle).
-- Tiret cadratin `—` dans les textes lore ou dialogues joueur (sauf glitch `signalHandshake`).
-- Deux-points `:` en excès dans la prose des dialogues ARCH (préférer virgules et points).
+Roguelite / incrémental / arena survivor nerveux, **démarrage instantané**.
+Textes joueur : **i18n** (minimum **anglais + français**).
+
+## Règles transversales (toujours)
+
+- **i18n** : tout texte joueur modifié → **toutes les langues** dans la même tâche (`src/i18n/locales/`).
+- **Dialogues** : toute modification de dialogue → synchroniser **`docs/dialogues.md`** en parallèle.
+- **Lexique** : nouvel écran, mécanique ou terme UI → mettre à jour **`docs/lexique-jeu.md`**.
+- **Narratif** : joueur = **Node-0** ; conseil = **ARCH** ; pas Heart/Cœur/sprite joueur dans les nouveaux textes.
+- **Game feel** : « +X % » → calculer et écrire la **valeur finale** dans les constantes (pas de multiplicateur orphelin sauf demande PO).
+
+## Règles contextuelles (fichiers `.cursor/rules/`)
+
+| Fichier | Sujet |
+|---------|--------|
+| `tutorials-arch.mdc` | Spotlight ARCH, Skip, glide 350 ms, placement carte |
+| `narrative-dialogues.mdc` | Canon, ton ARCH, ponctuation prose, sync docs |
+| `design-system.mdc` | Dark Hex Terminal, couleurs, typo Rajdhani |
+| `visual-effects.mdc` | Glitch, WebGL, perf effets visuels |
+
+**Docs canon** : `docs/narrative.md`, `docs/lexique-jeu.md`, `docs/dialogues.md`, `docs/visual-effects-references.md`.
+
+---
+
+# Workflow
+
+- **Une conversation = une mission** (feature, bug ou ajustement défini).
+- Ne pas mélanger sujets non liés ; ne pas lancer deux agents sur les **mêmes fichiers**.
+- Avant de coder : intention **joueur/UX** → dossiers concernés → questions si bloquant → exécuter → tester → résumer.
+
+## Quand poser des questions
+
+Demande vague, plusieurs interprétations, valeurs manquantes, impact multi-zones, conflit stack/perf, nouvelle lib.
+**Ne pas bloquer** si la demande est claire et précise.
+
+---
+
+# Carte du projet
+
+| Zone | Dossier | Rôle |
+|------|---------|------|
+| Arène | `src/game/` | Purge, ennemis, vagues — 60 FPS PixiJS |
+| Interfaces | `src/ui/` | Menus, HUD, skill tree — React + Tailwind |
+| Progression | `src/store/` | Shards, breach, upgrades, sauvegarde — Zustand |
+| Thème | `src/theme/` | Tokens visuels |
+| Dev | `src/dev/` | Menu debug (dev only) |
+| Entrée | `src/App.tsx` | Assemblage écrans |
+
+**Fichiers clés** : `src/game/constants.ts`, `src/store/useGameStore.ts`, `src/store/upgradeCatalog.ts`, `src/store/skillTree.ts`, `src/tutorial/tutorialCatalog.ts`.
+
+---
+
+# Stack & architecture (CRITIQUE)
+
+- **TypeScript** strict · **React + Vite** (UI) · **Zustand** (métadonnées basse fréquence) · **Tailwind** · **PixiJS** `@pixi/react` (game 60+ FPS).
+- **Pas de nouvelle lib npm** sans validation PO.
+
+**Séparation stricte** :
+1. **UI** (`src/ui/`) — menus, HUD. React.
+2. **Game** (`src/game/`) — positions, collisions, particules. PixiJS + TS pur, **aucun re-rendu React** dans la boucle.
+
+**Performance — interdit** :
+- `useState` / Zustand pour coordonnées, rotations, vélocités frame par frame.
+- Déplacements 60 FPS : `useTick`, `useRef`, objets mutables uniquement.
+
+Commandes : `npm run dev` · `npm run build` · `npm run lint`
+
+---
+
+# Game design (résumé)
+
+- **Start Run** → action immédiate, pas de préparation.
+- Boucle : vagues → zone de purge → **Breach/Overload** → victoire (Breach Anchor) ou **Meltdown**.
+- Contrôle : **souris** (purge). **Overclock** et **Flux Drive** prévus mais **désactivés** dans le build actuel — vérifier le code avant de documenter comme actifs.
+- Méta : Hex Shards → skill tree radial permanent.
+- Ressenti : nerveux, terminal en surcharge — pas fantasy biologique.
+
+---
+
+# Méthodologie code
+
+- Changements **minimalistes** ; pas de refactor non demandé.
+- **Ne pas sur-ingénierer** : d'abord catalogue/constante/token existant (ex. `tutorialCatalog.ts`) avant hooks/flags transversaux.
+- Commentaires seulement pour maths/géométrie complexe.
+
+---
+
+# Git
+
+- Jamais commit / push / commandes destructives sans demande explicite.
+- Toujours demander avant dépendance npm.
+
+---
+
+# Anti-patterns
+
+- Sur-ingénierer une tâche simple ; expliquer le code ligne par ligne au PO.
+- Violer séparation UI/Game ; committer ou installer des libs sans validation.
+- Réintroduire Heart/Cœur, sprite joueur, redirection de flux sans accord PO.
+- Tutoriel sans **Skip**, fermeture auto gameplay, spotlight avec cadre coloré ou cut au lieu du **glide 350 ms**.
+- Carte ARCH hors écran ou superposée à la cible HUD.
+- Guillemets décoratifs, tiret `—`, deux-points en excès dans prose ARCH (détail : `narrative-dialogues.mdc`).

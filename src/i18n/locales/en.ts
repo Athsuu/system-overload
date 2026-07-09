@@ -183,7 +183,7 @@ export const EN_STRINGS: GameStrings = {
     overloadStakes: `${LORE.breach.overload} ${LORE.breach.meltdown}`,
     overloadGoal: 'Contain the threat before quarantine breaks.',
     hexShardsUnified:
-      'Hex Shards are stable data fragments salvaged from corrupted processes during a run. Each kill adds to your total. Spend them on the Skill Tree to reinforce yourself.',
+      'Hex Shards are stable data fragments salvaged from corrupted processes. They drop when you purge a target. Sweep your purge zone over them to collect. Spend them on the Skill Tree to reinforce yourself.',
     overclockRisk: LORE.combat.overclock,
     skillTreeLore: LORE.skillTree.betweenRuns,
     prestigeReveal: LORE.prestige.unlock,
@@ -208,31 +208,39 @@ export const EN_STRINGS: GameStrings = {
   upgrades: {
     node0Boot: {
       name: 'Node-0 Boot',
-      description: 'Initialize the quarantine thread, baseline 5 purge hit damage',
+      description: 'Boot the quarantine thread so Node-0 can purge corrupted processes',
+    },
+    shardSalvage: {
+      name: 'Shard Salvage',
+      description: 'Extract more Hex Shards from every corrupted process you purge',
+    },
+    shardMagnet: {
+      name: 'Shard Magnet',
+      description: 'Draw dropped shards toward your purge zone from farther away',
     },
     purgeStrike: {
       name: 'Purge Strike',
-      description: '+3 purge hit damage per rank',
+      description: 'Increase purge hit damage against corrupted processes',
     },
     purgeCadence: {
       name: 'Purge Cadence',
-      description: '+2.5% purge cadence per rank',
+      description: 'Increase purge tick rate for faster clears',
     },
     purgeReach: {
       name: 'Purge Reach',
-      description: '+2.5% purge zone radius per rank',
+      description: 'Expand purge zone coverage on the arena',
     },
     threadCoolant: {
       name: 'Thread Coolant',
-      description: '−0.14 passive Overload / sec per rank',
+      description: 'Reduce passive Overload buildup while the Breach holds',
     },
     killBreachRelief: {
       name: 'Kill Vent',
-      description: '−0.1% Breach per kill per rank',
+      description: 'Each purge kill sheds a bit of Breach pressure',
     },
     meltdownThreshold: {
       name: 'Meltdown Threshold',
-      description: '+8% Overload cap per rank (max 180%)',
+      description: 'Stretch the Overload buffer before Meltdown',
     },
   },
   branches: {
@@ -243,6 +251,9 @@ export const EN_STRINGS: GameStrings = {
   tooltipStats: {
     purgeHitDamage: 'Purge hit damage',
     purgeDamageBonus: 'Purge damage bonus',
+    shardBonusPerKill: 'Hex Shards / kill',
+    shardPickupRadius: 'Shard pickup radius',
+    shardPickupReachBonus: 'Shard attraction radius',
     purgeCadence: 'Purge cadence',
     purgeReach: 'Purge zone radius',
     purgeReachBonus: 'Purge zone bonus',

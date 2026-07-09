@@ -5,10 +5,12 @@ import {
   PURGE_REACH_AOE_PERCENT_PER_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
+  SHARD_SALVAGE_BONUS_PER_LEVEL,
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
 import { BASE_BREACH_CAP, getKillBreachRelief, getRunConfig } from '../game/runConfig';
+import { getLootPickupRadii, getShardMagnetMagnetRadius } from '../game/loot';
 import { getGameStrings } from '../i18n';
 
 export interface TooltipStatLine {
@@ -42,6 +44,34 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     const current = String(getRunConfig(cur).purgeHitDamage);
     const next = nxt ? String(getRunConfig(nxt).purgeHitDamage) : null;
     return [line(labels.purgeHitDamage, current, nextLevel, next)];
+  }
+
+  if (id === 'shardSalvage') {
+    const current = `+${level * SHARD_SALVAGE_BONUS_PER_LEVEL}`;
+    const next =
+      nextLevel !== null ? `+${nextLevel * SHARD_SALVAGE_BONUS_PER_LEVEL}` : null;
+    return [line(labels.shardBonusPerKill, current, nextLevel, next)];
+  }
+
+  if (id === 'shardMagnet') {
+    const currentRadius = getLootPickupRadii(cur, 'hexShard').collectRadius;
+    const nextRadius = nxt ? getLootPickupRadii(nxt, 'hexShard').collectRadius : null;
+    const currentMagnet = getShardMagnetMagnetRadius(level);
+    const nextMagnet = nextLevel !== null ? getShardMagnetMagnetRadius(nextLevel) : null;
+    return [
+      line(
+        labels.shardPickupRadius,
+        String(currentRadius),
+        nextLevel,
+        nextRadius !== null ? String(nextRadius) : null,
+      ),
+      line(
+        labels.shardPickupReachBonus,
+        String(currentMagnet),
+        nextLevel,
+        nextMagnet !== null ? String(nextMagnet) : null,
+      ),
+    ];
   }
 
   if (id === 'purgeStrike') {

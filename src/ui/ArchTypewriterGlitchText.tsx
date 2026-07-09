@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { triggerSfx } from '../audio/sfxApi';
 import { ArchGlitchWords, glitchSlice } from './archGlitchCore';
 
 const DEFAULT_CHAR_MS = 28;
@@ -10,6 +11,10 @@ interface ArchTypewriterGlitchTextProps {
   charMs?: number;
   quote?: boolean;
   className?: string;
+  /** Terminal keystroke on each non-space character. */
+  typingSound?: boolean;
+  glitchIntensity?: 'normal' | 'heavy';
+  glitchChance?: number;
 }
 
 export function ArchTypewriterGlitchText({
@@ -17,16 +22,34 @@ export function ArchTypewriterGlitchText({
   charMs = DEFAULT_CHAR_MS,
   quote = false,
   className = '',
+  typingSound = true,
+  glitchIntensity = 'normal',
+  glitchChance,
 }: ArchTypewriterGlitchTextProps) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [typingDone, setTypingDone] = useState(false);
   const [display, setDisplay] = useState(text);
+  const prevVisibleCountRef = useRef(0);
 
   useEffect(() => {
     setVisibleCount(0);
     setTypingDone(false);
     setDisplay(text);
+    prevVisibleCountRef.current = 0;
   }, [text]);
+
+  useEffect(() => {
+    if (!typingSound || visibleCount <= prevVisibleCountRef.current) {
+      prevVisibleCountRef.current = visibleCount;
+      return;
+    }
+
+    const char = text[visibleCount - 1];
+    if (char && !/\s/.test(char)) {
+      triggerSfx('archTyping');
+    }
+    prevVisibleCountRef.current = visibleCount;
+  }, [text, typingSound, visibleCount]);
 
   useEffect(() => {
     if (typingDone) return;
@@ -43,16 +66,19 @@ export function ArchTypewriterGlitchText({
   useEffect(() => {
     if (!typingDone) return;
 
+    const tickMs = glitchIntensity === 'heavy' ? 200 : GLITCH_TICK_MS;
+    const triggerChance = glitchChance ?? GLITCH_CHANCE;
+
     const intervalId = window.setInterval(() => {
-      if (Math.random() > GLITCH_CHANCE) return;
+      if (Math.random() > triggerChance) return;
 
       setDisplay(glitchSlice(text));
-      const restoreMs = 60 + Math.random() * 70;
+      const restoreMs = glitchIntensity === 'heavy' ? 50 + Math.random() * 60 : 60 + Math.random() * 70;
       window.setTimeout(() => setDisplay(text), restoreMs);
-    }, GLITCH_TICK_MS);
+    }, tickMs);
 
     return () => window.clearInterval(intervalId);
-  }, [text, typingDone]);
+  }, [text, typingDone, glitchIntensity, glitchChance]);
 
   const partial = text.slice(0, visibleCount);
 

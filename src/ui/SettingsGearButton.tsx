@@ -1,7 +1,6 @@
 import { useGameStrings } from '../i18n/useGameStrings';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { playHubSfx } from '../audio/hubAudio';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
+import { triggerSfx } from '../audio/sfxApi';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { hexagonPoints } from './skillTreeGeometry';
 
@@ -10,8 +9,7 @@ export function SettingsGearButton() {
   const strings = useGameStrings();
 
   const handleOpen = () => {
-    ensureHubAudioUnlocked();
-    playHubSfx('settingsOpen');
+    triggerSfx('settingsOpen');
     openSettings();
   };
 

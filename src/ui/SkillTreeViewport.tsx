@@ -182,7 +182,7 @@ export function SkillTreeViewport({
           type="button"
           title="Reset view"
           onClick={resetView}
-          className="border border-[#5c1515] bg-[#111] px-3 py-2 text-[10px] font-semibold tracking-wider text-white/55 uppercase transition hover:border-[#ff5533] hover:text-white"
+          className="border border-[#5c1515] bg-[#111] px-3 py-2 text-[14px] font-semibold tracking-wider text-white/55 uppercase transition hover:border-[#ff5533] hover:text-white"
         >
           {Math.round(transform.scale * 100)}%
         </button>

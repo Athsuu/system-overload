@@ -1,21 +1,83 @@
-import type { SkillIconBranch } from '../store/skillTree';
+import type { SkillGlyphId } from '../store/skillTree';
 
 const ICON_SIZE = 24;
 
-interface SkillBranchIconProps {
-  branch: SkillIconBranch;
+interface SkillGlyphIconProps {
+  glyph: SkillGlyphId;
   size?: number;
   color?: string;
 }
 
-function BranchIconPaths({ branch }: { branch: SkillIconBranch }) {
-  switch (branch) {
+function GlyphPaths({ glyph }: { glyph: SkillGlyphId }) {
+  switch (glyph) {
     case 'degats':
       return (
         <path
           d="M13 2 L8 13 H12 L10 22 L18 10 H14 L16 2 Z"
           fill="currentColor"
         />
+      );
+    case 'cadence':
+      return (
+        <path
+          d="M7 6 L13 12 L7 18 M13 6 L19 12 L13 18"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.25}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      );
+    case 'reach':
+      return (
+        <>
+          <circle cx="12" cy="12" r="3.25" fill="currentColor" />
+          <circle
+            cx="12"
+            cy="12"
+            r="7.25"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeOpacity={0.85}
+          />
+        </>
+      );
+    case 'shard':
+      return (
+        <>
+          <polygon
+            points="12 3 18 6.5 18 17.5 12 21 6 17.5 6 6.5"
+            fill="currentColor"
+            fillOpacity={0.18}
+            stroke="currentColor"
+            strokeWidth={1.25}
+            strokeOpacity={0.9}
+          />
+          <polygon
+            points="12 8 15 10 15 14 12 16 9 14 9 10"
+            fill="currentColor"
+            fillOpacity={0.5}
+            stroke="currentColor"
+            strokeWidth={0.75}
+            strokeOpacity={0.65}
+          />
+        </>
+      );
+    case 'magnet':
+      return (
+        <>
+          <path
+            d="M7.5 7.5 V13.5 C7.5 16.4 9.4 18.5 12 18.5 C14.6 18.5 16.5 16.4 16.5 13.5 V7.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+          <rect x="6" y="5" width="4.5" height="3.5" rx="1" fill="currentColor" />
+          <rect x="13.5" y="5" width="4.5" height="3.5" rx="1" fill="currentColor" />
+          <circle cx="12" cy="13.5" r="1.35" fill="currentColor" fillOpacity={0.45} />
+        </>
       );
     case 'thermique':
       return (
@@ -74,8 +136,8 @@ function BranchIconPaths({ branch }: { branch: SkillIconBranch }) {
   }
 }
 
-/** Icône de branche pour tooltips / panneaux HTML. */
-export function SkillBranchIcon({ branch, size = ICON_SIZE, color = 'currentColor' }: SkillBranchIconProps) {
+/** Icône pour tooltips / panneaux HTML. */
+export function SkillBranchIcon({ glyph, size = ICON_SIZE, color = 'currentColor' }: SkillGlyphIconProps) {
   return (
     <svg
       width={size}
@@ -85,13 +147,13 @@ export function SkillBranchIcon({ branch, size = ICON_SIZE, color = 'currentColo
       style={{ color }}
       aria-hidden
     >
-      <BranchIconPaths branch={branch} />
+      <GlyphPaths glyph={glyph} />
     </svg>
   );
 }
 
 interface SkillTreeBranchGlyphProps {
-  branch: SkillIconBranch;
+  glyph: SkillGlyphId;
   x: number;
   y: number;
   color: string;
@@ -99,14 +161,15 @@ interface SkillTreeBranchGlyphProps {
 }
 
 /** Glyphe SVG inline pour les nœuds du skill tree. */
-export function SkillTreeBranchGlyph({ branch, x, y, color, scale = 0.85 }: SkillTreeBranchGlyphProps) {
-  const offset = (ICON_SIZE * scale) / 2;
+export function SkillTreeBranchGlyph({ glyph, x, y, color, scale }: SkillTreeBranchGlyphProps) {
+  const resolvedScale = scale ?? 0.85;
+  const offset = (ICON_SIZE * resolvedScale) / 2;
   return (
     <g
-      transform={`translate(${x - offset}, ${y - offset}) scale(${scale})`}
+      transform={`translate(${x - offset}, ${y - offset}) scale(${resolvedScale})`}
       style={{ color }}
     >
-      <BranchIconPaths branch={branch} />
+      <GlyphPaths glyph={glyph} />
     </g>
   );
 }

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { playHubSfx } from '../audio/hubAudio';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
+import { triggerSfx } from '../audio/sfxApi';
 import type { LanguageMode } from '../i18n/types';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { useGameStore } from '../store/useGameStore';
@@ -19,7 +18,7 @@ function VolumeSlider({
   return (
     <div className="px-1">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-[10px] tracking-[0.15em] text-white/50 uppercase">{label}</span>
+        <span className="text-[14px] tracking-[0.15em] text-white/50 uppercase">{label}</span>
         <span className="font-mono text-xs text-white/60">{value}%</span>
       </div>
       <input
@@ -77,15 +76,18 @@ function LanguageSettings() {
 
   return (
     <div className="mt-6 space-y-3">
-      <p className="px-1 text-[10px] leading-relaxed text-white/40">{strings.settings.languageHint}</p>
+      <p className="px-1 text-[14px] leading-relaxed text-white/40">{strings.settings.languageHint}</p>
       {LANGUAGE_OPTIONS.map((mode) => {
         const isActive = languageMode === mode;
         return (
           <button
             key={mode}
             type="button"
-            onClick={() => setLanguageMode(mode)}
-            className={`w-full border px-4 py-3 text-left text-[10px] tracking-[0.14em] uppercase transition ${
+            onClick={() => {
+              if (!isActive) triggerSfx('nodeSelect');
+              setLanguageMode(mode);
+            }}
+            className={`w-full border px-4 py-3 text-left text-[14px] tracking-[0.14em] uppercase transition ${
               isActive ? 'text-white/85' : 'text-white/45 hover:text-white/65'
             }`}
             style={{
@@ -119,24 +121,24 @@ export function SettingsPanel() {
   ];
 
   const handleClose = useCallback(() => {
-    ensureHubAudioUnlocked();
-    playHubSfx('settingsClose');
+    triggerSfx('uiBack');
     closeSettings();
   }, [closeSettings]);
 
   const handleReturnToMainMenu = useCallback(() => {
     if (inActiveRun && !confirmReturnToMainMenu) {
+      triggerSfx('nodeSelect');
       setConfirmReturnToMainMenu(true);
       return;
     }
-    ensureHubAudioUnlocked();
-    playHubSfx('settingsClose');
+    triggerSfx('uiConfirm');
     returnToMainMenu();
     closeSettings();
     setConfirmReturnToMainMenu(false);
   }, [closeSettings, confirmReturnToMainMenu, inActiveRun, returnToMainMenu]);
 
   const handleCancelReturnToMainMenu = useCallback(() => {
+    triggerSfx('uiBack');
     setConfirmReturnToMainMenu(false);
   }, []);
 
@@ -180,8 +182,13 @@ export function SettingsPanel() {
               key={section.id}
               type="button"
               disabled={isDisabled}
-              onClick={() => setActiveSection(section.id)}
-              className={`px-4 py-3 text-left text-[10px] tracking-[0.18em] uppercase transition ${
+              onClick={() => {
+                if (!isDisabled && section.id !== activeSection) {
+                  triggerSfx('nodeSelect');
+                }
+                setActiveSection(section.id);
+              }}
+              className={`px-4 py-3 text-left text-[14px] tracking-[0.18em] uppercase transition ${
                 isDisabled
                   ? 'cursor-not-allowed text-white/20'
                   : isActive
@@ -200,7 +207,7 @@ export function SettingsPanel() {
             >
               {section.label}
               {isDisabled && (
-                <span className="mt-0.5 block text-[8px] tracking-[0.1em] text-white/15 normal-case">
+                <span className="mt-0.5 block text-[12px] tracking-[0.1em] text-white/15 normal-case">
                   {strings.settings.comingSoon}
                 </span>
               )}
@@ -218,7 +225,7 @@ export function SettingsPanel() {
         >
           {strings.settings.title}
         </h2>
-        <p className="mt-1 text-[10px] italic tracking-[0.06em] text-white/40">{strings.settings.subtitle}</p>
+        <p className="mt-1 text-[14px] italic tracking-[0.06em] text-white/40">{strings.settings.subtitle}</p>
 
         {activeSection === 'audio' && <AudioSettings />}
         {activeSection === 'language' && <LanguageSettings />}
@@ -226,14 +233,14 @@ export function SettingsPanel() {
         <div className="mt-auto flex flex-col items-center gap-3 pt-10">
           {confirmReturnToMainMenu && (
             <div className="mb-1 w-full text-center">
-              <p className="mb-4 text-[10px] leading-relaxed tracking-[0.06em] text-white/50">
+              <p className="mb-4 text-[14px] leading-relaxed tracking-[0.06em] text-white/50">
                 {strings.pause.confirmPrompt}
               </p>
               <div className="flex items-center justify-center gap-4">
                 <button
                   type="button"
                   onClick={handleCancelReturnToMainMenu}
-                  className="border px-6 py-2 text-[10px] font-semibold tracking-[0.18em] text-white/55 uppercase transition hover:text-white/80"
+                  className="border px-6 py-2 text-[14px] font-semibold tracking-[0.18em] text-white/55 uppercase transition hover:text-white/80"
                   style={{ borderColor: DARK_HEX.tooltipBorder }}
                 >
                   {strings.pause.confirmNo}
@@ -241,7 +248,7 @@ export function SettingsPanel() {
                 <button
                   type="button"
                   onClick={handleReturnToMainMenu}
-                  className="border px-6 py-2 text-[10px] font-semibold tracking-[0.18em] uppercase transition hover:text-white/90"
+                  className="border px-6 py-2 text-[14px] font-semibold tracking-[0.18em] uppercase transition hover:text-white/90"
                   style={{
                     borderColor: DARK_HEX.goldMuted,
                     color: DARK_HEX.gold,
@@ -257,7 +264,7 @@ export function SettingsPanel() {
             <button
               type="button"
               onClick={handleReturnToMainMenu}
-              className="border px-8 py-2.5 text-[10px] font-semibold tracking-[0.18em] uppercase transition hover:text-white/90"
+              className="border px-8 py-2.5 text-[14px] font-semibold tracking-[0.18em] uppercase transition hover:text-white/90"
               style={{
                 borderColor: DARK_HEX.goldMuted,
                 color: DARK_HEX.gold,
@@ -270,7 +277,7 @@ export function SettingsPanel() {
           <button
             type="button"
             onClick={handleClose}
-            className="border px-8 py-2.5 text-[10px] font-semibold tracking-[0.18em] text-white/55 uppercase transition hover:border-white/25 hover:text-white/80"
+            className="border px-8 py-2.5 text-[14px] font-semibold tracking-[0.18em] text-white/55 uppercase transition hover:border-white/25 hover:text-white/80"
             style={{ borderColor: DARK_HEX.tooltipBorder }}
           >
             {strings.settings.closeLabel}

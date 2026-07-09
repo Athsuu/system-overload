@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ArchChannelLabel, ArchChannelPanel } from './ArchChannelPanel';
-import { ArchGlitchLine, ArchGlitchText } from './ArchGlitchText';
+import { ArchGlitchLine } from './ArchGlitchText';
+import { ArchTypewriterGlitchText } from './ArchTypewriterGlitchText';
 import { useArchAmbient } from '../tutorial/useArchAmbient';
 import { markArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -51,11 +52,11 @@ export function ArchAmbient() {
       <div className="so-animate-fade-in-slow pointer-events-auto absolute top-28 left-1/2 max-w-[340px] -translate-x-1/2 px-4">
         <ArchChannelPanel paddingClassName="px-4 py-3 pr-12" onSkip={dismissActive}>
           <ArchChannelLabel>{strings.arch.channelLabel}</ArchChannelLabel>
-          <p className="mt-1 text-[12px] font-semibold tracking-[0.18em]" style={{ color: ARCH_CYAN }}>
+          <p className="mt-1 text-[16px] font-semibold tracking-[0.18em]" style={{ color: ARCH_CYAN }}>
             <ArchGlitchLine text={strings.arch.name} variant="title" />
           </p>
-          <p className="mt-2 text-[13px] leading-relaxed text-white/60">
-            <ArchGlitchText text={activeLine.text} />
+          <p className="mt-2 text-[17px] leading-relaxed text-white/60">
+            <ArchTypewriterGlitchText text={activeLine.text} />
           </p>
         </ArchChannelPanel>
       </div>

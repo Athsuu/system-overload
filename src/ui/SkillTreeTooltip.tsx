@@ -7,10 +7,9 @@ import {
   getUpgradeDefinition,
   type UpgradeId,
 } from '../store/upgradeCatalog';
-import { getSkillNode, getParentRequirementLabel, getSkillIconBranch, getUpgradeBranch } from '../store/skillTree';
+import { getSkillNode, getParentRequirementLabel, getSkillGlyphId, getUpgradeBranch } from '../store/skillTree';
 import { useGameStrings } from '../i18n/useGameStrings';
-import { playHubSfx } from '../audio/hubAudio';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
+import { triggerSfx } from '../audio/sfxApi';
 import { getTooltipHeight, getUpgradeTooltipLines } from './upgradeTooltipStats';
 import { playOneShotAnimation } from './animations';
 import { SkillBranchIcon } from './skillTreeBranchIcons';
@@ -51,7 +50,7 @@ function StatRow({
   maxLabel: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-2 text-[11px]">
+    <div className="flex items-baseline justify-between gap-2 text-[15px]">
       <span className="shrink-0 text-white/45">{label}</span>
       <span className="text-right font-mono">
         <span className="text-white/85">{current}</span>
@@ -61,7 +60,7 @@ function StatRow({
             <span style={{ color: STAT_GREEN }}>{next}</span>
           </>
         )}
-        {isMaxed && <span className="ml-1.5 text-[9px] tracking-wider text-white/30 uppercase">{maxLabel}</span>}
+        {isMaxed && <span className="ml-1.5 text-[13px] tracking-wider text-white/30 uppercase">{maxLabel}</span>}
       </span>
     </div>
   );
@@ -98,15 +97,15 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
   const costProgress = isMaxed ? 100 : Math.min(100, (balance / Math.max(cost, 1)) * 100);
   const statLines = getUpgradeTooltipLines(selectedId, upgrades);
   const branch = getUpgradeBranch(selectedId);
+  const glyph = getSkillGlyphId(selectedId, branch);
 
   useEffect(() => {
     playOneShotAnimation(panelRef.current, 'so-animate-slide-up');
   }, [selectedId, level]);
 
   const handlePurchase = (event: MouseEvent<HTMLButtonElement>) => {
-    ensureHubAudioUnlocked();
     if (!purchaseUpgrade(selectedId)) return;
-    playHubSfx('purchase');
+    triggerSfx('purchase');
     playOneShotAnimation(event.currentTarget, 'so-animate-purchase-flash');
   };
 
@@ -122,24 +121,26 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
       onPointerDown={(event) => event.stopPropagation()}
     >
         <div className="flex items-start gap-3">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded border text-sm font-bold text-white"
-            style={{
-              borderColor: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.goldMuted,
-              backgroundColor: '#2a0808',
-            }}
-          >
-            <SkillBranchIcon branch={getSkillIconBranch(selectedId, branch)} size={22} color="#ffffff" />
-          </div>
+          {glyph && (
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded border text-sm font-bold text-white"
+              style={{
+                borderColor: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.goldMuted,
+                backgroundColor: '#2a0808',
+              }}
+            >
+              <SkillBranchIcon glyph={glyph} size={22} color="#ffffff" />
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p
               id={SKILL_TREE_TOOLTIP_TITLE_ID}
-              className="text-[10px] font-semibold tracking-[0.2em] uppercase"
+              className="text-[14px] font-semibold tracking-[0.2em] uppercase"
               style={{ color: isAnchor ? DARK_HEX.breachGlow : SKILL_TREE_VISUAL.gold }}
             >
               {definition.name}
             </p>
-            <p className="mt-0.5 text-[9px] tracking-wide text-white/30 uppercase">
+            <p className="mt-0.5 text-[13px] tracking-wide text-white/30 uppercase">
               {strings.ui.levelFormat
                 .replace('{current}', String(level))
                 .replace('{max}', String(definition.maxLevel))}
@@ -147,7 +148,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
           </div>
         </div>
 
-        <p className="mt-2 text-[11px] leading-relaxed text-white/45">{definition.description}</p>
+        <p className="mt-2 text-[15px] leading-relaxed text-white/45">{definition.description}</p>
 
         <div className="mt-3 space-y-1.5 border-t border-white/8 pt-2.5">
           {statLines.map((stat) => (
@@ -162,7 +163,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
           ))}
         </div>
 
-        <div className="mt-3 flex items-center justify-between text-[10px] text-white/45">
+        <div className="mt-3 flex items-center justify-between text-[14px] text-white/45">
           <span className="text-white/35">
             {isMaxed ? strings.ui.fullyUpgraded : strings.ui.nextRankCost}
           </span>
@@ -186,7 +187,7 @@ export function SkillTreeTooltip({ selectedId }: SkillTreeTooltipProps) {
         )}
 
         {state === 'locked' && (
-          <p className="mt-2 text-[10px]" style={{ color: '#ff5533' }}>
+          <p className="mt-2 text-[14px]" style={{ color: '#ff5533' }}>
             {getParentRequirementLabel(skillNode.requires) ?? strings.ui.requirementsNotMet}
           </p>
         )}

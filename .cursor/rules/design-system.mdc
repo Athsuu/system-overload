@@ -1,0 +1,42 @@
+---
+description: Dark Hex Terminal — couleurs, typo, skill tree, HUD, interdictions UI
+globs: src/ui/**/*,src/theme/**/*,src/index.css
+alwaysApply: false
+---
+
+# Design system — Dark Hex Terminal
+
+Terminal de l'**Archive Zéro** en surcharge — pas UI « produit SaaS ».
+
+## Tokens
+
+| Usage | Valeur |
+|-------|--------|
+| Fond | `#0a0a0f` |
+| Breach glow | `#ff4d00`, `#ff6b2b` |
+| Verrouillé | `#4a0000`, `#5c1515` |
+| Accents or | `#c5a059` |
+| Zone purge (Pixi) | `#e8b896` |
+
+Fichiers : `src/theme/darkHexTerminal.ts`, `src/ui/skillTreeTheme.ts`, `src/theme/typography.ts`.
+
+## Skill tree (MENU / UPGRADING)
+
+- Nœuds **hexagonaux** ; connexions arête→arête ; arbre radial SVG.
+- Racine : **Node-0 Boot** (pas de sprite central PNG).
+- Police **Rajdhani** ; textes **i18n** EN + FR.
+
+## Gameplay (PLAYING)
+
+- Fond `#0a0a0f`, grille hex React, vignette rouge.
+- Ennemis hex ; HUD minimal : Overload bas, Run Shards haut-droit.
+- Urgence breach ≥ **80 %**.
+
+## Interdictions
+
+- **Glassmorphism**, esthétique Apple, `backdrop-blur` décoratif.
+- Couleurs ou typo hors tokens sans raison gameplay claire.
+
+## Effets visuels
+
+Glitch, shaders, scanlines → lire aussi `.cursor/rules/visual-effects.mdc` et `docs/visual-effects-references.md`.

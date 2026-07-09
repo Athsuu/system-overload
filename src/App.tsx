@@ -2,7 +2,7 @@ import { DevMenu } from './dev/DevMenu';
 import { isDevMenuEnabled } from './dev/isDevMenuEnabled';
 import { useHubAudio } from './audio/useHubAudio';
 import { GameCanvas } from './game/GameCanvas';
-import { useBreachEndWatcher } from './game/useBreachEndWatcher';
+import { useBreachWarningSound } from './game/useBreachWarningSound';
 import { useProgressAutosave } from './store/useProgressAutosave';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useGameStore } from './store/useGameStore';
@@ -21,7 +21,7 @@ import { usePauseHotkey } from './ui/usePauseHotkey';
 import { DARK_HEX } from './theme/darkHexTerminal';
 
 function App() {
-  useBreachEndWatcher();
+  useBreachWarningSound();
   usePauseHotkey();
   const gameState = useGameStore((state) => state.gameState);
   const isSettingsOpen = useSettingsStore((state) => state.isOpen);

@@ -1,11 +1,6 @@
 import { useEffect } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
-import {
-  applyAudioVolumes,
-  startHubAmbient,
-  stopHubAmbient,
-  unlockHubAudioNow,
-} from './hubAudio';
+import { applyAudioVolumes, ensureAudioUnlocked, startHubAmbient, stopHubAmbient } from './sfxApi';
 
 export function useHubAudio(): void {
   const masterVolume = useSettingsStore((state) => state.masterVolume);
@@ -20,7 +15,7 @@ export function useHubAudio(): void {
     startHubAmbient();
 
     const unlockOnGesture = () => {
-      unlockHubAudioNow();
+      ensureAudioUnlocked();
     };
 
     window.addEventListener('pointerdown', unlockOnGesture, { once: true });
@@ -32,8 +27,4 @@ export function useHubAudio(): void {
       stopHubAmbient();
     };
   }, []);
-}
-
-export function ensureHubAudioUnlocked(): void {
-  unlockHubAudioNow();
 }

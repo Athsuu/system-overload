@@ -1,5 +1,3 @@
-import { playHubSfx } from '../audio/hubAudio';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { useGameStore } from '../store/useGameStore';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
@@ -10,8 +8,6 @@ export function PlayRunButton() {
   const strings = useGameStrings();
 
   const handleStartRun = () => {
-    ensureHubAudioUnlocked();
-    playHubSfx('startRun');
     markTutorialSignal('runsStarted');
     startRun();
   };
@@ -21,6 +17,7 @@ export function PlayRunButton() {
       <HexActionButton
         label={strings.ui.startRun}
         onClick={handleStartRun}
+        clickSound="startRun"
         size="hubRun"
         variant="primary"
         className="hover:scale-[1.03]"

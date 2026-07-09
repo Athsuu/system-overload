@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react';
-import { isOverclockUnlocked } from '../store/upgradeCatalog';
-import { useGameStore } from '../store/useGameStore';
-import { getOverclockDurationMs, tryActivateOverclock, type OverclockState } from './activeSkill';
+import { isOverclockUnlocked } from '../../store/upgradeCatalog';
+import { useGameStore } from '../../store/useGameStore';
+import { getOverclockDurationMs, tryActivateOverclock, type OverclockState } from './state';
 
 export const overclockInputRef = {
   activateRequested: false,

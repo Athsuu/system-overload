@@ -4,7 +4,8 @@
 import type { Graphics } from 'pixi.js';
 import { FillGradient } from 'pixi.js';
 import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
-import { FLASH_DURATION_MS, getEnemyHexRadius } from './constants';
+import { FLASH_DURATION_MS } from './constants';
+import { getEnemyHexRadius } from './enemyClass';
 import { drawRotatedFlatTopHexFillGradient, drawRotatedFlatTopHexStroke } from './hexDraw';
 import type { GameEffect } from './effects';
 import type { DissipationNode } from './types';
@@ -139,9 +140,9 @@ function drawRadialFill(
   graphics.fill({ fill: gradient, alpha });
 }
 
-function getHexBandRadii(radius: number, isBoss: boolean): { outerHexR: number; innerCircleR: number } {
-  const outerHexR = radius * (isBoss ? 0.94 : 0.92);
-  const bandRadial = (outerHexR / radius - (isBoss ? 0.5 : 0.48)) * HEX_BAND_SCALE;
+function getHexBandRadii(radius: number, isElite: boolean): { outerHexR: number; innerCircleR: number } {
+  const outerHexR = radius * (isElite ? 0.94 : 0.92);
+  const bandRadial = (outerHexR / radius - (isElite ? 0.5 : 0.48)) * HEX_BAND_SCALE;
   return { outerHexR, innerCircleR: outerHexR - bandRadial * radius };
 }
 
@@ -158,9 +159,9 @@ function drawCorruptGrain(
   outerR: number,
   seed: number,
   hexAngle: number,
-  isBoss: boolean,
+  isElite: boolean,
 ): void {
-  const count = isBoss ? BOSS_GRAIN_COUNT : CORRUPT_GRAIN_COUNT;
+  const count = isElite ? BOSS_GRAIN_COUNT : CORRUPT_GRAIN_COUNT;
   const band = outerR - innerR;
   if (band <= 1) return;
 
@@ -178,7 +179,7 @@ function drawCorruptGrain(
     graphics.moveTo(px, py);
     graphics.lineTo(px + Math.cos(segAngle) * len, py + Math.sin(segAngle) * len);
     graphics.stroke({
-      color: useCyan ? NODE_CYAN : isBoss ? DARK_HEX_PIXI.breachGlow : VIOLET_BRIGHT,
+      color: useCyan ? NODE_CYAN : isElite ? DARK_HEX_PIXI.breachGlow : VIOLET_BRIGHT,
       width: 0.75,
       alpha: (0.1 + corruptHash(seed, i + 88) * 0.22) * flicker,
     });
@@ -222,7 +223,7 @@ function drawHexVertexGlitches(
   outerHexR: number,
   hexAngle: number,
   seed: number,
-  isBoss: boolean,
+  isElite: boolean,
 ): void {
   for (let i = 0; i < 6; i += 1) {
     const angle = hexAngle + (i * Math.PI) / 3;
@@ -236,7 +237,7 @@ function drawHexVertexGlitches(
     graphics.moveTo(vx - nx * tickLen + ny * jitter, vy - ny * tickLen - nx * jitter);
     graphics.lineTo(vx + nx * (tickLen * 0.35), vy + ny * (tickLen * 0.35));
     graphics.stroke({
-      color: isBoss ? DARK_HEX_PIXI.breachGlow : VIOLET_BRIGHT,
+      color: isElite ? DARK_HEX_PIXI.breachGlow : VIOLET_BRIGHT,
       width: 1,
       alpha: 0.22 + corruptHash(seed, i + 220) * 0.2,
     });
@@ -250,17 +251,17 @@ function drawHexFrame(
   radius: number,
   hexAngle: number,
   hpRatio: number,
-  isBoss: boolean,
+  isElite: boolean,
   corruptSeed: number,
 ): void {
-  const { outerHexR, innerCircleR } = getHexBandRadii(radius, isBoss);
+  const { outerHexR, innerCircleR } = getHexBandRadii(radius, isElite);
   const ringAlpha = 0.6 + hpRatio * 0.35;
-  const ringColor = isBoss ? DARK_HEX_PIXI.breach : NODE_VIOLET;
-  const bandGradient = isBoss ? BOSS_HEX_BAND_GRADIENT : HEX_BAND_GRADIENT;
+  const ringColor = isElite ? DARK_HEX_PIXI.breach : NODE_VIOLET;
+  const bandGradient = isElite ? BOSS_HEX_BAND_GRADIENT : HEX_BAND_GRADIENT;
 
   drawRotatedFlatTopHexFillGradient(graphics, cx, cy, outerHexR, hexAngle, bandGradient, ringAlpha);
   drawRadialFill(graphics, cx, cy, innerCircleR, VOID_GRADIENT, 1);
-  drawCorruptGrain(graphics, cx, cy, innerCircleR, outerHexR, corruptSeed, hexAngle, isBoss);
+  drawCorruptGrain(graphics, cx, cy, innerCircleR, outerHexR, corruptSeed, hexAngle, isElite);
   drawVoidScanlines(graphics, cx, cy, innerCircleR, hexAngle, corruptSeed);
 
   drawRotatedFlatTopHexStroke(
@@ -281,16 +282,16 @@ function drawHexFrame(
     cy,
     outerHexR * 0.96,
     hexAngle,
-    isBoss ? VIOLET_DARK : VIOLET_DEEP,
+    isElite ? VIOLET_DARK : VIOLET_DEEP,
     0.75,
     ringAlpha * 0.35,
     'butt',
     'miter',
   );
-  drawHexVertexGlitches(graphics, cx, cy, outerHexR, hexAngle, corruptSeed, isBoss);
+  drawHexVertexGlitches(graphics, cx, cy, outerHexR, hexAngle, corruptSeed, isElite);
 
   graphics.circle(cx, cy, innerCircleR);
-  graphics.stroke({ color: isBoss ? DARK_HEX_PIXI.breachGlow : NODE_CYAN, width: 0.75, alpha: ringAlpha * 0.12 });
+  graphics.stroke({ color: isElite ? DARK_HEX_PIXI.breachGlow : NODE_CYAN, width: 0.75, alpha: ringAlpha * 0.12 });
 }
 
 function drawCore(
@@ -299,17 +300,17 @@ function drawCore(
   cy: number,
   radius: number,
   hpRatio: number,
-  isBoss: boolean,
+  isElite: boolean,
   flashRatio: number,
 ): void {
-  const baseCoreR = radius * (isBoss ? BOSS_CORE_SCALE : CORE_SCALE);
+  const baseCoreR = radius * (isElite ? BOSS_CORE_SCALE : CORE_SCALE);
   const coreR = baseCoreR * hpRatio;
   if (coreR <= 0.35) return;
 
   const intensity = 0.82;
   const hitGlow = flashRatio ** 1.4;
 
-  if (isBoss) {
+  if (isElite) {
     drawRadialFill(
       graphics,
       cx,
@@ -374,36 +375,36 @@ function drawHitFeedback(
   cy: number,
   radius: number,
   flashAlpha: number,
-  isBoss: boolean,
+  isElite: boolean,
   hpRatio: number,
 ): void {
   const ease = flashAlpha ** 1.6;
-  const coreRef = radius * (isBoss ? BOSS_CORE_SCALE : CORE_SCALE) * hpRatio;
+  const coreRef = radius * (isElite ? BOSS_CORE_SCALE : CORE_SCALE) * hpRatio;
   if (coreRef <= 0.35) return;
   drawRadialFill(graphics, cx, cy, coreRef * 6, HIT_BURST_GRADIENT, ease * 1);
   drawRadialFill(graphics, cx, cy, coreRef * 3, HIT_BURST_GRADIENT, ease * 0.85);
 }
 
 export function drawCorruptedProcess(graphics: Graphics, node: DissipationNode): void {
-  const radius = getEnemyHexRadius(node.waveIndex, node.isBoss ?? false);
+  const radius = getEnemyHexRadius(node.enemyClass);
   const hpRatio = Math.max(0, node.hp / node.maxHp);
-  const isBoss = node.isBoss ?? false;
+  const isElite = node.enemyClass === 'elite';
 
   const flashRatio = node.flashTimer > 0 ? node.flashTimer / FLASH_DURATION_MS : 0;
 
-  drawHexFrame(graphics, node.x, node.y, radius, node.hexAngle, hpRatio, isBoss, node.corruptSeed);
-  drawCore(graphics, node.x, node.y, radius, hpRatio, isBoss, flashRatio);
+  drawHexFrame(graphics, node.x, node.y, radius, node.hexAngle, hpRatio, isElite, node.corruptSeed);
+  drawCore(graphics, node.x, node.y, radius, hpRatio, isElite, flashRatio);
   drawSatellites(graphics, node.x, node.y, radius, node.satelliteAngle, hpRatio);
 
   if (flashRatio > 0) {
-    drawHitFeedback(graphics, node.x, node.y, radius, flashRatio, isBoss, hpRatio);
+    drawHitFeedback(graphics, node.x, node.y, radius, flashRatio, isElite, hpRatio);
   }
 }
 
 export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = (1 - progress) * 0.85;
-  const radius = getEnemyHexRadius(effect.waveIndex, effect.isBoss) * (0.2 + progress * 0.8);
+  const radius = getEnemyHexRadius(effect.enemyClass) * (0.2 + progress * 0.8);
 
   drawRadialFill(graphics, effect.x, effect.y, radius * 0.18, CORE_BLOOM_GRADIENT, alpha);
   drawRotatedFlatTopHexStroke(
@@ -423,14 +424,15 @@ export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): v
 export function drawCorruptDeathEffect(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = 1 - progress;
-  const radius = getEnemyHexRadius(effect.waveIndex, effect.isBoss);
+  const radius = getEnemyHexRadius(effect.enemyClass);
+  const isElite = effect.enemyClass === 'elite';
 
   drawRadialFill(
     graphics,
     effect.x,
     effect.y,
     radius * (0.2 + progress * 0.6),
-    effect.isBoss ? BOSS_CORE_GRADIENT : CORE_BLOOM_GRADIENT,
+    isElite ? BOSS_CORE_GRADIENT : CORE_BLOOM_GRADIENT,
     alpha * 0.45,
   );
   drawRotatedFlatTopHexStroke(

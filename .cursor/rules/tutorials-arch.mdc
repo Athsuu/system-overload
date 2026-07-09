@@ -1,0 +1,70 @@
+---
+description: Tutoriels ARCH — spotlight, placement carte, Skip, glide, pause run
+globs: src/tutorial/**/*,src/ui/Tutorial*.tsx,src/ui/Arch*.tsx,src/ui/*Tutorial*.ts,src/ui/*Tutorial*.tsx,src/ui/useAnimatedTutorial*.ts,src/game/GameArena.tsx
+alwaysApply: false
+---
+
+# Tutoriels ARCH — spotlight premium
+
+## Principe (un élément à la fois)
+
+- Un seul `data-tutorial-anchor` **éclairé** à la fois en mode `spotlight`.
+- Passage d'étape : le spot **quitte** l'ancre précédente et **glisse** vers la nouvelle (pas de téléportation, pas de fade complet du voile).
+- Préférer `display: 'spotlight'` + ancre HUD/menu — pas de voile partiel qui laisse d'anciennes zones trop visibles.
+- Ne jamais empiler deux zones éclairées.
+
+## Ressenti joueur
+
+- Cible : **luminosité native** ; assombrir **autour** seulement — pas d'éclaircissement artificiel du centre, pas de cadre coloré.
+- Voile doux, pas tunnel noir agressif.
+- Lecture **à son rythme** : jamais de fermeture auto sur action gameplay.
+- Bouton **Skip** toujours visible (i18n).
+
+## Interdictions visuelles
+
+- Pas de cadre coloré (rebord cyan/orange/bleu).
+- Pas de clip-path dur — bords en fondu / masque.
+- Pas de glassmorphism ni popup SaaS sur cartes ARCH.
+- Classes canal / glitch ARCH : préfixe `.so-arch-*` uniquement.
+
+## Animation (canon)
+
+| Paramètre | Valeur |
+|-----------|--------|
+| Durée glide | **350 ms** (`SPOTLIGHT_MOVE_DURATION_MS`) |
+| Easing | **ease-out cubic** (`easeOutCubic`) |
+| Carte ARCH | suit le spot (position interpolée) |
+| Première apparition | fondu voile (`so-animate-fade-in-slow`) ; ensuite glide seul |
+| Resize fenêtre | repositionnement instantané |
+
+## Placement carte
+
+- Carte + **Skip** + **‹ ›** : entièrement visibles (marge 16 px).
+- Carte **ne recouvre jamais** la zone spotlight ni l'élément HUD expliqué (`CARD_GAP`).
+- Hauteur réservée : **300 px** (`SPOTLIGHT_CARD_ESTIMATED_HEIGHT`).
+- Candidats **collés à la cible** (gauche/droite/dessus/dessous) ; choisir le plus proche valide.
+- **Exception Overload** : carte centrée milieu écran (`OVERLOAD_CARD_TOP_OFFSET_PX = 115`) ; spotlight sur jauge bas.
+- Réglages validés → `src/tutorial/tutorialSpotlightDefaults.ts` uniquement.
+
+## Comportement par contexte
+
+| Contexte | Comportement |
+|----------|--------------|
+| Intro menu (`featured`) | Overlay centré/latéral ; **‹ ›** si groupe ; Skip = tout le groupe |
+| Premier run (`spotlight`) | **Pause gameplay** ; spotlight + carte à côté ; **‹ ›** ; Skip = groupe |
+| Tutos contextuels | Spotlight si ancré ; sinon carte discrète — toujours **Skip** |
+
+## Fichiers canoniques
+
+- Catalogue : `src/tutorial/tutorialCatalog.ts`
+- Coach / dismiss : `src/tutorial/useTutorialCoach.ts`, `src/tutorial/tutorialPersistence.ts`
+- Carte : `src/ui/TutorialCoach.tsx`, `src/ui/ArchChannelPanel.tsx`, `src/ui/ArchGlitchText.tsx`
+- Spotlight : `src/ui/TutorialTransitionOverlay.tsx`, `src/ui/useAnimatedTutorialLayout.ts`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`
+- Pause run : `src/tutorial/tutorialRunSpotlight.ts` + gel `src/game/GameArena.tsx`
+- Ambient / relay run : `src/tutorial/archAmbientCatalog.ts`, `src/ui/ArchAmbient.tsx`, `src/ui/ArchRunDialogue.tsx`
+- Ancres HUD : `data-tutorial-anchor` dans `src/ui/HUD.tsx`
+
+## Textes
+
+- i18n EN + FR ; canal : `ARCH // ADVISORY CHANNEL`.
+- Speaker : **ARCH** — ton parental/urgent, pas « System ».

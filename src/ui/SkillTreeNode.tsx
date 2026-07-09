@@ -1,9 +1,8 @@
 import type { SkillState } from '../store/upgradeCatalog';
-import type { SkillIconBranch } from '../store/skillTree';
+import type { SkillGlyphId } from '../store/skillTree';
 import { NODE_RADIUS } from '../store/skillTree';
 import { getNodeHexRadius } from './skillTreeGeometry';
-import { playHubSfx } from '../audio/hubAudio';
-import { ensureHubAudioUnlocked } from '../audio/useHubAudio';
+import { triggerSfx } from '../audio/sfxApi';
 import { hexagonPoints } from './skillTreeGeometry';
 import { SkillTreeBranchGlyph } from './skillTreeBranchIcons';
 import { getNodeVisualState, getRootNodeVisualState, SKILL_TREE_VISUAL } from './skillTreeTheme';
@@ -11,7 +10,7 @@ import { getNodeVisualState, getRootNodeVisualState, SKILL_TREE_VISUAL } from '.
 interface SkillTreeNodeProps {
   x: number;
   y: number;
-  branch: SkillIconBranch;
+  glyph: SkillGlyphId | null;
   level: number;
   state: SkillState;
   isSelected: boolean;
@@ -22,7 +21,7 @@ interface SkillTreeNodeProps {
 export function SkillTreeNode({
   x,
   y,
-  branch,
+  glyph,
   level,
   state,
   isSelected,
@@ -43,13 +42,12 @@ export function SkillTreeNode({
       style={{ cursor: isLocked ? 'not-allowed' : 'pointer', opacity: visual.opacity }}
       onPointerDown={(event) => {
         event.stopPropagation();
-        ensureHubAudioUnlocked();
         if (isLocked) {
-          playHubSfx('nodeLocked');
+          triggerSfx('nodeLocked');
           return;
         }
         if (!isReserved) {
-          playHubSfx('nodeSelect');
+          triggerSfx('nodeSelect');
         }
         onSelect();
       }}
@@ -82,16 +80,16 @@ export function SkillTreeNode({
       />
 
       {isLocked ? (
-        <text x={x} y={y + 5} textAnchor="middle" fontSize={20} fill={visual.iconFill} fontWeight={600}>
+        <text x={x} y={y + 5} textAnchor="middle" fontSize={24} fill={visual.iconFill} fontWeight={600}>
           ?
         </text>
       ) : state === 'reserved' ? (
-        <text x={x} y={y + 4} textAnchor="middle" fontSize={11} fill={visual.iconFill} fontWeight={600}>
+        <text x={x} y={y + 4} textAnchor="middle" fontSize={15} fill={visual.iconFill} fontWeight={600}>
           ···
         </text>
-      ) : (
-        <SkillTreeBranchGlyph branch={branch} x={x} y={y} color={visual.iconFill} />
-      )}
+      ) : glyph ? (
+        <SkillTreeBranchGlyph glyph={glyph} x={x} y={y} color={visual.iconFill} />
+      ) : null}
     </g>
   );
 }

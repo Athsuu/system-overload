@@ -1,19 +1,28 @@
+import { MUSIC_BUS_TRIM, RUN_EVENT_MUSIC_DUCK, SFX_BUS_FILTERS, SFX_BUS_TRIM } from './audioMix';
 import {
   isHubMusicPlaying,
-  playHubSfx as playHubSfxSound,
   preloadHubMusic,
   startHubMusic,
   stopHubMusic,
-} from './hubSounds';
-import { playGameSfx as playGameSfxSound } from './gameSounds';
+} from './hubMusic';
+import { playGameSfx as playGameSfxSound } from './combatSounds';
+import { playHubSfx as playHubSfxSound } from './hubUiSounds';
 import { loadSettings } from '../store/settingsPersistence';
-import type { GameSfxId, HubSfxId } from './types';
+import { playRunEventSfx as playRunEventSfxSound } from './runEventSounds';
+import type { GameSfxId, HubSfxId, RunEventSfxId } from './types';
+
+interface SfxBusRoute {
+  context: AudioContext;
+  bus: GainNode;
+}
 
 class AudioManager {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private musicBusGain: GainNode | null = null;
-  private sfxBusGain: GainNode | null = null;
+  private uiBusGain: GainNode | null = null;
+  private combatBusGain: GainNode | null = null;
+  private runEventBusGain: GainNode | null = null;
   private unlocked = false;
   private ambientWanted = false;
 
@@ -26,10 +35,14 @@ class AudioManager {
       this.context = new AudioContext();
       this.masterGain = this.context.createGain();
       this.musicBusGain = this.context.createGain();
-      this.sfxBusGain = this.context.createGain();
+      this.uiBusGain = this.context.createGain();
+      this.combatBusGain = this.context.createGain();
+      this.runEventBusGain = this.context.createGain();
 
+      this.connectFilteredBus(this.uiBusGain, SFX_BUS_FILTERS.ui);
+      this.connectFilteredBus(this.combatBusGain, SFX_BUS_FILTERS.combat);
+      this.connectFilteredBus(this.runEventBusGain, SFX_BUS_FILTERS.runEvent);
       this.musicBusGain.connect(this.masterGain);
-      this.sfxBusGain.connect(this.masterGain);
       this.masterGain.connect(this.context.destination);
 
       this.applyBusGains();
@@ -37,12 +50,39 @@ class AudioManager {
     return this.context;
   }
 
+  private connectFilteredBus(
+    busGain: GainNode,
+    filterDef: { type: 'highpass'; frequencyHz: number; q: number },
+  ): void {
+    const context = this.context;
+    const master = this.masterGain;
+    if (!context || !master) return;
+
+    const filter = context.createBiquadFilter();
+    filter.type = filterDef.type;
+    filter.frequency.value = filterDef.frequencyHz;
+    filter.Q.value = filterDef.q;
+    busGain.connect(filter);
+    filter.connect(master);
+  }
+
   private applyBusGains(): void {
-    if (!this.context || !this.masterGain || !this.musicBusGain || !this.sfxBusGain) return;
+    if (
+      !this.context ||
+      !this.masterGain ||
+      !this.musicBusGain ||
+      !this.uiBusGain ||
+      !this.combatBusGain ||
+      !this.runEventBusGain
+    ) {
+      return;
+    }
     const t = this.context.currentTime;
     this.setGainValue(this.masterGain, this.masterVolumeNorm, t);
-    this.setGainValue(this.musicBusGain, this.musicVolumeNorm, t);
-    this.setGainValue(this.sfxBusGain, this.sfxVolumeNorm, t);
+    this.setGainValue(this.musicBusGain, this.musicVolumeNorm * MUSIC_BUS_TRIM, t);
+    this.setGainValue(this.uiBusGain, this.sfxVolumeNorm * SFX_BUS_TRIM.ui, t);
+    this.setGainValue(this.combatBusGain, this.sfxVolumeNorm * SFX_BUS_TRIM.combat, t);
+    this.setGainValue(this.runEventBusGain, this.sfxVolumeNorm * SFX_BUS_TRIM.runEvent, t);
   }
 
   private setGainValue(node: GainNode, value: number, time: number): void {
@@ -50,9 +90,30 @@ class AudioManager {
     node.gain.setValueAtTime(value, time);
   }
 
-  private getMusicBusGain(): GainNode | null {
-    this.ensureContext();
-    return this.musicBusGain;
+  private getSfxRoute(bus: GainNode | null): SfxBusRoute | null {
+    this.ensureUnlocked();
+    const context = this.context;
+    if (!context || !bus || context.state === 'suspended') return null;
+    return { context, bus };
+  }
+
+  private duckMusicForRunEvent(eventId: RunEventSfxId): void {
+    const bus = this.musicBusGain;
+    const context = this.context;
+    if (!bus || !context) return;
+
+    const profile = RUN_EVENT_MUSIC_DUCK[eventId];
+    const attackSec = profile.attackMs / 1000;
+    const holdSec = profile.holdMs / 1000;
+    const releaseSec = profile.releaseMs / 1000;
+    const t = context.currentTime;
+    const ducked = this.musicVolumeNorm * MUSIC_BUS_TRIM * profile.depthMult;
+
+    bus.gain.cancelScheduledValues(t);
+    bus.gain.setValueAtTime(bus.gain.value, t);
+    bus.gain.linearRampToValueAtTime(ducked, t + attackSec);
+    bus.gain.setValueAtTime(ducked, t + attackSec + holdSec);
+    bus.gain.linearRampToValueAtTime(this.musicVolumeNorm * MUSIC_BUS_TRIM, t + attackSec + holdSec + releaseSec);
   }
 
   ensureUnlocked(): void {
@@ -62,10 +123,6 @@ class AudioManager {
     }
     this.unlocked = true;
     this.tryStartMusic();
-  }
-
-  unlockAndPlay(): void {
-    this.ensureUnlocked();
   }
 
   async unlock(): Promise<void> {
@@ -99,7 +156,7 @@ class AudioManager {
     if (isHubMusicPlaying()) return;
 
     const context = this.ensureContext();
-    const musicBus = this.getMusicBusGain();
+    const musicBus = this.musicBusGain;
     if (!musicBus) return;
     startHubMusic(context, musicBus);
   }
@@ -111,19 +168,22 @@ class AudioManager {
   }
 
   playHubSfx(id: HubSfxId): void {
-    this.ensureUnlocked();
-    const context = this.context;
-    const sfxBus = this.sfxBusGain;
-    if (!context || !sfxBus || context.state === 'suspended') return;
-    playHubSfxSound(context, sfxBus, id);
+    const route = this.getSfxRoute(this.uiBusGain);
+    if (!route) return;
+    playHubSfxSound(route.context, route.bus, id);
   }
 
-  playGameSfx(id: GameSfxId): void {
-    this.ensureUnlocked();
-    const context = this.context;
-    const sfxBus = this.sfxBusGain;
-    if (!context || !sfxBus || context.state === 'suspended') return;
-    playGameSfxSound(context, sfxBus, id);
+  playGameSfx(id: GameSfxId, startOffsetSec = 0): void {
+    const route = this.getSfxRoute(this.combatBusGain);
+    if (!route) return;
+    playGameSfxSound(route.context, route.bus, id, startOffsetSec);
+  }
+
+  playRunEventSfx(id: RunEventSfxId, startOffsetSec = 0): void {
+    const route = this.getSfxRoute(this.runEventBusGain);
+    if (!route) return;
+    this.duckMusicForRunEvent(id);
+    playRunEventSfxSound(route.context, route.bus, id, startOffsetSec);
   }
 }
 
