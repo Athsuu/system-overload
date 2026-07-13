@@ -1,7 +1,18 @@
 import { create } from 'zustand';
 import { saveGame, type SaveData } from './persistence';
 import { loadSettings } from './settingsPersistence';
-import { DEFAULT_PRESTIGE } from './prestigeTypes';
+import { DEFAULT_PRESTIGE, DEFAULT_CORE_PROTOCOLS, type CoreProtocolId } from './prestigeTypes';
+import {
+  getCoreProtocolCost,
+  getCoreProtocolDefinition,
+  getCoreProtocolState,
+} from './coreProtocolCatalog';
+import {
+  canRecompile,
+  computeResidualMemoryStartingShards,
+  computeSeedFragmentsGain,
+} from './prestigeLogic';
+import { skipTutorialsAfterRecompile } from './playerReset';
 import {
   BOSS_VICTORY_SHARD_BONUS,
   DEFAULT_UPGRADES,
@@ -30,6 +41,7 @@ export type GameState =
   | 'PAUSED'
   | 'RUN_END'
   | 'UPGRADING'
+  | 'SEED_PROTOCOLS'
   | 'GAME_OVER';
 export type RunOutcome = 'victory_boss' | 'defeat_breach';
 export type WavePhase = 'idle' | 'spawning' | 'combat' | 'intermission' | 'boss';
@@ -44,6 +56,9 @@ interface GameStore {
   lastRunAnchorFragments: number;
   anchorFragmentEarnedThisRun: boolean;
   upgrades: UpgradeLevels;
+  seedFragments: number;
+  recompileDepth: number;
+  coreProtocols: typeof DEFAULT_CORE_PROTOCOLS;
   prestigeUnlocked: boolean;
   prestigeLevel: number;
   highestCycleUnlocked: number;
@@ -56,6 +71,7 @@ interface GameStore {
   wavePhase: WavePhase;
   showWaveClear: boolean;
   fluxDriveEnabled: boolean;
+  seedProtocolsReturnState: Extract<GameState, 'MENU' | 'UPGRADING'>;
   setGameState: (state: GameState) => void;
   pauseRun: () => void;
   resumeRun: () => void;
@@ -65,7 +81,11 @@ interface GameStore {
   addRunShards: (amount: number) => void;
   endRun: (outcome: RunOutcome) => void;
   openModuleTree: () => void;
+  openSeedProtocols: () => void;
+  closeSeedProtocols: () => void;
   purchaseUpgrade: (id: UpgradeId) => boolean;
+  purchaseCoreProtocol: (id: CoreProtocolId) => boolean;
+  recompile: () => boolean;
   startRun: (cycle?: number) => void;
   setSelectedCycle: (cycle: number) => void;
   toggleFluxDriveEnabled: () => void;
@@ -80,6 +100,9 @@ function buildSaveSnapshot(state: {
   bankShards: number;
   bankAnchorFragments: number;
   upgrades: UpgradeLevels;
+  seedFragments: number;
+  recompileDepth: number;
+  coreProtocols: typeof DEFAULT_CORE_PROTOCOLS;
   prestigeUnlocked: boolean;
   prestigeLevel: number;
   highestCycleUnlocked: number;
@@ -90,8 +113,11 @@ function buildSaveSnapshot(state: {
     bankShards: state.bankShards,
     bankAnchorFragments: state.bankAnchorFragments,
     upgrades: state.upgrades,
-    prestigeUnlocked: state.prestigeUnlocked,
-    prestigeLevel: state.prestigeLevel,
+    seedFragments: state.seedFragments,
+    recompileDepth: state.recompileDepth,
+    coreProtocols: state.coreProtocols,
+    prestigeUnlocked: state.recompileDepth > 0,
+    prestigeLevel: state.recompileDepth,
     highestCycleUnlocked: state.highestCycleUnlocked,
     selectedCycle: state.selectedCycle,
     cyclesCleared: state.cyclesCleared,
@@ -114,6 +140,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lastRunAnchorFragments: 0,
   anchorFragmentEarnedThisRun: false,
   upgrades: DEFAULT_UPGRADES,
+  seedFragments: DEFAULT_PRESTIGE.seedFragments,
+  recompileDepth: DEFAULT_PRESTIGE.recompileDepth,
+  coreProtocols: { ...DEFAULT_CORE_PROTOCOLS },
   prestigeUnlocked: DEFAULT_PRESTIGE.prestigeUnlocked,
   prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
   highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,
@@ -122,6 +151,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
   runOutcome: null,
   prestigeUnlockedThisRun: false,
+  seedProtocolsReturnState: 'MENU',
   waveIndex: 0,
   wavePhase: 'idle',
   showWaveClear: false,
@@ -222,6 +252,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
     }),
   openModuleTree: () => set({ gameState: 'UPGRADING' }),
+  openSeedProtocols: () =>
+    set((state) => ({
+      gameState: 'SEED_PROTOCOLS',
+      seedProtocolsReturnState:
+        state.gameState === 'MENU' || state.gameState === 'UPGRADING'
+          ? state.gameState
+          : state.seedProtocolsReturnState,
+    })),
+  closeSeedProtocols: () =>
+    set((state) => ({ gameState: state.seedProtocolsReturnState })),
   purchaseUpgrade: (id) => {
     const state = get();
     const definition = getUpgradeDefinition(id);
@@ -251,6 +291,71 @@ export const useGameStore = create<GameStore>((set, get) => ({
     persistProgress({ ...state, bankShards, upgrades });
     markTutorialSignal('upgradePurchased');
     set({ bankShards, upgrades });
+    return true;
+  },
+  purchaseCoreProtocol: (id) => {
+    const state = get();
+    const definition = getCoreProtocolDefinition(id);
+    const level = state.coreProtocols[id];
+    if (level >= definition.maxLevel) return false;
+
+    const protocolState = getCoreProtocolState(id, state.seedFragments, state.coreProtocols);
+    if (protocolState !== 'available') return false;
+
+    const cost = getCoreProtocolCost(definition, level);
+    const seedFragments = state.seedFragments - cost;
+    const coreProtocols = { ...state.coreProtocols, [id]: level + 1 };
+    persistProgress({ ...state, seedFragments, coreProtocols });
+    set({ seedFragments, coreProtocols });
+    return true;
+  },
+  recompile: () => {
+    const state = get();
+    if (!canRecompile(state.cyclesCleared)) return false;
+
+    const fragmentsGain = computeSeedFragmentsGain(state.cyclesCleared, state.coreProtocols);
+    const startingShards = computeResidualMemoryStartingShards(state.coreProtocols);
+    const seedFragments = state.seedFragments + fragmentsGain;
+    const recompileDepth = state.recompileDepth + 1;
+    const upgrades = { ...DEFAULT_UPGRADES, node0Boot: 1 };
+    const bankShards = startingShards;
+    const bankAnchorFragments = 0;
+    const highestCycleUnlocked = DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked;
+    const selectedCycle = DEFAULT_CYCLE_PROGRESS.selectedCycle;
+    const cyclesCleared = [...DEFAULT_CYCLE_PROGRESS.cyclesCleared];
+
+    skipTutorialsAfterRecompile();
+
+    const next = {
+      ...state,
+      bankShards,
+      bankAnchorFragments,
+      upgrades,
+      seedFragments,
+      recompileDepth,
+      highestCycleUnlocked,
+      selectedCycle,
+      cyclesCleared,
+      prestigeUnlocked: recompileDepth > 0,
+      prestigeLevel: recompileDepth,
+    };
+    persistProgress(next);
+
+    set({
+      bankShards,
+      bankAnchorFragments,
+      upgrades,
+      seedFragments,
+      recompileDepth,
+      prestigeUnlocked: recompileDepth > 0,
+      prestigeLevel: recompileDepth,
+      highestCycleUnlocked,
+      selectedCycle,
+      cyclesCleared,
+      activeCycle: selectedCycle,
+      gameState: 'SEED_PROTOCOLS',
+      seedProtocolsReturnState: 'UPGRADING',
+    });
     return true;
   },
   setSelectedCycle: (cycle) =>
@@ -319,6 +424,9 @@ export function resetToFreshPlayer(): void {
     lastRunAnchorFragments: 0,
     anchorFragmentEarnedThisRun: false,
     upgrades: DEFAULT_UPGRADES,
+    seedFragments: DEFAULT_PRESTIGE.seedFragments,
+    recompileDepth: DEFAULT_PRESTIGE.recompileDepth,
+    coreProtocols: { ...DEFAULT_CORE_PROTOCOLS },
     prestigeUnlocked: DEFAULT_PRESTIGE.prestigeUnlocked,
     prestigeLevel: DEFAULT_PRESTIGE.prestigeLevel,
     highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,

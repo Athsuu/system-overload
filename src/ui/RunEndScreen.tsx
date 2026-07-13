@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
 import { useGameStore } from '../store/useGameStore';
+import { canRecompile } from '../store/prestigeLogic';
+import { MAX_CYCLES } from '../store/cycleTypes';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { useGameStrings } from '../i18n/useGameStrings';
@@ -10,6 +12,8 @@ import { pickMeltdownArchVariantIndex } from './meltdownArchRotation';
 import { pickVictoryArchVariantIndex } from './victoryArchRotation';
 import { useCountUp } from './useCountUp';
 import { useScreenTransition } from './transitions/useScreenTransition';
+import { RecompileConfirmModal } from './RecompileConfirmModal';
+import { SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
 
 export function RunEndScreen() {
   const lastRunShards = useGameStore((state) => state.lastRunShards);
@@ -17,6 +21,7 @@ export function RunEndScreen() {
   const anchorFragmentEarnedThisRun = useGameStore((state) => state.anchorFragmentEarnedThisRun);
   const runOutcome = useGameStore((state) => state.runOutcome);
   const activeCycle = useGameStore((state) => state.activeCycle);
+  const cyclesCleared = useGameStore((state) => state.cyclesCleared);
   const waveIndex = useGameStore((state) => state.waveIndex);
   const selectedCycle = useGameStore((state) => state.selectedCycle);
   const { launchHubToArena, launchArenaToHub, isTransitioning } = useScreenTransition();
@@ -24,6 +29,7 @@ export function RunEndScreen() {
   const strings = useGameStrings();
   const [meltdownArchText, setMeltdownArchText] = useState<string | null>(null);
   const [victoryArchText, setVictoryArchText] = useState<string | null>(null);
+  const [recompileOpen, setRecompileOpen] = useState(false);
 
   const isVictory = runOutcome === 'victory_boss';
   const title = isVictory ? strings.runEnd.victoryTitle : strings.runEnd.meltdownTitle;
@@ -40,6 +46,9 @@ export function RunEndScreen() {
   const displayShards = useCountUp(lastRunShards, 600);
   const displayAnchors = useCountUp(lastRunAnchorFragments, 600);
   const showRewards = lastRunShards > 0 || lastRunAnchorFragments > 0;
+
+  const showRecompileBanner =
+    isVictory && activeCycle === MAX_CYCLES && canRecompile(cyclesCleared);
 
   const accentColor = isVictory ? DARK_HEX.gold : DARK_HEX.breach;
   const accentGlow = isVictory ? DARK_HEX.goldMuted : 'rgba(255, 77, 0, 0.22)';
@@ -145,6 +154,31 @@ export function RunEndScreen() {
           </div>
         )}
 
+        {showRecompileBanner && (
+          <div
+            className="so-animate-reveal-step-2 mt-6 border-t border-white/[0.06] pt-5"
+            style={{ borderColor: `${SEED_PROTOCOL_VISUAL.accent}33` }}
+          >
+            <p
+              className="text-[13px] tracking-[0.28em] uppercase"
+              style={{ color: SEED_PROTOCOL_VISUAL.accentMuted }}
+            >
+              {strings.seedProtocols.recompileAvailable}
+            </p>
+            <button
+              type="button"
+              onClick={() => setRecompileOpen(true)}
+              className="mt-3 rounded border px-4 py-2 text-[13px] font-semibold tracking-[0.2em] uppercase transition hover:opacity-90"
+              style={{
+                borderColor: `${SEED_PROTOCOL_VISUAL.accent}88`,
+                color: SEED_PROTOCOL_VISUAL.accentMuted,
+              }}
+            >
+              {strings.seedProtocols.recompileAction}
+            </button>
+          </div>
+        )}
+
         <div className="so-animate-reveal-step-3 mt-8 flex items-center justify-center gap-4">
           <HexActionButton
             label={strings.ui.moduleTree}
@@ -178,6 +212,7 @@ export function RunEndScreen() {
           )}
         </div>
       )}
+      {recompileOpen && <RecompileConfirmModal onClose={() => setRecompileOpen(false)} />}
     </div>
   );
 }

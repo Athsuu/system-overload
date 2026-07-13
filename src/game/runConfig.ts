@@ -22,6 +22,7 @@ export {
   MODULE_EFFECT_REGISTRY,
   computePurgeAoeProfile,
   getEliteBreakerDamageBonusPercent,
+  getLatencySlowMultiplier,
   getPurgeReachBonusPercent,
   getPurgeSplashDamagePercent,
   getPurgeSplashRadius,
@@ -60,7 +61,8 @@ export function getRunTimeScale(_upgrades: UpgradeLevels, _fluxDriveEnabled: boo
 }
 
 export function getRunConfig(upgrades: UpgradeLevels): RunConfig {
-  return computeRunConfig(upgrades);
+  const coreProtocols = useGameStore.getState().coreProtocols;
+  return computeRunConfig(upgrades, coreProtocols);
 }
 
 export function resolveActiveCycle(): number {

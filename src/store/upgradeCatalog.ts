@@ -16,6 +16,7 @@ export type UpgradeId =
   | 'purgeCadence'
   | 'purgeReach'
   | 'purgeSplash'
+  | 'latencyInjection'
   | 'threadCoolant'
   | 'killBreachRelief'
   | 'meltdownThreshold';
@@ -32,6 +33,7 @@ export interface UpgradeLevels {
   purgeCadence: number;
   purgeReach: number;
   purgeSplash: number;
+  latencyInjection: number;
   threadCoolant: number;
   killBreachRelief: number;
   meltdownThreshold: number;
@@ -104,6 +106,8 @@ export const PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL = [50, 75, 100] as const
 export const PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL = [15, 30, 45] as const;
 export const COST_PURGE_SPLASH = COST_ELITE_BREAKER;
 
+export const COST_LATENCY_INJECTION = [140, 240, 380] as const;
+
 export const PURGE_CADENCE_MAX_LEVEL = 10;
 export const PURGE_CADENCE_PERCENT_PER_LEVEL = 2.5;
 export const PURGE_CADENCE_INTERVAL_MS_PER_LEVEL = 25;
@@ -163,6 +167,7 @@ export const DEFAULT_UPGRADES: UpgradeLevels = {
   purgeCadence: 0,
   purgeReach: 0,
   purgeSplash: 0,
+  latencyInjection: 0,
   threadCoolant: 0,
   killBreachRelief: 0,
   meltdownThreshold: 0,
@@ -228,6 +233,12 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     id: 'purgeSplash',
     maxLevel: PURGE_SPLASH_MAX_LEVEL,
     costByLevel: COST_PURGE_SPLASH,
+    currency: 'shards',
+  },
+  {
+    id: 'latencyInjection',
+    maxLevel: 3,
+    costByLevel: COST_LATENCY_INJECTION,
     currency: 'shards',
   },
   {

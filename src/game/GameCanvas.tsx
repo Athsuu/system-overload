@@ -6,7 +6,7 @@ extend({ Container, Graphics });
 
 export function GameCanvas() {
   return (
-    <div className="absolute inset-0 z-0 cursor-crosshair">
+    <div className="absolute inset-0 z-0 cursor-none">
       <Application resizeTo={window} backgroundAlpha={0} antialias>
         <GameArena />
       </Application>

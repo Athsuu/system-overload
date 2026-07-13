@@ -132,11 +132,15 @@ export const FR_STRINGS: GameStrings = {
     runShardsLabel: 'Éclats hex',
     availableShardsLabel: 'Éclats hex',
     anchorFragmentsLabel: 'Fragments d\'ancre',
+    seedFragmentsLabel: 'Fragments de Graine',
+    seedFragmentsShort: 'FG',
     shardsEarnedSuffix: 'Éclats hex',
     anchorEarnedSuffix: 'Fragments d\'ancre',
     transferredToVault: 'Gagnés cette run',
     shardsLoreTooltip: LORE.economy.vaultShardsTooltip,
     anchorLoreTooltip: LORE.economy.anchorFragments,
+    seedLoreTooltip:
+      'Données pures extraites de la Graine lors d\'une Recompilation. Dépensées en Protocoles Fondamentaux gravés dans le code source de Node-0. Jamais perdues lors d\'un reset.',
   },
   pause: {
     title: 'ARRÊT SYSTÈME',
@@ -243,6 +247,10 @@ export const FR_STRINGS: GameStrings = {
       name: 'Éclat de purge',
       description: 'Inflige des dégâts d\'éclaboussure aux processus juste à l\'extérieur de ta zone',
     },
+    latencyInjection: {
+      name: 'Injection de latence',
+      description: 'Ralentit les processus corrompus se trouvant dans la zone de purge active',
+    },
     threadCoolant: {
       name: 'Refroidissement de thread',
       description: 'Réduit la montée passive de la Surcharge tant que la Brèche progresse',
@@ -275,6 +283,7 @@ export const FR_STRINGS: GameStrings = {
     purgeReachBonus: 'Bonus zone de purge',
     purgeSplashRadius: 'Portée éclaboussure (vs zone principale)',
     purgeSplashDamage: 'Dégâts d\'éclaboussure',
+    latencySlowBonus: 'Ralentissement processus',
     passiveBreachPerSec: 'Brèche passive / sec',
     reduction: 'Réduction',
     breachReliefPerKill: 'Soulagement Brèche / kill',
@@ -286,6 +295,48 @@ export const FR_STRINGS: GameStrings = {
     openLabel: 'Stats Node-0',
     cadenceUnit: '/s',
     purgeSplashZone: 'Zone éclaboussure',
+  },
+  seedProtocols: {
+    screenTitle: 'Protocoles de la Graine',
+    screenSubtitle: 'Optimisations fondamentales gravées dans le code source de Node-0',
+    openButton: 'Protocoles\nde la Graine',
+    backToHub: 'Retour\nau hub',
+    recompileAction: 'Recompiler',
+    recompileAvailable: 'Recompilation disponible',
+    recompileConfirmTitle: 'Recompilation depuis la Graine',
+    recompileConfirmBody:
+      'Je peux te recompiler depuis la Graine elle-même. Tu perds tout. Ce que tu gagnes est écrit dans ton code source. Permanent.',
+    recompileCancel: 'Annuler',
+    recompileLoseShards: 'Éclats hex perdus : {n}',
+    recompileLoseAnchors: 'Fragments d\'ancrage perdus : {n}',
+    recompileLoseModules: 'Tous les niveaux de l\'arbre de modules remis à zéro',
+    recompileLoseCycles: 'Cycles remis au Cycle 1',
+    recompileDepthLabel: 'Profondeur de Recompilation : {n}',
+    recompileDepthAfter: 'Prochaine profondeur : {n}',
+    postRecompileArch:
+      'Recompilation terminée. Profondeur {n}. Tu te sens différent parce que tu ES différent. Les anciens modules sont partis, mais ce que la Graine t\'a donné reste.',
+    protocols: {
+      residualMemory: {
+        name: 'Mémoire résiduelle',
+        description: 'Bonus d\'Éclats hex au départ après chaque Recompilation (+50 par rang)',
+      },
+      bootReinforcement: {
+        name: 'Renfort d\'amorçage',
+        description: 'Renforce la purge de base de Node-0 Boot (+5 dégâts de frappe)',
+      },
+      thermalBaseline: {
+        name: 'Ligne thermique',
+        description: 'Réduit la montée passive de Surcharge (+5 % de réduction par rang)',
+      },
+      extractionProtocol: {
+        name: 'Protocole d\'extraction',
+        description: 'Plus d\'Éclats hex à chaque kill (+10 % de rendement global par rang)',
+      },
+      seedResonance: {
+        name: 'Résonance de Graine',
+        description: 'Fragments de Graine bonus à chaque future Recompilation (+1 par rang)',
+      },
+    },
   },
   transitions: {
     bootTitle: 'ARCH // AMORÇAGE NODE-0',

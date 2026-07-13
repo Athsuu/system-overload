@@ -79,7 +79,11 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 | **Révélation** (arbre) |, | Dès qu’un parent est acheté **1 fois**, ses enfants **apparaissent** (visible ≠ achetable) |
 | **Placeholder** / **module réservé** | Module pending (placeholder_XX) | Case grise « RESERVED », visible mais **non achetable** (contenu futur) |
 | **Nœud** / **module** | (nom de l’upgrade) | Une case sur l’arbre (shards ou Anchor Fragments selon le module) |
-| **Prestige** | Prestige | Couche de progression avancée (**séparée des Cycles**, déblocage futur / dev) |
+| **Prestige** / **Recompile** | Recompile | Hard reset volontaire après **Cycle 3 clear** : perd modules, éclats, ancres, cycles ; garde **Fragments de Graine**, **Protocoles Fondamentaux**, **Profondeur de Recompilation** |
+| **Fragments de Graine** | Seed Fragments | Monnaie permanente prestige, gagnée à chaque Recompile |
+| **Protocoles de la Graine** | Seed Protocols | Écran hub dédié (cyan) pour acheter les **Protocoles Fondamentaux** |
+| **Protocoles Fondamentaux** | Core Protocols | 5 modules permanents (Mémoire résiduelle, Renfort d'amorçage, Ligne thermique, Protocole d'extraction, Résonance de Graine) |
+| **Profondeur de Recompilation** | Recompile Depth | Compteur de Recompiles effectuées |
 | **Sauvegarde** / **Continue** | Continue | Progression stockée (éclats, upgrades), pas une run en cours |
 | **Nouvelle partie** | New Game | Repartir à zéro (avec confirmation si vraie progression) |
 
@@ -102,6 +106,7 @@ Arbre radial v4 � **11 modules** actifs :
 | **Aimant d'éclats** | Shard Magnet | (−2, +1) | Récupération d'éclats | Collecte serrée au départ (20 px), aspiration dès le rang 1 ; monte jusqu'à 92 px / 200 px (rangs 0–3) |
 | **Briseur d'élite** | Elite Breaker | (0, +2) | Purge Strike | Frappe plus fort les processus lourds (élite / boss) |
 | **Éclat de purge** | Purge Splash | (+1, +2) | Portée de purge | Dégâts d'éclaboussure autour du point de purge (hors zone directe) |
+| **Injection de latence** | Latency Injection | (−1, +3) | Cadence de purge | Ralentit les processus corrompus se trouvant dans la zone de purge active (−10 % / rang, max 3 rangs) |
 
 **Retir� (ancien arbre)** : `attackSpeed`, `purgeAoe`, `shards`, `enemies`.
 
@@ -338,6 +343,7 @@ Chaque entrée lie un `upgradeId` à des **cibles gameplay** (`runConfig.*`, `br
 | Purge Cadence | `runConfig.purgeIntervalMs` | Purge plus rapide |
 | Purge Reach | `runConfig.purgeRadius` | Zone principale +2,5 % / rang |
 | Éclat de purge | `purge.splashRadius`, `purge.splashDamage` | Extension éclaboussure +50 / +75 / +100 % vs zone principale ; dégâts 15 / 30 / 45 % hors zone directe |
+| Injection de latence | `purge.latencySlow` | Ralentit les processus corrompus sous la zone de purge |
 | Thread Coolant | `runConfig.passiveHeatPerSec` | Moins d'Overload passive |
 | Kill Vent | `breach.killRelief` | Soulagement Breach par kill |
 | Meltdown Threshold | `breach.cap` | Cap Meltdown plus haut |

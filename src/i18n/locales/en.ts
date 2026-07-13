@@ -132,11 +132,15 @@ export const EN_STRINGS: GameStrings = {
     runShardsLabel: 'Hex Shards',
     availableShardsLabel: 'Hex Shards',
     anchorFragmentsLabel: 'Anchor Fragments',
+    seedFragmentsLabel: 'Seed Fragments',
+    seedFragmentsShort: 'SF',
     shardsEarnedSuffix: 'Hex Shards',
     anchorEarnedSuffix: 'Anchor Fragments',
     transferredToVault: 'Earned this run',
     shardsLoreTooltip: LORE.economy.vaultShardsTooltip,
     anchorLoreTooltip: LORE.economy.anchorFragments,
+    seedLoreTooltip:
+      'Pure data torn from the Seed during Recompile. Spent on Core Protocols etched into Node-0 source code. Never lost on reset.',
   },
   pause: {
     title: 'SYSTEM HALT',
@@ -243,6 +247,10 @@ export const EN_STRINGS: GameStrings = {
       name: 'Purge Splash',
       description: 'Splash purge damage to corrupted processes just outside your zone',
     },
+    latencyInjection: {
+      name: 'Latency Injection',
+      description: 'Slow down corrupted processes inside your active purge zone',
+    },
     threadCoolant: {
       name: 'Thread Coolant',
       description: 'Reduce passive Overload buildup while the Breach holds',
@@ -275,6 +283,7 @@ export const EN_STRINGS: GameStrings = {
     purgeReachBonus: 'Purge zone bonus',
     purgeSplashRadius: 'Splash reach (vs main zone)',
     purgeSplashDamage: 'Splash damage',
+    latencySlowBonus: 'Process slowdown',
     passiveBreachPerSec: 'Passive Breach / sec',
     reduction: 'Reduction',
     breachReliefPerKill: 'Breach relief / kill',
@@ -286,6 +295,48 @@ export const EN_STRINGS: GameStrings = {
     openLabel: 'Node-0 stats',
     cadenceUnit: '/s',
     purgeSplashZone: 'Splash zone',
+  },
+  seedProtocols: {
+    screenTitle: 'Seed Protocols',
+    screenSubtitle: 'Core optimizations written into Node-0 source code',
+    openButton: 'Seed\nProtocols',
+    backToHub: 'Back to\nHub',
+    recompileAction: 'Recompile',
+    recompileAvailable: 'Recompile available',
+    recompileConfirmTitle: 'Seed Recompilation',
+    recompileConfirmBody:
+      'I can recompile you from the Seed itself. You lose everything. What you gain is written into your source code. Permanent.',
+    recompileCancel: 'Cancel',
+    recompileLoseShards: 'Hex Shards lost: {n}',
+    recompileLoseAnchors: 'Anchor Fragments lost: {n}',
+    recompileLoseModules: 'All Module Tree levels reset',
+    recompileLoseCycles: 'Cycles reset to Cycle 1',
+    recompileDepthLabel: 'Recompile Depth: {n}',
+    recompileDepthAfter: 'Next Recompile Depth: {n}',
+    postRecompileArch:
+      'Recompile complete. Depth {n}. You feel different because you ARE different. The old modules are gone, but what the Seed gave you stays.',
+    protocols: {
+      residualMemory: {
+        name: 'Residual Memory',
+        description: 'Start each new cycle with bonus Hex Shards after a Recompile (+50 per rank)',
+      },
+      bootReinforcement: {
+        name: 'Boot Reinforcement',
+        description: 'Reinforce Node-0 Boot baseline purge output (+5 hit damage)',
+      },
+      thermalBaseline: {
+        name: 'Thermal Baseline',
+        description: 'Lower passive Overload buildup from the Breach (+5% reduction per rank)',
+      },
+      extractionProtocol: {
+        name: 'Extraction Protocol',
+        description: 'Extract more Hex Shards from every kill (+10% global yield per rank)',
+      },
+      seedResonance: {
+        name: 'Seed Resonance',
+        description: 'Gain extra Seed Fragments on every future Recompile (+1 per rank)',
+      },
+    },
   },
   transitions: {
     bootTitle: 'ARCH // NODE-0 BOOT',

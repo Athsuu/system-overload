@@ -93,6 +93,7 @@ const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   purgeCadence: 'degats',
   purgeReach: 'degats',
   purgeSplash: 'degats',
+  latencyInjection: 'degats',
   threadCoolant: 'thermique',
   killBreachRelief: 'thermique',
   meltdownThreshold: 'thermique',
@@ -108,6 +109,7 @@ const NODE_ICONS: Record<UpgradeId, string> = {
   purgeCadence: '',
   purgeReach: '',
   purgeSplash: '',
+  latencyInjection: '',
   threadCoolant: '◌',
   killBreachRelief: '◇',
   meltdownThreshold: '▲',
@@ -178,6 +180,7 @@ const PURGE_REACH_POS = positionFromAxial(1, 1);
 const PURGE_SPLASH_POS = positionFromAxial(1, 2);
 const MELTDOWN_THRESHOLD_POS = positionFromAxial(2, -1);
 const KILL_BREACH_RELIEF_POS = positionFromParent(THREAD_COOLANT_POS, 'downRight');
+const LATENCY_INJECTION_POS = positionFromAxial(-1, 3);
 
 /** Radial module tree — Node-0 Boot root; branches rebuilt incrementally. */
 export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
@@ -251,6 +254,14 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     position: PURGE_SPLASH_POS,
     branch: 'degats',
     requires: requireLevel('purgeReach', 1),
+  },
+  {
+    id: 'latencyInjection',
+    kind: 'upgrade',
+    parentId: 'purgeCadence',
+    position: LATENCY_INJECTION_POS,
+    branch: 'degats',
+    requires: requireLevel('purgeCadence', 1),
   },
   {
     id: 'threadCoolant',

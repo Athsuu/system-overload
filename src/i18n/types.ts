@@ -1,8 +1,34 @@
 import type { BranchId } from '../store/moduleTree';
 import type { UpgradeId } from '../store/upgradeCatalog';
+import type { CoreProtocolId } from '../store/prestigeTypes';
 
 export type GameLocale = 'en' | 'fr';
 export type LanguageMode = 'auto' | GameLocale;
+
+export interface CoreProtocolText {
+  name: string;
+  description: string;
+}
+
+export interface SeedProtocolsStrings {
+  screenTitle: string;
+  screenSubtitle: string;
+  openButton: string;
+  backToHub: string;
+  recompileAction: string;
+  recompileAvailable: string;
+  recompileConfirmTitle: string;
+  recompileConfirmBody: string;
+  recompileCancel: string;
+  recompileLoseShards: string;
+  recompileLoseAnchors: string;
+  recompileLoseModules: string;
+  recompileLoseCycles: string;
+  recompileDepthLabel: string;
+  recompileDepthAfter: string;
+  postRecompileArch: string;
+  protocols: Record<CoreProtocolId, CoreProtocolText>;
+}
 
 export interface UpgradeText {
   name: string;
@@ -44,6 +70,7 @@ export interface TooltipStatLabels {
   purgeReachBonus: string;
   purgeSplashRadius: string;
   purgeSplashDamage: string;
+  latencySlowBonus: string;
   passiveBreachPerSec: string;
   reduction: string;
   breachReliefPerKill: string;
@@ -148,11 +175,14 @@ export interface GameStrings {
     runShardsLabel: string;
     availableShardsLabel: string;
     anchorFragmentsLabel: string;
+    seedFragmentsLabel: string;
+    seedFragmentsShort: string;
     shardsEarnedSuffix: string;
     anchorEarnedSuffix: string;
     transferredToVault: string;
     shardsLoreTooltip: string;
     anchorLoreTooltip: string;
+    seedLoreTooltip: string;
   };
   pause: {
     title: string;
@@ -216,6 +246,7 @@ export interface GameStrings {
   branches: Record<BranchId, string> & { flux: string };
   tooltipStats: TooltipStatLabels;
   playerStats: PlayerStatsStrings;
+  seedProtocols: SeedProtocolsStrings;
   transitions: TransitionStrings;
   ui: UiStrings;
 }

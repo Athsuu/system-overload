@@ -12,6 +12,7 @@ export const PLAYTEST_FULL_MAX_UPGRADES: UpgradeLevels = {
   purgeCadence: 10,
   purgeReach: 10,
   purgeSplash: 0,
+  latencyInjection: 0,
   threadCoolant: 10,
   killBreachRelief: 10,
   meltdownThreshold: 10,

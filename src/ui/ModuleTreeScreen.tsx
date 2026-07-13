@@ -49,13 +49,9 @@ export function ModuleTreeScreen({ mode }: ModuleTreeScreenProps) {
           />
         </h1>
 
-        {isMenu ? (
+        {isMenu && (
           <p className="so-hub-glitch-tagline mt-3 max-w-md text-center text-[14px] tracking-[0.18em] text-white/35">
             <ArchGlitchLine text={strings.tagline} variant="dialogue" quote={false} glitchChance={0.1} />
-          </p>
-        ) : (
-          <p className="mt-2 text-[15px] tracking-[0.3em] text-white/50 uppercase">
-            {strings.hub.upgradesSubtitle}
           </p>
         )}
 

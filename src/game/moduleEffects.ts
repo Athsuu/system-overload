@@ -18,6 +18,12 @@ import {
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
+import type { CoreProtocolLevels } from '../store/prestigeTypes';
+import {
+  BOOT_REINFORCEMENT_DAMAGE_PER_LEVEL,
+  EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL,
+  THERMAL_BASELINE_REDUCTION_PERCENT_PER_LEVEL,
+} from '../store/coreProtocolCatalog';
 import type { EnemyClass } from './enemyClass';
 
 export const BASE_BREACH_CAP = 100;
@@ -65,6 +71,7 @@ export type ModuleEffectTarget =
   | 'purge.splashRadius'
   | 'purge.splashDamage'
   | 'runConfig.passiveHeatPerSec'
+  | 'purge.latencySlow'
   | 'breach.cap'
   | 'breach.killRelief'
   | 'loot.hexShardRadii';
@@ -124,6 +131,11 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
     upgradeId: 'purgeSplash',
     targets: ['purge.splashRadius', 'purge.splashDamage'],
     summaryFr: 'Éclaboussure : extension % de la zone principale + dégâts réduits hors zone directe',
+  },
+  {
+    upgradeId: 'latencyInjection',
+    targets: ['purge.latencySlow'],
+    summaryFr: 'Ralentit les processus corrompus dans la zone de purge',
   },
   {
     upgradeId: 'threadCoolant',
@@ -211,6 +223,11 @@ export function getEliteBreakerDamageBonusPercent(level: number): number {
   return ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL[index];
 }
 
+export function getLatencySlowMultiplier(level: number): number {
+  if (level <= 0) return 1;
+  return Math.max(0.1, 1 - level * 0.10);
+}
+
 export function getPurgeSplashRadiusBonusPercent(splashLevel: number): number {
   if (splashLevel <= 0) return 0;
   const index = Math.min(splashLevel, PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL.length) - 1;
@@ -245,27 +262,51 @@ export function resolvePurgeHitDamage(
   return Math.round(basePurgeHitDamage * (1 + bonusPercent / 100));
 }
 
-export function computeRunConfig(upgrades: UpgradeLevels): RunConfig {
+export function computeRunConfig(
+  upgrades: UpgradeLevels,
+  coreProtocols: CoreProtocolLevels = {
+    residualMemory: 0,
+    bootReinforcement: 0,
+    thermalBaseline: 0,
+    extractionProtocol: 0,
+    seedResonance: 0,
+  },
+): RunConfig {
   const aoe = computePurgeAoeProfile(upgrades);
+  const thermalBaselineReduction =
+    (coreProtocols.thermalBaseline * THERMAL_BASELINE_REDUCTION_PERCENT_PER_LEVEL) / 100;
+  const basePassiveAfterModules = subtractPerLevel(
+    RUN_STAT_BASE.basePassiveHeatPerSec,
+    upgrades.threadCoolant,
+    THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
+    MIN_PASSIVE_HEAT_PER_SEC,
+  );
+  const passiveHeatPerSec = Math.max(
+    MIN_PASSIVE_HEAT_PER_SEC,
+    basePassiveAfterModules * (1 - thermalBaselineReduction),
+  );
+  const extractionBonus =
+    1 + (coreProtocols.extractionProtocol * EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL) / 100;
+  const bootReinforcementDamage = flatPerLevel(
+    coreProtocols.bootReinforcement,
+    BOOT_REINFORCEMENT_DAMAGE_PER_LEVEL,
+  );
+
   return {
     starterNodes: RUN_STAT_BASE.starterNodes,
     baseEnemyHp: RUN_STAT_BASE.baseEnemyHp,
-    shardsMultiplier: getShardYieldMultiplier(upgrades.shardYield),
+    shardsMultiplier: getShardYieldMultiplier(upgrades.shardYield) * extractionBonus,
     killBonusShards: flatPerLevel(upgrades.shardSalvage, SHARD_SALVAGE_BONUS_PER_LEVEL),
     spawnIntervalMult: RUN_STAT_BASE.spawnIntervalMult,
     maxAliveReduction: RUN_STAT_BASE.maxAliveReduction,
     baseEnemySpeed: RUN_STAT_BASE.baseEnemySpeed,
     maxEnemySpeed: RUN_STAT_BASE.maxEnemySpeed,
-    passiveHeatPerSec: subtractPerLevel(
-      RUN_STAT_BASE.basePassiveHeatPerSec,
-      upgrades.threadCoolant,
-      THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
-      MIN_PASSIVE_HEAT_PER_SEC,
-    ),
+    passiveHeatPerSec,
     leakProgressPenalty: RUN_STAT_BASE.baseLeakProgressPenalty,
     purgeRadius: aoe.mainRadius,
     purgeHitDamage:
       (upgrades.node0Boot >= 1 ? RUN_STAT_BASE.basePurgeHitDamage : 0) +
+      bootReinforcementDamage +
       flatPerLevel(upgrades.purgeStrike, PURGE_STRIKE_DAMAGE_PER_LEVEL),
     purgeIntervalMs: subtractPerLevel(
       RUN_STAT_BASE.basePurgeIntervalMs,

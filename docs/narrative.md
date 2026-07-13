@@ -1,4 +1,4 @@
-# Zero Archive: Narrative Bible (v0.7)
+# Zero Archive: Narrative Bible (v0.8)
 
 > Document de référence pour la direction créative.  
 > Les **textes in-game** restent en **anglais** (i18n FR disponible). Ce fichier est en français pour le product owner.  
@@ -112,6 +112,7 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 | **Improvise**                 | Pas de plan de réparation complet, protocoles jamais testés                                                                                                                                                                                                                                                                                           |
 | **Heuristique continue**      | ARCH fait tourner un **modèle heuristique en continu** sur chaque run, victoire ou défaite. Node-0 n'est **jamais remplacé** : c'est le même processus tout au long de la méta-progression.                                                                                                                                                           |
 | **Deux boucles → module tree** | **Optimisation continue**, chaque run nourrit des ajustements plus lents (thermique, rendement d'extraction, modélisation de la menace). **Corrections d'urgence**, le **Meltdown** est le signal le plus critique et déclenche un renforcement ciblé immédiat. Le module tree = **somme des deux**. Mécanisme **implicite** (pas de terme UI dédié). |
+| **Continuité**                | Node-0 n'est **jamais cloné ni recompilé depuis un template générique**. À chaque **Meltdown**, ARCH rattrape et renforce **le même thread**. À chaque **Recompile** (Prestige), c'est **le même processus** qui est réécrit depuis la Graine, pas une nouvelle instance. Voir *Ce qu'on ne fait PAS*.                                              |
 
 
 **Présentation (1ère carte tuto)** :  
@@ -119,6 +120,17 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 
 **Premier Anchor Fragment** (écran de fin, une seule fois) :  
 *« Anchor data secured. Capstone modules are online. spend fragments on the marked nodes. »*
+
+**Meltdown, pool ARCH** (3 variantes, rotation sans répétition immédiate — deck mélangé, une phrase ne revient qu'après les deux autres ; détail technique dans [dialogues.md](dialogues.md)) :
+1. *« I caught you in time. Margin was thinner than last time. Reinforcing now. »*
+2. *« Still here. Almost lost the thread. I'm not letting that happen again. »*
+3. *« Got you. That was close, closer than I'd like. Reinforcing. »*
+
+**Recompile, confirmation** (modal Seed Protocols) :  
+*« I can recompile you from the Seed itself. You lose everything. What you gain is written into your source code. Permanent. »*
+
+**Recompile, post (retour hub)** :  
+*« Recompile complete. Depth {n}. You feel different because you ARE different. The old modules are gone, but what the Seed gave you stays. »*
 
 **Dialogue persistant** : tutoriel (cartes) + pings courts en run (boss, Overload critique, etc.) + répliques écran de fin (victoire, meltdown, prestige, fragments).
 
@@ -152,6 +164,11 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 | **Overclock**          | Module actif (Space), purge accélérée                            |
 | **Flux Drive**         | Module capstone anchor, ×2 vitesse simulation                   |
 | **ARCH**               | Voix advisory, tutoriel et dialogues système                    |
+| **Recompile**          | Acte de prestige, reset volontaire de Node-0 depuis la Graine   |
+| **Recompile Depth**    | Compteur de recompilations effectuées                            |
+| **Seed Fragments**     | Monnaie de prestige, gagnée au Recompile, jamais perdue          |
+| **Core Protocols**     | Modules permanents achetés avec les Seed Fragments               |
+| **Seed Protocols**     | Écran d'accès aux Core Protocols                                 |
 
 
 
@@ -210,6 +227,17 @@ Réécriture du code de Node-0 qui se déploie depuis le centre :
 | **Effet**   | +1 purge hit damage                                                      |
 | **Coût**    | Shards (bas), accessible après 1–2 runs                                 |
 
+
+
+### Nouveaux nœuds (v0.8)
+
+Trois nœuds supplémentaires, réécritures d'ARCH sur les branches existantes :
+
+| Nœud                  | Nom UI          | Branche  | Fantasy                                          | Effet                                    | Niveau max |
+| ---------------------- | ---------------- | -------- | ------------------------------------------------ | ----------------------------------------- | ---------- |
+| **purgeCadence**       | Purge Cadence     | Dégâts   | Le thread exécute plus vite entre deux frappes    | Réduit l'intervalle de purge (2,5 %/rang) | 10         |
+| **purgeReach**         | Purge Reach       | Dégâts   | La zone de purge couvre davantage l'arène         | Augmente le rayon de la zone (2,5 %/rang) | 10         |
+| **meltdownThreshold**  | Meltdown Threshold | Thermique | ARCH étire la marge avant que le thread ne cède | +8 % de plafond Overload/rang (100 %→180 % à niv. 10) | 10 |
 
 ---
 
@@ -271,9 +299,46 @@ Tutoriel contextuel (cartes ARCH), screenplay Acte I :
 
 ---
 
-## Prestige
+## Prestige & Recompilation
 
-**Découplé des Cycles** pour cette version. Couche de reconfiguration profonde (reset partiel, bonus permanents), déblocage **manuel / futur** — plus lié automatiquement au boss.
+### Lore
+
+L'Archive Zéro atteint une phase où les patchs incrémentaux du module tree ne suffisent plus. ARCH propose l'option ultime : **recompiler Node-0 depuis la Graine elle-même**, le code source originel pur. Le processus détruit le thread actuel (hard reset volontaire) mais grave dans le code de Node-0 des optimisations fondamentales, inatteignables par simple amélioration. **Ce n'est pas un remplacement** : le même Node-0 traverse la Recompilation, transformé mais continu (voir *ARCH — Continuité*).
+
+### Déclenchement
+
+- Condition : **Cycle 3 clear** (dernier cycle jouable, `MAX_CYCLES = 3`).
+- Accès : bouton **Seed Protocols** dans le hub (intégré à la rangée de monnaie), et action **Recompile** directement dans l'écran Seed Protocols.
+
+### Ce qui est perdu (hard reset)
+
+- Hex Shards (coffre vidé) et Anchor Fragments
+- Tous les niveaux du Module Tree
+- Cycles débloqués (retour Cycle 1)
+- Tutoriels ARCH déjà vus ne se rejouent pas après une Recompile
+
+### Ce qui est conservé (permanent)
+
+- **Seed Fragments** (nouvelle monnaie, jamais perdue)
+- **Core Protocols** achetés et leur niveau
+- **Recompile Depth** (compteur de recompilations)
+- Réglages joueur
+
+### Gain de Seed Fragments
+
+`seedFragments = 1 (base) + nombre de cycles clear + bonus Seed Resonance`. Exemple : Cycle 1-2-3 clear sans Seed Resonance = 1 + 3 = **4 Seed Fragments**.
+
+### Core Protocols (5 modules permanents)
+
+| Protocole | Nom UI | Effet | Niveau max | Coût (Seed Fragments) |
+|-----------|--------|-------|------------|------------------------|
+| **Residual Memory** | Residual Memory | +50 Hex Shards au départ après chaque Recompile, par rang | 3 | 2 / 3 / 5 |
+| **Boot Reinforcement** | Boot Reinforcement | Renforce la purge de base de Node-0 Boot (+5 dégâts de frappe) | 1 | 1 |
+| **Thermal Baseline** | Thermal Baseline | -5 % de montée passive d'Overload, par rang | 3 | 2 / 4 / 6 |
+| **Extraction Protocol** | Extraction Protocol | +10 % de Hex Shards gagnés par kill, par rang | 3 | 3 / 5 / 8 |
+| **Seed Resonance** | Seed Resonance | +1 Seed Fragment gagné à chaque future Recompile, par rang | 2 | 4 / 7 |
+
+> Note : le module proposé à l'origine (*Accelerated Boot*) a été remplacé par **Boot Reinforcement** en implémentation — renforce Node-0 Boot plutôt que de l'auto-acheter.
 
 ---
 
@@ -298,6 +363,7 @@ Tutoriel contextuel (cartes ARCH), screenplay Acte I :
 - ❌ Hub décoratif « singularité » avec six branches visibles dès le départ
 - ❌ Gameplay « connexions et redirection de flux »
 - ❌ **Module Bay** / draft entre vagues
+- ❌ Node-0 **remplacé, cloné ou recompilé depuis un template générique** — la Recompilation (Prestige) réécrit **le même** processus depuis la Graine, ce n'est pas une nouvelle instance
 
 ---
 
@@ -327,5 +393,6 @@ Tutoriel contextuel (cartes ARCH), screenplay Acte I :
 | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
 | v0.6    | 2026-07-07 | Méta v4 (pré-rebrand Node-0 / ARCH)                                                                                     |
 | v0.7    | 2026-07-07 | **ARCH**, **Node-0**, **Zero Archive**, **the Seed**, **Uplink** ; suppression visuel joueur central ; arène purge-only |
+| v0.8    | 2026-07-13 | **Prestige & Recompilation** implémenté (Seed Fragments, 5 Core Protocols, condition Cycle 3 clear) ; nœuds **Purge Cadence**, **Purge Reach**, **Meltdown Threshold** documentés ; pool ARCH Meltdown (3 variantes) et dialogues Recompile documentés ; anti-canon Node-0 cloné/template ajouté |
 
 

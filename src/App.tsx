@@ -16,6 +16,7 @@ import { ScreenTransition } from './ui/ScreenTransition';
 import { SettingsOverlay } from './ui/SettingsOverlay';
 import { MainMenuScreen } from './ui/MainMenuScreen';
 import { ModuleTreeScreen } from './ui/ModuleTreeScreen';
+import { SeedProtocolsScreen } from './ui/SeedProtocolsScreen';
 import { ScreenTransitionOverlay } from './ui/transitions/ScreenTransitionOverlay';
 import { TutorialCoach } from './ui/TutorialCoach';
 import { ArchAmbient } from './ui/ArchAmbient';
@@ -34,10 +35,11 @@ function App() {
   const isArenaVisible = isPlaying || isPaused || isRunEnd;
   const isMainMenu = gameState === 'MAIN_MENU';
   const isHub = gameState === 'MENU' || gameState === 'UPGRADING';
-  const showHubSettings = isSettingsOpen && isHub;
+  const isSeedProtocols = gameState === 'SEED_PROTOCOLS';
+  const showHubSettings = isSettingsOpen && (isHub || isSeedProtocols);
   const showMainMenuSettings = isSettingsOpen && isMainMenu;
 
-  const showHexShardsBadge = isHub || isPlaying || isPaused;
+  const showHexShardsBadge = isHub || isSeedProtocols || isPlaying || isPaused;
 
   useHubAudio();
   useProgressAutosave();
@@ -53,7 +55,7 @@ function App() {
           <GameCanvas />
         </>
       )}
-      {showHexShardsBadge && <HexShardsBadgeLayer />}
+      {showHexShardsBadge && <HexShardsBadgeLayer showPrestigeEntry={isHub} />}
       <div className="pointer-events-none absolute inset-0 z-10">
         {isPlaying && (
           <ScreenTransition screenKey="hud" className="absolute inset-0">
@@ -78,6 +80,11 @@ function App() {
         {isHub && (
           <ScreenTransition screenKey={`hub-${gameState}`} className="absolute inset-0">
             <ModuleTreeScreen mode={gameState} />
+          </ScreenTransition>
+        )}
+        {isSeedProtocols && (
+          <ScreenTransition screenKey="seed-protocols" className="absolute inset-0">
+            <SeedProtocolsScreen />
           </ScreenTransition>
         )}
       </div>

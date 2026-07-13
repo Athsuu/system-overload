@@ -4,9 +4,14 @@ import type { EnemyClass } from './enemyClass';
 import {
   getEnemyMaxHp,
   getEnemySpeed,
+  getLatencySlowMultiplier,
+  getRunConfig,
   type RunConfig,
 } from './runConfig';
 import type { DissipationNode } from './types';
+import { purgePointerRef } from './purgeInput';
+import { isEnemyInPurgeZone } from './purgeZone';
+import { useGameStore } from '../store/useGameStore';
 
 function pointOnEdge(
   edge: number,
@@ -139,6 +144,11 @@ export function tickEnemyMovement(
   deltaSeconds: number,
   onFlowEscape: (node: DissipationNode) => void,
 ): void {
+  const store = useGameStore.getState();
+  const slowLevel = store.upgrades.latencyInjection || 0;
+  const slowMult = getLatencySlowMultiplier(slowLevel);
+  const config = getRunConfig(store.upgrades);
+
   for (let index = nodes.length - 1; index >= 0; index -= 1) {
     const node = nodes[index];
     const remaining = node.flowDistance - node.distanceTraveled;
@@ -148,7 +158,16 @@ export function tickEnemyMovement(
       continue;
     }
 
-    const step = Math.min(node.moveSpeed * deltaSeconds, remaining);
+    let speed = node.moveSpeed;
+    if (
+      slowLevel > 0 &&
+      purgePointerRef.active &&
+      isEnemyInPurgeZone(node, purgePointerRef.x, purgePointerRef.y, config.purgeRadius)
+    ) {
+      speed *= slowMult;
+    }
+
+    const step = Math.min(speed * deltaSeconds, remaining);
     node.x += node.vx * step;
     node.y += node.vy * step;
     node.distanceTraveled += step;

@@ -1,4 +1,5 @@
-import { DEFAULT_PRESTIGE } from './prestigeTypes';
+import { DEFAULT_PRESTIGE, type CoreProtocolLevels } from './prestigeTypes';
+import { sanitizeCoreProtocols } from './coreProtocolCatalog';
 import {
   DEFAULT_CYCLE_PROGRESS,
   sanitizeCyclesCleared,
@@ -12,7 +13,12 @@ export interface SaveData {
   bankShards: number;
   bankAnchorFragments: number;
   upgrades: UpgradeLevels;
+  seedFragments: number;
+  recompileDepth: number;
+  coreProtocols: CoreProtocolLevels;
+  /** @deprecated legacy — migrated to recompileDepth */
   prestigeUnlocked: boolean;
+  /** @deprecated legacy — migrated to recompileDepth */
   prestigeLevel: number;
   highestCycleUnlocked: number;
   selectedCycle: number;
@@ -28,6 +34,9 @@ interface LegacySaveData {
   bankAnchorFragments?: number;
   bankTflops?: number;
   upgrades?: Partial<UpgradeLevels>;
+  seedFragments?: number;
+  recompileDepth?: number;
+  coreProtocols?: Partial<CoreProtocolLevels>;
   prestigeUnlocked?: boolean;
   prestigeLevel?: number;
   highestCycleUnlocked?: number;
@@ -154,12 +163,25 @@ export function loadSave(): SaveData | null {
         : Math.min(DEFAULT_CYCLE_PROGRESS.selectedCycle, highestCycleUnlocked);
     const cyclesCleared = sanitizeCyclesCleared(parsed.cyclesCleared);
 
+    const recompileDepth = Math.max(
+      0,
+      parsed.recompileDepth ?? parsed.prestigeLevel ?? DEFAULT_PRESTIGE.recompileDepth,
+    );
+    const seedFragments =
+      typeof parsed.seedFragments === 'number'
+        ? Math.max(0, parsed.seedFragments)
+        : DEFAULT_PRESTIGE.seedFragments;
+    const coreProtocols = sanitizeCoreProtocols(parsed.coreProtocols);
+
     const saveData: SaveData = {
       bankShards,
       bankAnchorFragments,
       upgrades,
-      prestigeUnlocked: parsed.prestigeUnlocked ?? DEFAULT_PRESTIGE.prestigeUnlocked,
-      prestigeLevel: Math.max(0, parsed.prestigeLevel ?? DEFAULT_PRESTIGE.prestigeLevel),
+      seedFragments,
+      recompileDepth,
+      coreProtocols,
+      prestigeUnlocked: parsed.prestigeUnlocked ?? recompileDepth > 0,
+      prestigeLevel: recompileDepth,
       highestCycleUnlocked,
       selectedCycle,
       cyclesCleared,
@@ -207,6 +229,8 @@ export function hasProgressToErase(): boolean {
   if (!save) return false;
   if (save.bankShards > 0) return true;
   if (save.bankAnchorFragments > 0) return true;
+  if (save.seedFragments > 0) return true;
+  if (save.recompileDepth > 0) return true;
   if (save.prestigeUnlocked || save.prestigeLevel > 0) return true;
   if (save.highestCycleUnlocked > 1) return true;
   if (save.cyclesCleared.length > 0) return true;

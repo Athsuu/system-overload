@@ -221,6 +221,12 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     ];
   }
 
+  if (id === 'latencyInjection') {
+    const current = `-${level * 10}%`;
+    const next = nextLevel !== null ? `-${nextLevel * 10}%` : null;
+    return [line(labels.latencySlowBonus, current, nextLevel, next)];
+  }
+
   if (id === 'meltdownThreshold') {
     const currentCap = BASE_BREACH_CAP + level * MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL;
     const nextCap =

@@ -1,5 +1,6 @@
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
+import { SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
 
 interface CurrencyIconProps {
   size?: number;
@@ -59,6 +60,36 @@ export function AnchorFragmentIcon({ size = 20 }: CurrencyIconProps) {
         strokeOpacity={0.9}
       />
       <circle cx="12" cy="12" r="1.6" fill={DARK_HEX.breachGlow} fillOpacity={0.85} />
+    </svg>
+  );
+}
+
+/** Pure Seed data — cyan nested hex (Seed Fragments lore). */
+export function SeedFragmentIcon({ size = 20 }: CurrencyIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <polygon
+        points="12 2 20 6.5 20 17.5 12 22 4 17.5 4 6.5"
+        fill="#081018"
+        stroke={SEED_PROTOCOL_VISUAL.accent}
+        strokeWidth={1.25}
+        strokeOpacity={0.9}
+      />
+      <polygon
+        points="12 6 15.5 8 15.5 12 12 14 8.5 12 8.5 8"
+        fill={SEED_PROTOCOL_VISUAL.accent}
+        fillOpacity={0.18}
+        stroke={SEED_PROTOCOL_VISUAL.accentMuted}
+        strokeWidth={0.75}
+        strokeOpacity={0.65}
+      />
+      <circle cx="12" cy="10" r="1.4" fill={SEED_PROTOCOL_VISUAL.accentMuted} fillOpacity={0.9} />
     </svg>
   );
 }

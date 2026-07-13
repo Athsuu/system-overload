@@ -105,6 +105,14 @@ function getUnlockedPlayerStatLines(
     });
   }
 
+  if (upgrades.latencyInjection > 0) {
+    lines.push({
+      id: 'latencySlow',
+      label: labels.latencySlowBonus,
+      value: `-${upgrades.latencyInjection * 10}%`,
+    });
+  }
+
   return lines;
 }
 
