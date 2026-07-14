@@ -1,6 +1,6 @@
 import { clampCycleIndex, REGULAR_WAVES_PER_CYCLE } from '../store/cycleTypes';
 
-/** Breach / Overload pressure per cycle: C1 1.0, C2 1.12, C3 1.24 */
+/** Spawn / densité par cycle: C1 1.0, C2 1.12, C3 1.24 — indépendant de la chaleur. */
 export const CYCLE_PRESSURE_STEP = 0.12;
 
 /**
@@ -10,7 +10,10 @@ export const CYCLE_PRESSURE_STEP = 0.12;
  */
 export const CYCLE_HP_GROWTH_PER_LEVEL = 1.15;
 export const CYCLE_SPEED_GROWTH_PER_LEVEL = 1.04;
+/** Legacy — les fuites runtime sont un % du cap (voir LEAK_BREACH_PERCENT_OF_CAP). */
 export const CYCLE_LEAK_GROWTH_PER_LEVEL = 1.08;
+/** Package A — chaleur passive ×1,30 par Cycle (composé) : C1 1.0, C2 1.30, C3 1.69. */
+export const CYCLE_HEAT_GROWTH_PER_LEVEL = 1.3;
 
 /** Maps hub cycle + local wave (1–11) to a continuous scaling index. */
 export function getScalingWaveIndex(cycle: number, localWave: number): number {
@@ -37,4 +40,9 @@ export function getCycleSpeedGrowthMult(cycle: number): number {
 export function getCycleLeakGrowthMult(cycle: number): number {
   const safeCycle = clampCycleIndex(cycle);
   return CYCLE_LEAK_GROWTH_PER_LEVEL ** (safeCycle - 1);
+}
+
+export function getCycleHeatGrowthMult(cycle: number): number {
+  const safeCycle = clampCycleIndex(cycle);
+  return CYCLE_HEAT_GROWTH_PER_LEVEL ** (safeCycle - 1);
 }

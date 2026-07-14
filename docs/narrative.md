@@ -35,7 +35,7 @@ Au départ, un seul module est visible : **Node-0 Boot**, l'initialisation du th
 
 **Objectif long terme (narratif)** : l'**Uplink**, extraire la Graine hors de l'Archive en collapse. Pas de mécanique dédiée dans cette version.
 
-**Rythme cible** : runs courtes une fois équipé (échecs souvent 1,5–3 min) ; premier clear du Cycle 1 depuis une sauvegarde neuve = **15-20 minutes cumulées** (plusieurs tentatives + achats hub, voir rééquilibrage) ; méta complète ~~**4–5 h** (~~60–80 runs).
+**Rythme cible** : runs équipées **2 min 30 – 3 min** (Package A pression Overload) ; échecs souvent plus courts ; premier clear du Cycle 1 depuis une sauvegarde neuve = **15-20 minutes cumulées** (plusieurs tentatives + achats hub) ; méta complète ~~**4–5 h** (~~60–80 runs).
 
 ---
 

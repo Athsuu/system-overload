@@ -8,7 +8,7 @@ import {
 import { applyDevRunConfigOverrides } from '../dev/devRunConfigOverrides';
 import { isNodeAnchorActive } from './anchorSupercharge';
 import type { EnemyClass } from './enemyClass';
-import { getCyclePressureMult, getScalingWaveIndex } from './cycleScaling';
+import { getCycleHeatGrowthMult, getCyclePressureMult, getScalingWaveIndex } from './cycleScaling';
 import { useGameStore } from '../store/useGameStore';
 import {
   computeBreachCap,
@@ -18,10 +18,12 @@ import {
 } from './moduleEffects';
 import {
   getWaveHpMultiplier,
-  getWaveLeakPenalty,
   getWaveShardReward,
   getWaveSpeedMultiplier,
 } from './waveScaling';
+
+/** Package A — chaque fuite inflige 20 % du seuil Meltdown actuel. */
+export const LEAK_BREACH_PERCENT_OF_CAP = 20;
 
 export {
   BASE_BREACH_CAP,
@@ -91,7 +93,7 @@ export function resolveScalingWaveIndex(localWaveIndex: number): number {
 }
 
 export function getEffectivePassiveHeatPerSec(config: RunConfig): number {
-  return config.passiveHeatPerSec * getCyclePressureMult(resolveActiveCycle());
+  return config.passiveHeatPerSec * getCycleHeatGrowthMult(resolveActiveCycle());
 }
 
 export function getEnemyMaxHp(
@@ -125,10 +127,9 @@ export function getShardReward(
   return Math.floor(base * config.shardsMultiplier) + config.killBonusShards;
 }
 
-export function getLeakProgressPenalty(_config: RunConfig, localWaveIndex: number): number {
-  const cycle = resolveActiveCycle();
-  const scalingIndex = getScalingWaveIndex(cycle, localWaveIndex);
-  return Math.round(getWaveLeakPenalty(scalingIndex) * getCyclePressureMult(cycle));
+export function getLeakProgressPenalty(_config: RunConfig, _localWaveIndex: number): number {
+  const breachCap = getBreachCap(useGameStore.getState().upgrades);
+  return Math.round(breachCap * (LEAK_BREACH_PERCENT_OF_CAP / 100));
 }
 
 export function getKillBreachRelief(upgrades: UpgradeLevels, _waveIndex: number): number {

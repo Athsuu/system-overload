@@ -60,7 +60,9 @@ export const RUN_STAT_BASE = {
   baseEnemyHp: 20,
   baseEnemySpeed: 52.16,
   maxEnemySpeed: 102.47,
-  basePassiveHeatPerSec: 1.5,
+  /** Package A — pression Overload : base 2,8 / s (ex-1,5). */
+  basePassiveHeatPerSec: 2.8,
+  /** Réserve legacy RunConfig ; la fuite runtime utilise LEAK_BREACH_PERCENT_OF_CAP. */
   baseLeakProgressPenalty: 20,
   basePurgeRadius: 72,
   basePurgeHitDamage: 5,
@@ -192,8 +194,11 @@ export const MODULE_ADDITION_PIPELINE = [
 /** Plancher cadence purge — évite intervalle 0 ms ou négatif si niveaux / constantes augmentent. */
 export const MIN_PURGE_INTERVAL_MS = 150;
 
-/** Plancher Overload passive — la Brèche ne doit pas s'arrêter totalement au max Thread Coolant. */
-export const MIN_PASSIVE_HEAT_PER_SEC = 0.5;
+/**
+ * Plancher Overload passive (Package A) — Coolant ne peut plus éteindre la jauge.
+ * Avec base 2,8 et −0,08 / rang, le plancher cadre surtout les Ancrages.
+ */
+export const MIN_PASSIVE_HEAT_PER_SEC = 1.8;
 
 function flatPerLevel(level: number, perLevel: number): number {
   return level * perLevel;
