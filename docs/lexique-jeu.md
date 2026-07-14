@@ -53,7 +53,8 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 | **ARCH** | ARCH | Voix conseil / tutoriel, modèle heuristique continu sur chaque run ; ton urgent, parental, attaché (Archive Recovery & Containment Heuristic) |
 | **Breach** / **Brèche** / **Surcharge** | Overload (jauge) · Breach (lore) | Pression du système ; si ça explose → défaite |
 | **Meltdown** / **Fusion du noyau** | Meltdown | Défaite à 100 % surcharge |
-| **Surcharge passive (base run)** | passive heat | **1,5 / s** sans module thermique (`RUN_STAT_BASE.basePassiveHeatPerSec`) ; cap Meltdown 100 → ~67 s sans kill ni relief |
+| **Surcharge passive (base run)** | passive heat | **2,8 / s** sans module thermique (`RUN_STAT_BASE.basePassiveHeatPerSec`) ; scaling Cycle **×1,30** composé (`CYCLE_HEAT_GROWTH_PER_LEVEL`) ; cap Meltdown 100 → ~36 s sans kill ni relief (C1) |
+| **Fuite / leak** | leak | Ennemi qui touche le bord : **+20 %** du seuil Meltdown actuel (`LEAK_BREACH_PERCENT_OF_CAP`) ; fuites en rafale ×1,5 |
 | **Breach Contained** / **Brèche contenue** | Breach Contained | Victoire (boss vaincu) |
 | **Processus corrompus** | Corrupted processes | Ennemis |
 | **Dissipation Nodes** | (nom technique ennemis) | Hex ennemis dans l’arène, OK de garder ce nom en interne |
@@ -362,8 +363,8 @@ Chaque entrée lie un `upgradeId` à des **cibles gameplay** (`runConfig.*`, `br
 | Purge Reach | `runConfig.purgeRadius` | Zone principale +2,5 % / rang |
 | Éclat de purge | `purge.splashRadius`, `purge.splashDamage` | Extension éclaboussure +50 / +75 / +100 % vs zone principale ; dégâts 15 / 30 / 45 % hors zone directe |
 | Injection de latence | `purge.latencySlow` | Ralentit les processus corrompus sous la zone de purge |
-| Thread Coolant | `runConfig.passiveHeatPerSec` | Moins d'Overload passive |
-| Kill Vent | `breach.killRelief` | Soulagement Breach par kill |
+| Thread Coolant | `runConfig.passiveHeatPerSec` | −0,08 / rang (plancher 1,8 / s) |
+| Kill Vent | `breach.killRelief` | −1 Overload / kill / rang (max 5) |
 | Meltdown Threshold | `breach.cap` | ×1.05^rang composé sur le cap Breach de base (illimité — remplace l'ancien flat +8/rang) |
 | Overclock | `overclock.unlock` | Débloque le bouton Overclock (Espace / HUD) |
 | Flux Drive | `runConfig.timeScale` | Débloque le toggle Flux Drive (×2 vitesse de simulation) |
@@ -391,7 +392,7 @@ Les modules qui **soustraient** par rang (`subtractPerLevel` dans `moduleEffects
 | Stat | Constante | Plancher | Module |
 |------|-----------|----------|--------|
 | Cadence purge | `MIN_PURGE_INTERVAL_MS` | **150 ms** | Purge Cadence |
-| Overload passive / s | `MIN_PASSIVE_HEAT_PER_SEC` | **0,5 / s** | Thread Coolant |
+| Overload passive / s | `MIN_PASSIVE_HEAT_PER_SEC` | **1,8 / s** | Thread Coolant |
 
 Les stats affichées au tooltip reflètent ces planchers une fois le cap atteint.
 

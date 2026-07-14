@@ -160,7 +160,8 @@ export const COST_PURGE_REACH = buildShardCostCurve(
 );
 
 export const THREAD_COOLANT_MAX_LEVEL = 10;
-export const THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL = 0.14;
+/** Package A — réduction douce : base 2,8 − 0,08/rang → ~2,0/s au max (plancher 1,8). */
+export const THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL = 0.08;
 export const THREAD_COOLANT_COST_BASE = 10;
 export const THREAD_COOLANT_COST_GROWTH = 1.2;
 
@@ -170,8 +171,9 @@ export const COST_THREAD_COOLANT = buildShardCostCurve(
   THREAD_COOLANT_MAX_LEVEL,
 );
 
-export const KILL_BREACH_RELIEF_MAX_LEVEL = 10;
-export const KILL_BREACH_RELIEF_PER_LEVEL = 0.1;
+/** Package A — moins de rangs, relief lisible par kill (ex-0,1 / rang sur 10 rangs). */
+export const KILL_BREACH_RELIEF_MAX_LEVEL = 5;
+export const KILL_BREACH_RELIEF_PER_LEVEL = 1;
 export const KILL_BREACH_RELIEF_COST_BASE = 10;
 export const KILL_BREACH_RELIEF_COST_GROWTH = 1.18;
 

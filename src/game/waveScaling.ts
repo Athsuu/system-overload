@@ -57,6 +57,10 @@ export function getWaveShardReward(scalingWaveIndex: number, enemyClass: EnemyCl
   return 1 + Math.floor((localWave - 1) / 4);
 }
 
+/**
+ * @deprecated Package A — fuites runtime = % du cap Meltdown (`LEAK_BREACH_PERCENT_OF_CAP` dans runConfig).
+ * Conservé pour outils / lecture historique de l'ancienne courbe vague.
+ */
 export function getWaveLeakPenalty(scalingWaveIndex: number): number {
   const { cycle, localWave } = resolveCycleAndLocalWave(scalingWaveIndex);
   return Math.round((18 + localWave * 2) * getCycleLeakGrowthMult(cycle));
