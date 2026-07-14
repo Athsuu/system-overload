@@ -1,9 +1,12 @@
-import { useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameStore } from '../store/useGameStore';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { MAX_CYCLES, isCycleCleared } from '../store/cycleTypes';
+import { isCycleCleared } from '../store/cycleTypes';
+import { RECOMPILE_TRIGGER_CYCLE } from '../store/prestigeLogic';
+import { ANCHOR_CYCLES_PER_FRAGMENT } from '../game/anchorSupercharge';
+import { setBadgeTarget } from '../game/juice/badgeTarget';
 import { AnchorFragmentIcon, HexShardIcon, SeedFragmentIcon } from './currencyIcons';
 import { isAnchorFragmentsUnlocked, isVaultShardsUnlocked } from './currencyVisibility';
 import {
@@ -77,6 +80,7 @@ function CurrencyRow({
 export function CurrencyBadge({ containerRef, showPrestigeEntry = false }: CurrencyBadgeProps) {
   const bankShards = useGameStore((state) => state.bankShards);
   const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
+  const cyclesSinceLastAnchor = useGameStore((state) => state.cyclesSinceLastAnchor);
   const seedFragments = useGameStore((state) => state.seedFragments);
   const recompileDepth = useGameStore((state) => state.recompileDepth);
   const cyclesCleared = useGameStore((state) => state.cyclesCleared);
@@ -85,7 +89,7 @@ export function CurrencyBadge({ containerRef, showPrestigeEntry = false }: Curre
   const strings = useGameStrings();
 
   const showSeedProtocolsEntry =
-    showPrestigeEntry && (recompileDepth > 0 || isCycleCleared(cyclesCleared, MAX_CYCLES));
+    showPrestigeEntry && (recompileDepth > 0 || isCycleCleared(cyclesCleared, RECOMPILE_TRIGGER_CYCLE));
 
   const [hoveredCurrency, setHoveredCurrency] = useState<HoveredCurrency | null>(null);
   const shardsIconRef = useRef<HTMLDivElement>(null);
@@ -96,6 +100,21 @@ export function CurrencyBadge({ containerRef, showPrestigeEntry = false }: Curre
   const showShards = isVaultShardsUnlocked(bankShards, upgrades);
   const showAnchors = isAnchorFragmentsUnlocked(bankAnchorFragments);
   const showSeed = recompileDepth > 0 || seedFragments > 0;
+
+  useLayoutEffect(() => {
+    if (!showShards) return;
+
+    const updateTarget = () => {
+      const icon = shardsIconRef.current;
+      if (!icon) return;
+      const rect = icon.getBoundingClientRect();
+      setBadgeTarget(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    };
+
+    updateTarget();
+    window.addEventListener('resize', updateTarget);
+    return () => window.removeEventListener('resize', updateTarget);
+  }, [showShards, showSeedProtocolsEntry]);
 
   const hoveredAnchorRef =
     hoveredCurrency === 'shards'
@@ -183,15 +202,22 @@ export function CurrencyBadge({ containerRef, showPrestigeEntry = false }: Curre
           )}
         </div>
         {showAnchors && (
-          <CurrencyRow
-            iconRef={anchorIconRef}
-            icon={<AnchorFragmentIcon size={26} />}
-            value={bankAnchorFragments}
-            valueColor={DARK_HEX.breachGlow}
-            onHoverStart={() => showCurrency('anchor')}
-            onHoverEnd={scheduleDismiss}
-            ariaLabel={`${strings.currency.anchorFragmentsLabel}: ${bankAnchorFragments}`}
-          />
+          <div className="flex flex-col items-end gap-0.5">
+            <CurrencyRow
+              iconRef={anchorIconRef}
+              icon={<AnchorFragmentIcon size={26} />}
+              value={bankAnchorFragments}
+              valueColor={DARK_HEX.breachGlow}
+              onHoverStart={() => showCurrency('anchor')}
+              onHoverEnd={scheduleDismiss}
+              ariaLabel={`${strings.currency.anchorFragmentsLabel}: ${bankAnchorFragments}`}
+            />
+            <span className="font-mono text-[11px] tracking-wide text-white/35">
+              {strings.currency.anchorProgressFormat
+                .replace('{current}', String(cyclesSinceLastAnchor))
+                .replace('{total}', String(ANCHOR_CYCLES_PER_FRAGMENT))}
+            </span>
+          </div>
         )}
         {showSeed && (
           <CurrencyRow

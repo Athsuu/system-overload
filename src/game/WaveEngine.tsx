@@ -1,6 +1,6 @@
 import { useApplication, useTick } from '@pixi/react';
 import { useCallback, type MutableRefObject, type RefObject } from 'react';
-import { consumeDevWaveJump } from '../dev/devFlags';
+import { consumeDevKillAllRequest, consumeDevWaveJump } from '../dev/devFlags';
 import { triggerRunEventSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
@@ -83,12 +83,22 @@ export function WaveEngine({
   const tick = useCallback(
     (ticker: { deltaMS: number }) => {
       if (!isPlaying) return;
+      if (!app?.renderer) return;
 
       const nodes = nodesRef.current;
       if (!nodes) return;
 
       const store = useGameStore.getState();
       if (store.gameState !== 'PLAYING') return;
+
+      if (consumeDevKillAllRequest()) {
+        nodes.length = 0;
+        if (effectsRef.current) effectsRef.current.length = 0;
+        if (pickupsRef.current) pickupsRef.current.length = 0;
+        // Empêche le spawner de reboucher immédiatement le quota du groupe en cours.
+        waveRuntimeRef.current.spawnedInGroup = Number.MAX_SAFE_INTEGER;
+        return;
+      }
 
       const pendingWave = consumeDevWaveJump();
       if (pendingWave !== null) {
@@ -215,7 +225,7 @@ export function WaveEngine({
         }
       }
     },
-    [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef, pickupsRef, waveRuntimeRef],
+    [app, effectsRef, isPlaying, nodesRef, pickupsRef, waveRuntimeRef],
   );
 
   useTick({ callback: tick, isEnabled: isPlaying });

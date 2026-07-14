@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/useGameStore';
-import { getModuleState, type UpgradeId } from '../store/upgradeCatalog';
+import { getModuleState, getUpgradeDefinition, type UpgradeId } from '../store/upgradeCatalog';
 import {
   NODE0_HUB_POSITION,
   getNodePosition,
@@ -153,6 +153,7 @@ export function ModuleTree({
         return (
           <ModuleTreeNode
             key={node.id}
+            id={upgradeId}
             x={node.position.x}
             y={node.position.y}
             glyph={getModuleGlyphId(upgradeId, branch)}
@@ -166,6 +167,7 @@ export function ModuleTree({
               node.requires,
             )}
             isSelected={selectedId === node.id}
+            isUncapped={!Number.isFinite(getUpgradeDefinition(upgradeId).maxLevel)}
             onSelect={() => onSelectModule(node.id)}
           />
         );

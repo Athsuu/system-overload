@@ -53,6 +53,7 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 | **ARCH** | ARCH | Voix conseil / tutoriel, modèle heuristique continu sur chaque run ; ton urgent, parental, attaché (Archive Recovery & Containment Heuristic) |
 | **Breach** / **Brèche** / **Surcharge** | Overload (jauge) · Breach (lore) | Pression du système ; si ça explose → défaite |
 | **Meltdown** / **Fusion du noyau** | Meltdown | Défaite à 100 % surcharge |
+| **Surcharge passive (base run)** | passive heat | **1,5 / s** sans module thermique (`RUN_STAT_BASE.basePassiveHeatPerSec`) ; cap Meltdown 100 → ~67 s sans kill ni relief |
 | **Breach Contained** / **Brèche contenue** | Breach Contained | Victoire (boss vaincu) |
 | **Processus corrompus** | Corrupted processes | Ennemis |
 | **Dissipation Nodes** | (nom technique ennemis) | Hex ennemis dans l’arène, OK de garder ce nom en interne |
@@ -71,44 +72,61 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 | Mot à utiliser | Terme UI (EN) | C’est quoi ? |
 |--------------|---------------|--------------|
 | **Éclats hex** / **Hex Shards** | Hex Shards | Monnaie unique : **drop au sol** quand un ennemi meurt, **ramassée** en passant la zone de purge à proximité ; créditée au coffre à la collecte ; dépensée sur le module tree |
-| **Fragments d’ancre** | Anchor Fragments | 2e monnaie permanente, **+1 au premier clear boss d’un Cycle** (replays = shards seulement) ; modules « capstone » |
+| **Fragments d’ancre** / **Puces matérielles** | Anchor Fragments | 2e monnaie permanente, **+1 tous les 3 Cycles réussis** (`cyclesSinceLastAnchor`) ; sert à **Surcharger** un module (Hardware Supercharge, voir §3bis) — n'achète plus de module directement |
 | **Cycle** / **Cycles** | Cycle | Couche de progression hub : 10 vagues + boss par cycle ; scaling plus dur ; Cycle 2+ débloqué après 1er clear du cycle précédent |
 | **Coffre** / **vault** | vault | Où vont les Hex Shards après une run |
 | **Module tree** / **arbre de modules** | Module tree | Arbre hex **radial** : somme des deux boucles ARCH (urgence Meltdown + optimisation continue) ; un seul nœud visible au départ, branches qui se révèlent |
-| **Node-0 Boot** / **amorçage Node-0** | Node-0 Boot | **Nœud racine** achetable, seul module visible au tout début |
+| **Node-0 Boot** / **amorçage Node-0** | Node-0 Boot | **Nœud racine** — baseline **gratuit** (niveau 1 dès le départ, non achetable), seul module visible au tout début |
 | **Révélation** (arbre) |, | Dès qu’un parent est acheté **1 fois**, ses enfants **apparaissent** (visible ≠ achetable) |
 | **Placeholder** / **module réservé** | Module pending (placeholder_XX) | Case grise « RESERVED », visible mais **non achetable** (contenu futur) |
-| **Nœud** / **module** | (nom de l’upgrade) | Une case sur l’arbre (shards ou Anchor Fragments selon le module) |
+| **Nœud** / **module** | (nom de l’upgrade) | Une case sur l’arbre, achetée en **Éclats hex** (tous les modules, y compris Overclock et Flux Drive) — les Anchor Fragments servent uniquement au Hardware Supercharge (§3bis) |
 | **Prestige** / **Recompile** | Recompile | Hard reset volontaire après **Cycle 3 clear** : perd modules, éclats, ancres, cycles ; garde **Fragments de Graine**, **Protocoles Fondamentaux**, **Profondeur de Recompilation** |
 | **Fragments de Graine** | Seed Fragments | Monnaie permanente prestige, gagnée à chaque Recompile |
 | **Protocoles de la Graine** | Seed Protocols | Écran hub dédié (cyan) pour acheter les **Protocoles Fondamentaux** |
-| **Protocoles Fondamentaux** | Core Protocols | 5 modules permanents (Mémoire résiduelle, Renfort d'amorçage, Ligne thermique, Protocole d'extraction, Résonance de Graine) |
-| **Profondeur de Recompilation** | Recompile Depth | Compteur de Recompiles effectuées |
+| **Protocoles Fondamentaux** | Core Protocols | 5 modules permanents (Mémoire résiduelle, Renfort d'amorçage, Ligne thermique, Protocole d'extraction, Résonance de Graine) — **déplafonnés**, coût croissant exponentiel (`base × growth^rang`), jamais "MAX" |
+| **Profondeur de Recompilation** | Recompile Depth | Compteur de Recompiles effectuées — donne aussi un multiplicateur permanent ×1.08/Recompile sur les dégâts de purge et le rendement d'éclats, ressenti dès la run suivante (rééquilibrage) |
 | **Sauvegarde** / **Continue** | Continue | Progression stockée (éclats, upgrades), pas une run en cours |
 | **Nouvelle partie** | New Game | Repartir à zéro (avec confirmation si vraie progression) |
 
 ---
 
+## 3bis. Hardware Supercharge (Ancrage)
+
+Risk/Reward permanent sur les modules déjà achetés (Éclats hex) — voir `src/game/anchorSupercharge.ts`, `src/store/upgradeCatalog.ts` (`isAnchorSuperchargeEligible`), `src/store/useGameStore.ts` (`purchaseAnchorSupercharge` / `toggleAnchorSupercharge`).
+
+| Mot à utiliser | Terme UI (EN) | C’est quoi ? |
+|--------------|---------------|--------------|
+| **Surcharge Matérielle** / **Hardware Supercharge** | Hardware Supercharge | Mécanique Risk/Reward : dépenser 1 Anchor Fragment pour **ancrer** un module possédé (niveau ≥ 1, acheté en Éclats hex) |
+| **Socket** / **connecteur** | Socket | Petit trapèze inversé sous le hexagone du module (`ModuleTreeNode.tsx`) — invisible si non ancré, gris éteint si ancré OFF, ambré si ancré ON ; cliquable indépendamment (bascule instantanée sans ouvrir le panneau) |
+| **Ancré** / **anchored** |, | État persistant (`anchoredNodes[id]`) : `undefined` = jamais surchargé, `false` = surchargé mais OFF, `true` = ON |
+
+**Bonus** (module ON) : rendement de base du module ×2 (générique) — sauf Overclock (durée active ×2, 4s → 8s) et Flux Drive (vitesse ×3 au lieu de ×2, pas de ×4 cumulé) pour rester équilibré.
+**Malus** (global, tant qu'au moins un module est ON) : +25 % additif à la génération de Surcharge (Heat) passive, **par module ancré actif** — cumulatif si plusieurs modules sont surchargés en même temps.
+
+---
+
 ## 4. Branches du module tree
 
-Arbre radial v4 � **11 modules** actifs :
+Arbre radial v4 — **13 modules** actifs :
 
 | Mot à utiliser (FR) | Branche (agent) | Thème |
 |---------------------|-----------------|--------|
-| **Dégâts** | `degats` | **Purge Strike**, **Briseur d'élite**, **Purge Cadence**, **Purge Reach**, **Éclat de purge** |
-| **Thermique** | `thermique` | **Node-0 Boot**, **Récupération d'éclats**, **Rendement d'extraction**, **Aimant d'éclats**, **Thread Coolant**, **Kill Vent**, **Meltdown Threshold** |
-| **Flux** (icône hub) | `flux` | Icône **Node-0 Boot** uniquement |
+| **Dégâts** | `degats` | **Purge Strike**, **Briseur d'élite**, **Purge Cadence**, **Purge Reach**, **Éclat de purge**, **Overclock** |
+| **Thermique** | `thermique` | **Node-0 Boot**, **Récupération d'éclats**, **Rendement d'extraction**, **Aimant d'éclats**, **Thread Coolant**, **Kill Vent**, **Meltdown Threshold**, **Flux Drive** |
+| **Flux** (icône hub) | `flux` | Icône **Node-0 Boot** et **Flux Drive** |
 
 | Module (FR) | Terme UI (EN) | Position hex | Parent | Effet |
 |-------------|---------------|--------------|--------|-------|
-| **Récupération d'éclats** | Shard Salvage | (−1, 0) | Node-0 Boot | +1 Éclat hex fixe par kill |
+| **Récupération d'éclats** | Shard Salvage | (−1, 0) | Node-0 Boot | ×1.18^rang composé sur le rendement d'éclats (illimité) |
 | **Rendement d'extraction** | Extraction Yield | (−2, 0) | Récupération d'éclats | +20 % / rang sur le rendement de base (5 rangs max) |
 | **Aimant d'éclats** | Shard Magnet | (−2, +1) | Récupération d'éclats | Collecte serrée au départ (20 px), aspiration dès le rang 1 ; monte jusqu'à 92 px / 200 px (rangs 0–3) |
 | **Briseur d'élite** | Elite Breaker | (0, +2) | Purge Strike | Frappe plus fort les processus lourds (élite / boss) |
 | **Éclat de purge** | Purge Splash | (+1, +2) | Portée de purge | Dégâts d'éclaboussure autour du point de purge (hors zone directe) |
 | **Injection de latence** | Latency Injection | (−1, +3) | Cadence de purge | Ralentit les processus corrompus se trouvant dans la zone de purge active (−10 % / rang, max 3 rangs) |
+| **Overclock** | Overclock | (+1, 0) | Node-0 Boot | Débloque le bouton Overclock (Espace / HUD) — **coûte 200 Éclats hex** ; Supercharge = durée active ×2 |
+| **Flux Drive** | Flux Drive | (−1, +1) | Node-0 Boot | Débloque le toggle Flux Drive (×2 vitesse de simulation) — **coûte 280 Éclats hex** ; achetable dès l’hub (prérequis Node-0 Boot actif) ; Supercharge = vitesse ×3 au lieu de ×2 |
 
-**Retir� (ancien arbre)** : `attackSpeed`, `purgeAoe`, `shards`, `enemies`.
+**Retiré (ancien arbre)** : `attackSpeed`, `purgeAoe`, `shards`, `enemies`.
 
 ---
 
@@ -148,7 +166,7 @@ Fichiers : `src/ui/transitions/` · `src/store/useTransitionStore.ts` · i18n `t
 | **Hex Shards** | Badge haut-droite (hub + run), total unique `bankShards`, monte à chaque **collecte** d’éclat en run | `hex-shards` |
 | Bouton **Overclock** | Bas droite | `overclock` |
 | **Flux Drive** | HUD | `flux-drive` |
-| Indicateur vague / boss | Haut centre | — |
+| Indicateur vague / boss + **timer run** (`MM:SS`) | Haut centre | — |
 
 ### Fiche stats Node-0 (hub)
 
@@ -335,10 +353,10 @@ Chaque entrée lie un `upgradeId` à des **cibles gameplay** (`runConfig.*`, `br
 | Module | Cible gameplay | Effet résumé |
 |--------|----------------|--------------|
 | Node-0 Boot | `runConfig.purgeHitDamage` | Active dégâts de base purge |
-| Récupération d'éclats | `runConfig.killBonusShards` | +1 éclat fixe / kill |
+| Récupération d'éclats | `runConfig.shardsMultiplier` | ×1.18^rang composé sur le rendement d'éclats (illimité) |
 | Rendement d'extraction | `runConfig.shardsMultiplier` | +20 % / rang sur éclats de base (max ×2) |
 | Aimant d'éclats | `loot.hexShardRadii` | Collecte / aspiration au sol |
-| Purge Strike | `runConfig.purgeHitDamage` | +dégâts purge |
+| Purge Strike | `runConfig.purgeHitDamage` | Hybride : +2 flat/rang puis ×1.015^rang composé (illimité) |
 | Briseur d'élite | `purge.eliteDamageBonus` | +dégâts purge vs processus lourds |
 | Purge Cadence | `runConfig.purgeIntervalMs` | Purge plus rapide |
 | Purge Reach | `runConfig.purgeRadius` | Zone principale +2,5 % / rang |
@@ -346,7 +364,9 @@ Chaque entrée lie un `upgradeId` à des **cibles gameplay** (`runConfig.*`, `br
 | Injection de latence | `purge.latencySlow` | Ralentit les processus corrompus sous la zone de purge |
 | Thread Coolant | `runConfig.passiveHeatPerSec` | Moins d'Overload passive |
 | Kill Vent | `breach.killRelief` | Soulagement Breach par kill |
-| Meltdown Threshold | `breach.cap` | Cap Meltdown plus haut |
+| Meltdown Threshold | `breach.cap` | ×1.05^rang composé sur le cap Breach de base (illimité — remplace l'ancien flat +8/rang) |
+| Overclock | `overclock.unlock` | Débloque le bouton Overclock (Espace / HUD) |
+| Flux Drive | `runConfig.timeScale` | Débloque le toggle Flux Drive (×2 vitesse de simulation) |
 
 ### Système AOE purge (zone principale + dérivés)
 

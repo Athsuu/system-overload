@@ -50,6 +50,8 @@ export function useTutorialCoach(enabled: boolean): TutorialCoachState {
   const waveIndex = useGameStore((state) => state.waveIndex);
   const wavePhase = useGameStore((state) => state.wavePhase);
   const runOutcome = useGameStore((state) => state.runOutcome);
+  const selectedCycle = useGameStore((state) => state.selectedCycle);
+  const activeCycle = useGameStore((state) => state.activeCycle);
 
   const [progressRevision, setProgressRevision] = useState(0);
   const [signalRevision, setSignalRevision] = useState(0);
@@ -88,6 +90,8 @@ export function useTutorialCoach(enabled: boolean): TutorialCoachState {
       waveIndex,
       wavePhase,
       runOutcome,
+      selectedCycle,
+      activeCycle,
       signals: getTutorialSignals(),
       dismissedIds,
     };
@@ -101,6 +105,8 @@ export function useTutorialCoach(enabled: boolean): TutorialCoachState {
     waveIndex,
     wavePhase,
     runOutcome,
+    selectedCycle,
+    activeCycle,
     dismissedIds,
     signalRevision,
   ]);

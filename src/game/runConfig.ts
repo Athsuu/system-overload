@@ -1,6 +1,14 @@
-import type { UpgradeLevels } from '../store/upgradeCatalog';
+import {
+  FLUX_DRIVE_TIME_SCALE,
+  FLUX_DRIVE_TIME_SCALE_ANCHORED,
+  isFluxDriveUnlocked,
+  type AnchoredNodes,
+  type UpgradeLevels,
+} from '../store/upgradeCatalog';
+import { applyDevRunConfigOverrides } from '../dev/devRunConfigOverrides';
+import { isNodeAnchorActive } from './anchorSupercharge';
 import type { EnemyClass } from './enemyClass';
-import { getCycleEnemyHpMult, getCyclePressureMult, getScalingWaveIndex } from './cycleScaling';
+import { getCyclePressureMult, getScalingWaveIndex } from './cycleScaling';
 import { useGameStore } from '../store/useGameStore';
 import {
   computeBreachCap,
@@ -38,7 +46,7 @@ export {
 } from './moduleEffects';
 
 export function getBreachCap(upgrades: UpgradeLevels): number {
-  return computeBreachCap(upgrades);
+  return computeBreachCap(upgrades, useGameStore.getState().anchoredNodes);
 }
 
 /** Overload affiché en % (0–100+), relatif au cap Meltdown du run. */
@@ -56,13 +64,22 @@ export function isMeltdownReached(breachProgress: number, upgrades: UpgradeLevel
   return Math.round(getBreachPercent(breachProgress, upgrades)) >= 100;
 }
 
-export function getRunTimeScale(_upgrades: UpgradeLevels, _fluxDriveEnabled: boolean): number {
-  return 1;
+export function getRunTimeScale(
+  upgrades: UpgradeLevels,
+  fluxDriveEnabled: boolean,
+  anchoredNodes: AnchoredNodes = {},
+): number {
+  if (!isFluxDriveUnlocked(upgrades) || !fluxDriveEnabled) return 1;
+  return isNodeAnchorActive(anchoredNodes, 'fluxDrive')
+    ? FLUX_DRIVE_TIME_SCALE_ANCHORED
+    : FLUX_DRIVE_TIME_SCALE;
 }
 
 export function getRunConfig(upgrades: UpgradeLevels): RunConfig {
-  const coreProtocols = useGameStore.getState().coreProtocols;
-  return computeRunConfig(upgrades, coreProtocols);
+  const state = useGameStore.getState();
+  return applyDevRunConfigOverrides(
+    computeRunConfig(upgrades, state.coreProtocols, state.anchoredNodes, state.recompileDepth),
+  );
 }
 
 export function resolveActiveCycle(): number {
@@ -84,10 +101,7 @@ export function getEnemyMaxHp(
 ): number {
   const cycle = resolveActiveCycle();
   const scalingIndex = getScalingWaveIndex(cycle, localWaveIndex);
-  const hp =
-    config.baseEnemyHp *
-    getWaveHpMultiplier(scalingIndex, enemyClass) *
-    getCycleEnemyHpMult(cycle);
+  const hp = config.baseEnemyHp * getWaveHpMultiplier(scalingIndex, enemyClass);
   return Math.round(hp);
 }
 
@@ -118,7 +132,7 @@ export function getLeakProgressPenalty(_config: RunConfig, localWaveIndex: numbe
 }
 
 export function getKillBreachRelief(upgrades: UpgradeLevels, _waveIndex: number): number {
-  return computeKillBreachRelief(upgrades);
+  return computeKillBreachRelief(upgrades, useGameStore.getState().anchoredNodes);
 }
 
 export function getSpawnIntervalMs(baseIntervalMs: number, config: RunConfig): number {

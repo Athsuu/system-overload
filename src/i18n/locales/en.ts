@@ -46,7 +46,7 @@ const LORE = {
     vaultShardsTooltip:
       'Hex Shards are stable data fragments salvaged from corrupted processes. Your total grows with each kill during a run.',
     anchorFragments:
-      'Anchoring data torn from the Breach Anchor, only earned when you destroy the boss.',
+      'Hardware chips torn from the Breach Anchor, one every 3 successful Cycles. Socket one into a module to Supercharge it: doubled yield, heavier global Overload while the chip stays active.',
   },
   moduleTree: {
     intro:
@@ -85,7 +85,7 @@ export const EN_STRINGS: GameStrings = {
     victorySubtitle: 'Threat contained. Node-0 holds.',
     victoryArchVariants: [
       "Anchor down. Hex Shards to vault. We bought time. Don't waste it.",
-      'Anchor data secured. Capstone modules are online. Spend fragments on the marked nodes.',
+      'Anchor chip secured. Socket it into a module — supercharge the yield, if you can take the Overload.',
     ],
     meltdownTitle: 'Meltdown',
     meltdownSubtitle: 'Overload at 100%. The active thread has collapsed. Node-0 stands by.',
@@ -141,12 +141,22 @@ export const EN_STRINGS: GameStrings = {
     anchorLoreTooltip: LORE.economy.anchorFragments,
     seedLoreTooltip:
       'Pure data torn from the Seed during Recompile. Spent on Core Protocols etched into Node-0 source code. Never lost on reset.',
+    anchorProgressFormat: 'Next: {current}/{total} Cycles',
+  },
+  hardwareSupercharge: {
+    sectionTitle: 'Hardware Supercharge',
+    superchargeButton: 'Supercharge',
+    costFormat: 'Cost: {n} Chip',
+    bonusLabel: 'Yield ×2',
+    malusLabel: '+25% Global Overload',
+    toggleOn: 'ON',
+    toggleOff: 'OFF',
   },
   pause: {
     title: 'SYSTEM HALT',
     subtitle: 'Node-0 execution suspended',
     resumeLabel: 'Resume',
-    abortLabel: 'Abort\nRun',
+    abortLabel: 'Abort Run',
     settingsLabel: 'Settings',
     confirmPrompt: 'Abort this run? Your Hex Shards are kept.',
     confirmYes: 'Yes',
@@ -263,6 +273,14 @@ export const EN_STRINGS: GameStrings = {
       name: 'Meltdown Threshold',
       description: 'Stretch the Overload buffer before Meltdown',
     },
+    overclock: {
+      name: 'Overclock',
+      description: 'Unlocks the Overclock button: temporary purge boost, at the cost of faster Overload buildup',
+    },
+    fluxDrive: {
+      name: 'Flux Drive',
+      description: 'Unlocks the Flux Drive toggle: doubles simulation speed inside quarantine',
+    },
   },
   branches: {
     degats: 'Damage',
@@ -289,6 +307,9 @@ export const EN_STRINGS: GameStrings = {
     breachReliefPerKill: 'Breach relief / kill',
     meltdownThreshold: 'Meltdown threshold',
     max: 'max',
+    overclockDuration: 'Overclock duration',
+    overclockCooldown: 'Overclock cooldown',
+    fluxDriveSpeed: 'Simulation speed',
   },
   playerStats: {
     title: 'NODE-0 // STATS',
@@ -318,23 +339,23 @@ export const EN_STRINGS: GameStrings = {
     protocols: {
       residualMemory: {
         name: 'Residual Memory',
-        description: 'Start each new cycle with bonus Hex Shards after a Recompile (+50 per rank)',
+        description: 'Start each new cycle with bonus Hex Shards after a Recompile (+150 per rank, uncapped)',
       },
       bootReinforcement: {
         name: 'Boot Reinforcement',
-        description: 'Reinforce Node-0 Boot baseline purge output (+5 hit damage)',
+        description: 'Multiplicative boost to total purge hit damage (+15% per rank, uncapped)',
       },
       thermalBaseline: {
         name: 'Thermal Baseline',
-        description: 'Lower passive Overload buildup from the Breach (+5% reduction per rank)',
+        description: 'Lower passive Overload buildup from the Breach (×0.9 per rank, exponential falloff, uncapped)',
       },
       extractionProtocol: {
         name: 'Extraction Protocol',
-        description: 'Extract more Hex Shards from every kill (+10% global yield per rank)',
+        description: 'Extract more Hex Shards from every kill (+15% global yield per rank, uncapped)',
       },
       seedResonance: {
         name: 'Seed Resonance',
-        description: 'Gain extra Seed Fragments on every future Recompile (+1 per rank)',
+        description: 'Gain extra Seed Fragments on every future Recompile (+25% per rank, additive stacking, uncapped)',
       },
     },
   },
@@ -352,7 +373,7 @@ export const EN_STRINGS: GameStrings = {
     shutdownAbortedLine3: 'ZERO ARCHIVE: RECOVERY MODE',
   },
   ui: {
-    startRun: 'Start\nRun',
+    startRun: 'Start Run',
     skip: 'Skip',
     purchase: 'Purchase',
     purchaseAnchor: 'Install',
@@ -370,10 +391,11 @@ export const EN_STRINGS: GameStrings = {
     waveClear: 'Wave Clear',
     overclock: 'Overclock',
     levelFormat: 'Level {current} / {max}',
+    levelFormatUncapped: 'Level {n}',
     previous: 'Previous',
     next: 'Next',
     gotIt: 'Got it',
-    moduleTree: 'Module\nTree',
+    moduleTree: 'Module Tree',
     cycleLabel: 'Cycle {n}',
     cycleWaveFormat: 'Cycle {cycle} · Wave {wave}/{max}',
     cycleBossFormat: 'Cycle {cycle} · BOSS',

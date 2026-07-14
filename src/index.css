@@ -353,8 +353,8 @@ body {
   animation: so-overclock-ready-glow 2.4s ease-in-out infinite;
 }
 
-.so-overclock-active-pulse {
-  animation: so-overclock-active-pulse 1.1s ease-in-out infinite;
+.so-overclock-active {
+  animation: so-overclock-active-glow 1.1s ease-in-out infinite;
 }
 
 @keyframes so-overclock-ready-glow {
@@ -367,15 +367,13 @@ body {
   }
 }
 
-@keyframes so-overclock-active-pulse {
+@keyframes so-overclock-active-glow {
   0%,
   100% {
-    opacity: 0.25;
-    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(255, 107, 43, 0.35));
   }
   50% {
-    opacity: 0.55;
-    transform: scale(1.04);
+    filter: drop-shadow(0 0 16px rgba(255, 107, 43, 0.62));
   }
 }
 

@@ -1,6 +1,3 @@
-/** Playable cycle count — increase when adding new cycle tiers. */
-export const MAX_CYCLES = 3;
-
 export const REGULAR_WAVES_PER_CYCLE = 10;
 
 export interface CycleProgress {
@@ -15,8 +12,9 @@ export const DEFAULT_CYCLE_PROGRESS: CycleProgress = {
   cyclesCleared: [],
 };
 
+/** Cycle progression is unbounded — only escalating difficulty slows the player down. */
 export function clampCycleIndex(cycle: number): number {
-  return Math.max(1, Math.min(MAX_CYCLES, Math.floor(cycle)));
+  return Math.max(1, Math.floor(cycle));
 }
 
 export function sanitizeCyclesCleared(raw: unknown): number[] {

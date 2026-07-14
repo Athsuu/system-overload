@@ -49,7 +49,8 @@ export function ArchAmbient() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[24]">
-      <div className="so-animate-fade-in-slow pointer-events-auto absolute top-28 left-1/2 max-w-[340px] -translate-x-1/2 px-4">
+      {/* Colé au lanceur de run (CycleRunLauncher · bottom-8) */}
+      <div className="so-animate-fade-in-slow pointer-events-auto absolute bottom-[12.75rem] left-1/2 max-w-[min(340px,calc(100vw-2rem))] -translate-x-1/2 px-4">
         <ArchChannelPanel paddingClassName="px-4 py-3 pr-12" onSkip={dismissActive}>
           <ArchChannelLabel>{strings.arch.channelLabel}</ArchChannelLabel>
           <p className="mt-1 text-[16px] font-semibold tracking-[0.18em]" style={{ color: ARCH_CYAN }}>

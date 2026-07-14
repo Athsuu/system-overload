@@ -7,6 +7,10 @@ import { useGameStore } from '../store/useGameStore';
 import { FLASH_DURATION_MS } from './constants';
 import { handleEnemyKill } from './enemyCombat';
 import { pushPurgeHit, pushDeathEffect, pushSplashShockwave, type GameEffect } from './effects';
+import { triggerChromaticAberration, type ChromaticAberrationState } from './juice/chromaticAberration';
+import { emitDamageApplied } from './juice/damageEvents';
+import { rollCritical } from './juice/criticalHit';
+import { triggerScreenShake, type ScreenShakeState } from './juice/screenShake';
 import { purgePointerRef } from './purgeInput';
 import {
   createPurgeVisualShake,
@@ -23,7 +27,9 @@ import {
   getPurgeSplashRadius,
   resolvePurgeSplashDamage,
 } from './moduleEffects';
+import { getAnchorMultiplier } from './anchorSupercharge';
 import { scaleDeltaMs } from './runTimeScale';
+import { BOSS_WAVE_INDEX } from './waveScaling';
 import type { LootPickup } from './loot';
 import type { DissipationNode } from './types';
 
@@ -35,6 +41,8 @@ interface PurgeZoneEngineProps {
   effectsRef: RefObject<GameEffect[]>;
   pickupsRef: RefObject<LootPickup[]>;
   overclockRef: MutableRefObject<OverclockState>;
+  screenShakeRef: MutableRefObject<ScreenShakeState>;
+  chromaticAberrationRef: MutableRefObject<ChromaticAberrationState>;
 }
 
 function getEnemiesInZone(
@@ -74,6 +82,8 @@ export function PurgeZoneEngine({
   effectsRef,
   pickupsRef,
   overclockRef,
+  screenShakeRef,
+  chromaticAberrationRef,
 }: PurgeZoneEngineProps) {
   const graphicsRef = useRef<Graphics | null>(null);
   const containerRef = useRef<Container | null>(null);
@@ -110,6 +120,10 @@ export function PurgeZoneEngine({
       effects: GameEffect[],
       pickups: LootPickup[],
       intervalMs: number,
+      criticalChance: number,
+      criticalMultiplier: number,
+      eliteBreakerAnchorMultiplier: number,
+      splashAnchorMultiplier: number,
     ) => {
       let kills = 0;
       let hitCount = 0;
@@ -118,29 +132,54 @@ export function PurgeZoneEngine({
         const index = nodes.indexOf(node);
         if (index < 0 || damage <= 0) return;
 
-        node.hp -= damage;
+        const crit = rollCritical(damage, criticalChance, criticalMultiplier);
+
+        node.hp -= crit.damage;
         node.flashTimer = FLASH_DURATION_MS;
         pushPurgeHit(effects, node.x, node.y, node.waveIndex, node.enemyClass);
         hitCount += 1;
 
+        emitDamageApplied({
+          x: node.x,
+          y: node.y,
+          waveIndex: node.waveIndex,
+          enemyClass: node.enemyClass,
+          damage: crit.damage,
+          isCritical: crit.isCritical,
+        });
+
+        if (crit.isCritical) {
+          triggerScreenShake(screenShakeRef.current, 'critical');
+          triggerChromaticAberration(chromaticAberrationRef.current);
+        }
+
         if (node.hp > 0) return;
 
         kills += 1;
+        if (node.enemyClass === 'elite') {
+          const isBoss = node.waveIndex >= BOSS_WAVE_INDEX;
+          triggerScreenShake(screenShakeRef.current, isBoss ? 'bossDeath' : 'eliteDeath');
+        }
         handleEnemyKill(node, pickups);
         pushDeathEffect(effects, node.x, node.y, node.waveIndex, node.enemyClass);
         nodes.splice(index, 1);
       };
 
       for (const node of targets) {
-        const damage = resolvePurgeHitDamage(baseDamage, node.enemyClass, eliteBreakerLevel);
+        const damage = resolvePurgeHitDamage(
+          baseDamage,
+          node.enemyClass,
+          eliteBreakerLevel,
+          eliteBreakerAnchorMultiplier,
+        );
         applyDamage(node, damage);
       }
 
       const hadMainPurgeHit = hitCount > 0;
 
       if (splashLevel > 0) {
-        const splashRadius = getPurgeSplashRadius(purgeRadius, splashLevel);
-        const splashDamage = resolvePurgeSplashDamage(baseDamage, splashLevel);
+        const splashRadius = getPurgeSplashRadius(purgeRadius, splashLevel, splashAnchorMultiplier);
+        const splashDamage = resolvePurgeSplashDamage(baseDamage, splashLevel, splashAnchorMultiplier);
         const splashTargets = getEnemiesInSplashRing(
           nodes,
           purgeX,
@@ -172,7 +211,7 @@ export function PurgeZoneEngine({
         triggerGameSfx('purgeKill', killIndex * 0.032);
       }
     },
-    [],
+    [chromaticAberrationRef, screenShakeRef],
   );
 
   const tick = useCallback(
@@ -204,6 +243,8 @@ export function PurgeZoneEngine({
       const config = getRunConfig(store.upgrades);
       const eliteBreakerLevel = store.upgrades.eliteBreaker;
       const splashLevel = store.upgrades.purgeSplash;
+      const eliteBreakerAnchorMultiplier = getAnchorMultiplier(store.anchoredNodes, 'eliteBreaker');
+      const splashAnchorMultiplier = getAnchorMultiplier(store.anchoredNodes, 'purgeSplash');
       const cadenceMult = overclockRef.current.active ? OVERCLOCK_CADENCE_MULT : 1;
       const intervalMs = config.purgeIntervalMs / cadenceMult;
       const effects = effectsRef.current ?? [];
@@ -230,6 +271,10 @@ export function PurgeZoneEngine({
           effects,
           pickups,
           intervalMs,
+          config.criticalChance,
+          config.criticalMultiplier,
+          eliteBreakerAnchorMultiplier,
+          splashAnchorMultiplier,
         );
         return;
       }
@@ -260,6 +305,10 @@ export function PurgeZoneEngine({
         effects,
         pickups,
         intervalMs,
+        config.criticalChance,
+        config.criticalMultiplier,
+        eliteBreakerAnchorMultiplier,
+        splashAnchorMultiplier,
       );
     },
     [applyPurgeHits, effectsRef, nodesRef, overclockRef, pickupsRef],

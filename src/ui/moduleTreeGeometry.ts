@@ -70,6 +70,28 @@ export function axialDistance(a: AxialCoord, b: AxialCoord): number {
   return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
 }
 
+/** Milieu du bord inférieur d'un hex plat (départ des arêtes vers le bas) — ancre du socket Hardware Supercharge. */
+export function getHexBottomMidpoint(cx: number, cy: number, radius: number): HexVertex {
+  return { x: cx, y: cy + radius * Math.sin(Math.PI / 3) };
+}
+
+/** Petit trapèze inversé centré sur le bord inférieur d'un hex — connecteur visuel Hardware Supercharge. */
+export function socketPoints(cx: number, cy: number, radius: number): string {
+  const { x, y } = getHexBottomMidpoint(cx, cy, radius);
+  const topHalf = 8;
+  const bottomHalf = 4;
+  const height = 8;
+  const overlap = 2;
+  const topY = y - overlap;
+  const bottomY = topY + height;
+  return [
+    `${x - topHalf},${topY}`,
+    `${x + topHalf},${topY}`,
+    `${x + bottomHalf},${bottomY}`,
+    `${x - bottomHalf},${bottomY}`,
+  ].join(' ');
+}
+
 /** Génère le path d'un petit hex pour le pattern de fond. */
 export function hexPatternPath(cx: number, cy: number, radius: number): string {
   const verts = getHexagonVertices(cx, cy, radius);

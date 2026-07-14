@@ -3,6 +3,7 @@ import { Container, Graphics } from 'pixi.js';
 import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 import { triggerSfx } from '../../audio/sfxApi';
 import { useGameStore } from '../../store/useGameStore';
+import { spawnBadgeFlyParticle, type BadgeFlyParticle } from '../juice/badgeFlyParticles';
 import { purgePointerRef } from '../purgeInput';
 import { scaleDeltaMs } from '../runTimeScale';
 import { applyLootCollection, getLootCollectSfx } from './collect';
@@ -14,9 +15,10 @@ import { renderLootPickups } from './visuals';
 interface LootPickupEngineProps {
   isPlaying: boolean;
   pickupsRef: RefObject<LootPickup[]>;
+  badgeParticlesRef: RefObject<BadgeFlyParticle[]>;
 }
 
-export function LootPickupEngine({ isPlaying, pickupsRef }: LootPickupEngineProps) {
+export function LootPickupEngine({ isPlaying, pickupsRef, badgeParticlesRef }: LootPickupEngineProps) {
   const graphicsRef = useRef<Graphics | null>(null);
   const containerRef = useRef<Container | null>(null);
 
@@ -52,8 +54,8 @@ export function LootPickupEngine({ isPlaying, pickupsRef }: LootPickupEngineProp
       const pointer = purgePointerRef;
 
       if (isPlaying) {
-        const upgrades = useGameStore.getState().upgrades;
-        const radii = getLootPickupRadiiForTick(upgrades);
+        const store = useGameStore.getState();
+        const radii = getLootPickupRadiiForTick(store.upgrades, store.anchoredNodes);
         const collected = tickLootPickups(
           pickups,
           pointer.x,
@@ -63,15 +65,19 @@ export function LootPickupEngine({ isPlaying, pickupsRef }: LootPickupEngineProp
           radii,
         );
 
+        const badgeParticles = badgeParticlesRef.current;
         for (const loot of collected) {
           applyLootCollection(loot);
           triggerSfx(getLootCollectSfx(loot.kind));
+          if (badgeParticles) {
+            spawnBadgeFlyParticle(badgeParticles, loot.x, loot.y);
+          }
         }
       }
 
       renderLootPickups(graphics, pickups);
     },
-    [isPlaying, pickupsRef],
+    [badgeParticlesRef, isPlaying, pickupsRef],
   );
 
   useTick({ callback: tick, isEnabled: isPlaying });

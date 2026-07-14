@@ -21,8 +21,8 @@ export const WAVE_DEFINITIONS: WaveDefinition[] = [
   { wave: 6, spawns: [{ count: 11, intervalMs: 1000, maxAlive: 5 }], interWaveMs: 1000 },
   { wave: 7, spawns: [{ count: 12, intervalMs: 940, maxAlive: 6 }], interWaveMs: 1000 },
   { wave: 8, spawns: [{ count: 13, intervalMs: 880, maxAlive: 6 }], interWaveMs: 1000 },
-  { wave: 9, spawns: [{ count: 14, intervalMs: 820, maxAlive: 7 }], interWaveMs: 1000 },
-  { wave: 10, spawns: [{ count: 15, intervalMs: 760, maxAlive: 8 }], interWaveMs: 1200 },
+  { wave: 9, spawns: [{ count: 14, intervalMs: 820, maxAlive: 6 }], interWaveMs: 1000 },
+  { wave: 10, spawns: [{ count: 15, intervalMs: 760, maxAlive: 7 }], interWaveMs: 1200 },
   {
     wave: 11,
     isBoss: true,

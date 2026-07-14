@@ -3,8 +3,14 @@ import { clampCycleIndex, REGULAR_WAVES_PER_CYCLE } from '../store/cycleTypes';
 /** Breach / Overload pressure per cycle: C1 1.0, C2 1.12, C3 1.24 */
 export const CYCLE_PRESSURE_STEP = 0.12;
 
-/** Enemy HP bonus per cycle: C1 1.0, C2 1.1, C3 1.2 */
-export const CYCLE_ENEMY_HP_STEP = 0.1;
+/**
+ * Croissance composée par cycle — remplace l'ancienne extrapolation par-vague (rééquilibrage).
+ * La table de vagues 1-10 boucle désormais à chaque cycle (voir waveScaling.ts) ; toute la
+ * progression inter-cycle est concentrée ici pour rester lisible et calibrable.
+ */
+export const CYCLE_HP_GROWTH_PER_LEVEL = 1.15;
+export const CYCLE_SPEED_GROWTH_PER_LEVEL = 1.04;
+export const CYCLE_LEAK_GROWTH_PER_LEVEL = 1.08;
 
 /** Maps hub cycle + local wave (1–11) to a continuous scaling index. */
 export function getScalingWaveIndex(cycle: number, localWave: number): number {
@@ -18,7 +24,17 @@ export function getCyclePressureMult(cycle: number): number {
   return 1 + (safeCycle - 1) * CYCLE_PRESSURE_STEP;
 }
 
-export function getCycleEnemyHpMult(cycle: number): number {
+export function getCycleHpGrowthMult(cycle: number): number {
   const safeCycle = clampCycleIndex(cycle);
-  return 1 + (safeCycle - 1) * CYCLE_ENEMY_HP_STEP;
+  return CYCLE_HP_GROWTH_PER_LEVEL ** (safeCycle - 1);
+}
+
+export function getCycleSpeedGrowthMult(cycle: number): number {
+  const safeCycle = clampCycleIndex(cycle);
+  return CYCLE_SPEED_GROWTH_PER_LEVEL ** (safeCycle - 1);
+}
+
+export function getCycleLeakGrowthMult(cycle: number): number {
+  const safeCycle = clampCycleIndex(cycle);
+  return CYCLE_LEAK_GROWTH_PER_LEVEL ** (safeCycle - 1);
 }

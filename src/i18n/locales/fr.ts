@@ -46,7 +46,7 @@ const LORE = {
     vaultShardsTooltip:
       'Les Éclats hex sont des fragments stables récupérés sur les processus corrompus. Ton total augmente à chaque kill pendant une run.',
     anchorFragments:
-      'Données d\'ancrage arrachées au Breach Anchor, uniquement quand tu détruis le boss.',
+      'Puces matérielles arrachées au Breach Anchor, une tous les 3 Cycles réussis. À brancher sur un module pour le Surcharger : rendement doublé, Surcharge globale alourdie tant que la puce est active.',
   },
   moduleTree: {
     intro:
@@ -85,7 +85,7 @@ export const FR_STRINGS: GameStrings = {
     victorySubtitle: 'Menace contenue. Node-0 tient.',
     victoryArchVariants: [
       'Ancre down. Éclats hex au coffre. On a gagné du temps. Ne le gâche pas.',
-      'Données d\'ancre sécurisées. Les modules capstone sont en ligne. Dépense les fragments sur les nœuds marqués.',
+      'Puce d\'ancrage sécurisée. Branche-la sur un module : surcharge le rendement, si tu tiens la Surcharge.',
     ],
     meltdownTitle: 'Fusion',
     meltdownSubtitle: 'Surcharge à 100 %. Le thread actif s\'est effondré. Node-0 en attente.',
@@ -141,12 +141,22 @@ export const FR_STRINGS: GameStrings = {
     anchorLoreTooltip: LORE.economy.anchorFragments,
     seedLoreTooltip:
       'Données pures extraites de la Graine lors d\'une Recompilation. Dépensées en Protocoles Fondamentaux gravés dans le code source de Node-0. Jamais perdues lors d\'un reset.',
+    anchorProgressFormat: 'Prochain : {current}/{total} Cycles',
+  },
+  hardwareSupercharge: {
+    sectionTitle: 'Surcharge Matérielle',
+    superchargeButton: 'Surcharger',
+    costFormat: 'Coût : {n} Puce',
+    bonusLabel: 'Rendement ×2',
+    malusLabel: '+25% Surcharge Globale',
+    toggleOn: 'ON',
+    toggleOff: 'OFF',
   },
   pause: {
     title: 'ARRÊT SYSTÈME',
     subtitle: 'Exécution de Node-0 suspendue',
     resumeLabel: 'Reprendre',
-    abortLabel: 'Abandonner\nla run',
+    abortLabel: 'Abandonner la run',
     settingsLabel: 'Réglages',
     confirmPrompt: 'Abandonner cette run ? Tu gardes tes Éclats hex.',
     confirmYes: 'Oui',
@@ -263,6 +273,14 @@ export const FR_STRINGS: GameStrings = {
       name: 'Seuil de fusion',
       description: 'Étire la marge de Surcharge avant la fusion',
     },
+    overclock: {
+      name: 'Overclock',
+      description: 'Débloque le bouton Overclock : boost de purge temporaire, au prix d\'une Surcharge plus rapide',
+    },
+    fluxDrive: {
+      name: 'Flux Drive',
+      description: 'Débloque le toggle Flux Drive : double la vitesse de simulation en quarantaine',
+    },
   },
   branches: {
     degats: 'Dégâts',
@@ -289,6 +307,9 @@ export const FR_STRINGS: GameStrings = {
     breachReliefPerKill: 'Soulagement Brèche / kill',
     meltdownThreshold: 'Seuil de fusion',
     max: 'max',
+    overclockDuration: 'Durée Overclock',
+    overclockCooldown: 'Cooldown Overclock',
+    fluxDriveSpeed: 'Vitesse simulation',
   },
   playerStats: {
     title: 'NODE-0 // STATS',
@@ -318,23 +339,23 @@ export const FR_STRINGS: GameStrings = {
     protocols: {
       residualMemory: {
         name: 'Mémoire résiduelle',
-        description: 'Bonus d\'Éclats hex au départ après chaque Recompilation (+50 par rang)',
+        description: 'Bonus d\'Éclats hex au départ après chaque Recompilation (+150 par rang, illimité)',
       },
       bootReinforcement: {
         name: 'Renfort d\'amorçage',
-        description: 'Renforce la purge de base de Node-0 Boot (+5 dégâts de frappe)',
+        description: 'Boost multiplicatif des dégâts de purge totaux (+15 % par rang, illimité)',
       },
       thermalBaseline: {
         name: 'Ligne thermique',
-        description: 'Réduit la montée passive de Surcharge (+5 % de réduction par rang)',
+        description: 'Réduit la montée passive de Surcharge (×0,9 par rang, décroissance exponentielle sans plancher)',
       },
       extractionProtocol: {
         name: 'Protocole d\'extraction',
-        description: 'Plus d\'Éclats hex à chaque kill (+10 % de rendement global par rang)',
+        description: 'Plus d\'Éclats hex à chaque kill (+15 % de rendement global par rang, illimité)',
       },
       seedResonance: {
         name: 'Résonance de Graine',
-        description: 'Fragments de Graine bonus à chaque future Recompilation (+1 par rang)',
+        description: 'Fragments de Graine bonus à chaque future Recompilation (+25 % par rang, cumul additif, illimité)',
       },
     },
   },
@@ -352,7 +373,7 @@ export const FR_STRINGS: GameStrings = {
     shutdownAbortedLine3: 'ARCHIVE ZÉRO: MODE RÉCUPÉRATION',
   },
   ui: {
-    startRun: 'Lancer\nla run',
+    startRun: 'Lancer la run',
     skip: 'Passer',
     purchase: 'Acheter',
     purchaseAnchor: 'Installer',
@@ -370,10 +391,11 @@ export const FR_STRINGS: GameStrings = {
     waveClear: 'Vague terminée',
     overclock: 'Overclock',
     levelFormat: 'Niveau {current} / {max}',
+    levelFormatUncapped: 'Niveau {n}',
     previous: 'Précédent',
     next: 'Suivant',
     gotIt: 'Compris',
-    moduleTree: 'Arbre de\nmodules',
+    moduleTree: 'Arbre de modules',
     cycleLabel: 'Cycle {n}',
     cycleWaveFormat: 'Cycle {cycle} · Vague {wave}/{max}',
     cycleBossFormat: 'Cycle {cycle} · BOSS',

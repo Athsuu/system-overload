@@ -4,7 +4,7 @@ import { BOSS_WAVE_INDEX } from '../game/waveScaling';
 import { BREACH_URGENT_THRESHOLD } from '../theme/darkHexTerminal';
 import type { ArchAmbientPersistScope } from './archAmbientPersistence';
 import { isArchAmbientHeard } from './archAmbientPersistence';
-import type { TutorialSnapshot } from './tutorialCatalog';
+import { getSnapshotCycle, type TutorialSnapshot } from './tutorialCatalog';
 
 export interface ArchAmbientLine {
   id: string;
@@ -56,10 +56,10 @@ export function getArchAmbientLines(): ArchAmbientLine[] {
     {
       id: 'flux_drive_ready',
       text: A.fluxDrive,
-      screens: ['PLAYING', 'MENU'],
+      screens: ['MENU'],
       requiresArchMet: true,
       persistScope: 'profile',
-      unlockWhen: () => false,
+      unlockWhen: (s) => s.upgrades.fluxDrive >= 1 && getSnapshotCycle(s) === 1,
     },
   ];
 }

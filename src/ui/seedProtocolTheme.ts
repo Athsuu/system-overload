@@ -26,18 +26,6 @@ export function getCoreProtocolTierVisual(
   isSelected: boolean,
   level: number,
 ): CoreProtocolTierVisual {
-  if (state === 'maxed') {
-    return {
-      border: `${SEED_PROTOCOL_VISUAL.accent}88`,
-      background: SEED_PROTOCOL_VISUAL.glassBgSelected,
-      glow: `0 0 36px ${SEED_PROTOCOL_VISUAL.accentGlow}`,
-      textColor: 'rgba(226, 244, 255, 0.7)',
-      titleColor: SEED_PROTOCOL_VISUAL.accentMuted,
-      pipColor: SEED_PROTOCOL_VISUAL.accent,
-      opacity: 1,
-    };
-  }
-
   if (state === 'available') {
     return {
       border: isSelected

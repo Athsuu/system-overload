@@ -5,26 +5,33 @@
 
 import {
   KILL_BREACH_RELIEF_PER_LEVEL,
-  MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL,
+  MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL,
   PURGE_CADENCE_INTERVAL_MS_PER_LEVEL,
   PURGE_REACH_AOE_PERCENT_PER_LEVEL,
   PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL,
   PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL,
+  PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
   ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL,
-  SHARD_SALVAGE_BONUS_PER_LEVEL,
+  SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL,
   SHARD_YIELD_PERCENT_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
+  type AnchoredNodes,
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
 import type { CoreProtocolLevels } from '../store/prestigeTypes';
 import {
-  BOOT_REINFORCEMENT_DAMAGE_PER_LEVEL,
+  BOOT_REINFORCEMENT_DAMAGE_PERCENT_PER_LEVEL,
   EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL,
-  THERMAL_BASELINE_REDUCTION_PERCENT_PER_LEVEL,
+  THERMAL_BASELINE_DECAY_FACTOR_PER_LEVEL,
 } from '../store/coreProtocolCatalog';
+import { getRecompileDepthMultiplier } from '../store/prestigeLogic';
+import { getAnchorHeatMultiplier, getAnchorMultiplier } from './anchorSupercharge';
 import type { EnemyClass } from './enemyClass';
+import { BASE_CRITICAL_CHANCE, BASE_CRITICAL_MULTIPLIER } from './juice/criticalHit';
+
+const NO_ANCHORED_NODES: AnchoredNodes = {};
 
 export const BASE_BREACH_CAP = 100;
 
@@ -42,6 +49,9 @@ export interface RunConfig {
   purgeRadius: number;
   purgeHitDamage: number;
   purgeIntervalMs: number;
+  /** Préparation coup critique — pas encore modifiable par un module (voir game/juice/criticalHit.ts). */
+  criticalChance: number;
+  criticalMultiplier: number;
 }
 
 /** Bases de run non modifiées par les modules (pour l'instant). */
@@ -50,9 +60,9 @@ export const RUN_STAT_BASE = {
   baseEnemyHp: 20,
   baseEnemySpeed: 52.16,
   maxEnemySpeed: 102.47,
-  basePassiveHeatPerSec: 2.8,
+  basePassiveHeatPerSec: 1.5,
   baseLeakProgressPenalty: 20,
-  basePurgeRadius: 50,
+  basePurgeRadius: 72,
   basePurgeHitDamage: 5,
   basePurgeIntervalMs: 1000,
   shardsMultiplier: 1,
@@ -74,7 +84,9 @@ export type ModuleEffectTarget =
   | 'purge.latencySlow'
   | 'breach.cap'
   | 'breach.killRelief'
-  | 'loot.hexShardRadii';
+  | 'loot.hexShardRadii'
+  | 'overclock.unlock'
+  | 'runConfig.timeScale';
 
 export interface ModuleEffectRegistryEntry {
   upgradeId: UpgradeId;
@@ -94,8 +106,8 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   },
   {
     upgradeId: 'shardSalvage',
-    targets: ['runConfig.killBonusShards'],
-    summaryFr: 'Bonus d’Éclats hex par kill (montant du loot)',
+    targets: ['runConfig.shardsMultiplier'],
+    summaryFr: 'Multiplicateur composé sur le rendement d’Éclats hex par kill (×1.18^rang, illimité)',
   },
   {
     upgradeId: 'shardYield',
@@ -152,6 +164,16 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
     targets: ['breach.cap'],
     summaryFr: 'Augmente le seuil Meltdown (cap Breach %)',
   },
+  {
+    upgradeId: 'overclock',
+    targets: ['overclock.unlock'],
+    summaryFr: 'Débloque le bouton Overclock (Espace / HUD)',
+  },
+  {
+    upgradeId: 'fluxDrive',
+    targets: ['runConfig.timeScale'],
+    summaryFr: 'Débloque le toggle Flux Drive (×2 vitesse de simulation)',
+  },
 ];
 
 /** Fichiers à toucher pour un nouveau module module tree (checklist agent). */
@@ -197,15 +219,20 @@ export function getPurgeReachBonusPercent(reachLevel: number): number {
   return flatPerLevel(reachLevel, PURGE_REACH_AOE_PERCENT_PER_LEVEL);
 }
 
-export function computePurgeAoeProfile(upgrades: UpgradeLevels): PurgeAoeProfile {
-  const reachBonusPercent = getPurgeReachBonusPercent(upgrades.purgeReach);
+export function computePurgeAoeProfile(
+  upgrades: UpgradeLevels,
+  anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
+): PurgeAoeProfile {
+  const reachMultiplier = getAnchorMultiplier(anchoredNodes, 'purgeReach');
+  const splashMultiplier = getAnchorMultiplier(anchoredNodes, 'purgeSplash');
+  const reachBonusPercent = getPurgeReachBonusPercent(upgrades.purgeReach) * reachMultiplier;
   const mainRadius = scaleRadiusByPercent(
     RUN_STAT_BASE.basePurgeRadius,
     upgrades.purgeReach,
-    PURGE_REACH_AOE_PERCENT_PER_LEVEL,
+    PURGE_REACH_AOE_PERCENT_PER_LEVEL * reachMultiplier,
   );
-  const splashRadiusBonusPercent = getPurgeSplashRadiusBonusPercent(upgrades.purgeSplash);
-  const splashRadius = getPurgeSplashRadius(mainRadius, upgrades.purgeSplash);
+  const splashRadiusBonusPercent = getPurgeSplashRadiusBonusPercent(upgrades.purgeSplash, splashMultiplier);
+  const splashRadius = getPurgeSplashRadius(mainRadius, upgrades.purgeSplash, splashMultiplier);
   return { mainRadius, splashRadius, reachBonusPercent, splashRadiusBonusPercent };
 }
 
@@ -217,37 +244,41 @@ export function getShardYieldMultiplier(yieldLevel: number): number {
   return 1 + getShardYieldBonusPercent(yieldLevel) / 100;
 }
 
-export function getEliteBreakerDamageBonusPercent(level: number): number {
+export function getEliteBreakerDamageBonusPercent(level: number, anchorMultiplier = 1): number {
   if (level <= 0) return 0;
   const index = Math.min(level, ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL.length) - 1;
-  return ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL[index];
+  return ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL[index] * anchorMultiplier;
 }
 
-export function getLatencySlowMultiplier(level: number): number {
+export function getLatencySlowMultiplier(level: number, anchorMultiplier = 1): number {
   if (level <= 0) return 1;
-  return Math.max(0.1, 1 - level * 0.10);
+  return Math.max(0.1, 1 - level * 0.10 * anchorMultiplier);
 }
 
-export function getPurgeSplashRadiusBonusPercent(splashLevel: number): number {
+export function getPurgeSplashRadiusBonusPercent(splashLevel: number, anchorMultiplier = 1): number {
   if (splashLevel <= 0) return 0;
   const index = Math.min(splashLevel, PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL.length) - 1;
-  return PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL[index];
+  return PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL[index] * anchorMultiplier;
 }
 
-export function getPurgeSplashRadius(mainRadius: number, splashLevel: number): number {
-  const bonusPercent = getPurgeSplashRadiusBonusPercent(splashLevel);
+export function getPurgeSplashRadius(mainRadius: number, splashLevel: number, anchorMultiplier = 1): number {
+  const bonusPercent = getPurgeSplashRadiusBonusPercent(splashLevel, anchorMultiplier);
   if (bonusPercent <= 0) return mainRadius;
   return Math.round(mainRadius * (1 + bonusPercent / 100));
 }
 
-export function getPurgeSplashDamagePercent(level: number): number {
+export function getPurgeSplashDamagePercent(level: number, anchorMultiplier = 1): number {
   if (level <= 0) return 0;
   const index = Math.min(level, PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL.length) - 1;
-  return PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL[index];
+  return PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL[index] * anchorMultiplier;
 }
 
-export function resolvePurgeSplashDamage(basePurgeHitDamage: number, splashLevel: number): number {
-  const percent = getPurgeSplashDamagePercent(splashLevel);
+export function resolvePurgeSplashDamage(
+  basePurgeHitDamage: number,
+  splashLevel: number,
+  anchorMultiplier = 1,
+): number {
+  const percent = getPurgeSplashDamagePercent(splashLevel, anchorMultiplier);
   if (percent <= 0) return 0;
   return Math.max(1, Math.round(basePurgeHitDamage * (percent / 100)));
 }
@@ -256,9 +287,10 @@ export function resolvePurgeHitDamage(
   basePurgeHitDamage: number,
   enemyClass: EnemyClass,
   eliteBreakerLevel: number,
+  anchorMultiplier = 1,
 ): number {
   if (enemyClass !== 'elite' || eliteBreakerLevel <= 0) return basePurgeHitDamage;
-  const bonusPercent = getEliteBreakerDamageBonusPercent(eliteBreakerLevel);
+  const bonusPercent = getEliteBreakerDamageBonusPercent(eliteBreakerLevel, anchorMultiplier);
   return Math.round(basePurgeHitDamage * (1 + bonusPercent / 100));
 }
 
@@ -271,32 +303,40 @@ export function computeRunConfig(
     extractionProtocol: 0,
     seedResonance: 0,
   },
+  anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
+  recompileDepth = 0,
 ): RunConfig {
-  const aoe = computePurgeAoeProfile(upgrades);
-  const thermalBaselineReduction =
-    (coreProtocols.thermalBaseline * THERMAL_BASELINE_REDUCTION_PERCENT_PER_LEVEL) / 100;
+  const aoe = computePurgeAoeProfile(upgrades, anchoredNodes);
+  const thermalBaselineDecay = THERMAL_BASELINE_DECAY_FACTOR_PER_LEVEL ** coreProtocols.thermalBaseline;
   const basePassiveAfterModules = subtractPerLevel(
     RUN_STAT_BASE.basePassiveHeatPerSec,
     upgrades.threadCoolant,
-    THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
+    THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL * getAnchorMultiplier(anchoredNodes, 'threadCoolant'),
     MIN_PASSIVE_HEAT_PER_SEC,
   );
   const passiveHeatPerSec = Math.max(
     MIN_PASSIVE_HEAT_PER_SEC,
-    basePassiveAfterModules * (1 - thermalBaselineReduction),
+    basePassiveAfterModules * thermalBaselineDecay * getAnchorHeatMultiplier(anchoredNodes),
   );
   const extractionBonus =
     1 + (coreProtocols.extractionProtocol * EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL) / 100;
-  const bootReinforcementDamage = flatPerLevel(
-    coreProtocols.bootReinforcement,
-    BOOT_REINFORCEMENT_DAMAGE_PER_LEVEL,
-  );
+  const bootReinforcementMultiplier =
+    1 + (coreProtocols.bootReinforcement * BOOT_REINFORCEMENT_DAMAGE_PERCENT_PER_LEVEL) / 100;
+  const shardYieldBonusPercent =
+    getShardYieldBonusPercent(upgrades.shardYield) * getAnchorMultiplier(anchoredNodes, 'shardYield');
+  const shardSalvageMultiplier =
+    SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL **
+    (upgrades.shardSalvage * getAnchorMultiplier(anchoredNodes, 'shardSalvage'));
+  const recompileDepthMultiplier = getRecompileDepthMultiplier(recompileDepth);
+  const purgeStrikeGrowthMultiplier = PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL ** upgrades.purgeStrike;
 
   return {
     starterNodes: RUN_STAT_BASE.starterNodes,
     baseEnemyHp: RUN_STAT_BASE.baseEnemyHp,
-    shardsMultiplier: getShardYieldMultiplier(upgrades.shardYield) * extractionBonus,
-    killBonusShards: flatPerLevel(upgrades.shardSalvage, SHARD_SALVAGE_BONUS_PER_LEVEL),
+    shardsMultiplier:
+      (1 + shardYieldBonusPercent / 100) * shardSalvageMultiplier * extractionBonus * recompileDepthMultiplier,
+    // Récupération d'éclats ne donne plus de bonus flat — voir shardsMultiplier (rééquilibrage).
+    killBonusShards: 0,
     spawnIntervalMult: RUN_STAT_BASE.spawnIntervalMult,
     maxAliveReduction: RUN_STAT_BASE.maxAliveReduction,
     baseEnemySpeed: RUN_STAT_BASE.baseEnemySpeed,
@@ -304,27 +344,48 @@ export function computeRunConfig(
     passiveHeatPerSec,
     leakProgressPenalty: RUN_STAT_BASE.baseLeakProgressPenalty,
     purgeRadius: aoe.mainRadius,
-    purgeHitDamage:
-      (upgrades.node0Boot >= 1 ? RUN_STAT_BASE.basePurgeHitDamage : 0) +
-      bootReinforcementDamage +
-      flatPerLevel(upgrades.purgeStrike, PURGE_STRIKE_DAMAGE_PER_LEVEL),
+    purgeHitDamage: Math.round(
+      ((upgrades.node0Boot >= 1
+        ? RUN_STAT_BASE.basePurgeHitDamage * getAnchorMultiplier(anchoredNodes, 'node0Boot')
+        : 0) +
+        flatPerLevel(
+          upgrades.purgeStrike,
+          PURGE_STRIKE_DAMAGE_PER_LEVEL * getAnchorMultiplier(anchoredNodes, 'purgeStrike'),
+        )) *
+        purgeStrikeGrowthMultiplier *
+        bootReinforcementMultiplier *
+        recompileDepthMultiplier,
+    ),
     purgeIntervalMs: subtractPerLevel(
       RUN_STAT_BASE.basePurgeIntervalMs,
       upgrades.purgeCadence,
-      PURGE_CADENCE_INTERVAL_MS_PER_LEVEL,
+      PURGE_CADENCE_INTERVAL_MS_PER_LEVEL * getAnchorMultiplier(anchoredNodes, 'purgeCadence'),
       MIN_PURGE_INTERVAL_MS,
     ),
+    criticalChance: BASE_CRITICAL_CHANCE,
+    criticalMultiplier: BASE_CRITICAL_MULTIPLIER,
   };
 }
 
-export function computeBreachCap(upgrades: UpgradeLevels): number {
-  return (
-    BASE_BREACH_CAP + flatPerLevel(upgrades.meltdownThreshold, MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL)
+export function computeBreachCap(
+  upgrades: UpgradeLevels,
+  anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
+): number {
+  const anchorMultiplier = getAnchorMultiplier(anchoredNodes, 'meltdownThreshold');
+  return Math.round(
+    BASE_BREACH_CAP *
+      MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL ** (upgrades.meltdownThreshold * anchorMultiplier),
   );
 }
 
-export function computeKillBreachRelief(upgrades: UpgradeLevels): number {
-  return flatPerLevel(upgrades.killBreachRelief, KILL_BREACH_RELIEF_PER_LEVEL);
+export function computeKillBreachRelief(
+  upgrades: UpgradeLevels,
+  anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
+): number {
+  return flatPerLevel(
+    upgrades.killBreachRelief,
+    KILL_BREACH_RELIEF_PER_LEVEL * getAnchorMultiplier(anchoredNodes, 'killBreachRelief'),
+  );
 }
 
 export function getModuleEffectEntry(upgradeId: UpgradeId): ModuleEffectRegistryEntry | undefined {

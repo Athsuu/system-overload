@@ -5,7 +5,14 @@ import {
   sanitizeCyclesCleared,
   clampCycleIndex,
 } from './cycleTypes';
-import { DEFAULT_UPGRADES, UPGRADE_CATALOG, type UpgradeLevels } from './upgradeCatalog';
+import {
+  DEFAULT_UPGRADES,
+  UPGRADE_CATALOG,
+  sanitizeUpgradeLevels,
+  type AnchoredNodes,
+  type UpgradeId,
+  type UpgradeLevels,
+} from './upgradeCatalog';
 
 const SAVE_KEY = 'system-overload-save';
 
@@ -23,6 +30,8 @@ export interface SaveData {
   highestCycleUnlocked: number;
   selectedCycle: number;
   cyclesCleared: number[];
+  cyclesSinceLastAnchor: number;
+  anchoredNodes: AnchoredNodes;
   economyV2?: boolean;
   moduleTreeV3?: boolean;
   economyV4?: boolean;
@@ -42,6 +51,8 @@ interface LegacySaveData {
   highestCycleUnlocked?: number;
   selectedCycle?: number;
   cyclesCleared?: unknown;
+  cyclesSinceLastAnchor?: number;
+  anchoredNodes?: Partial<Record<string, boolean>>;
   economyV2?: boolean;
   moduleTreeV3?: boolean;
   /** @deprecated legacy key — migrated to moduleTreeV3 */
@@ -50,6 +61,20 @@ interface LegacySaveData {
   moduleTreeV4?: boolean;
   /** @deprecated legacy key — migrated to moduleTreeV4 */
   skillTreeV4?: boolean;
+}
+
+function sanitizeAnchoredNodes(raw: LegacySaveData['anchoredNodes']): AnchoredNodes {
+  const anchoredNodes: AnchoredNodes = {};
+  if (!raw) return anchoredNodes;
+
+  for (const definition of UPGRADE_CATALOG) {
+    const value = raw[definition.id];
+    if (typeof value === 'boolean') {
+      anchoredNodes[definition.id as UpgradeId] = value;
+    }
+  }
+
+  return anchoredNodes;
 }
 
 function readBankShards(parsed: LegacySaveData): number | null {
@@ -68,17 +93,7 @@ function migrateEconomyV2(bankShards: number, parsed: LegacySaveData): number {
 }
 
 function sanitizeUpgrades(raw: LegacySaveData['upgrades']): UpgradeLevels {
-  const upgrades = { ...DEFAULT_UPGRADES };
-  if (!raw) return upgrades;
-
-  for (const definition of UPGRADE_CATALOG) {
-    const level = raw[definition.id];
-    if (typeof level === 'number' && Number.isFinite(level)) {
-      upgrades[definition.id] = Math.max(0, Math.min(definition.maxLevel, Math.floor(level)));
-    }
-  }
-
-  return upgrades;
+  return sanitizeUpgradeLevels(raw ?? undefined);
 }
 
 function hasModuleTreeV3(parsed: LegacySaveData): boolean {
@@ -162,6 +177,11 @@ export function loadSave(): SaveData | null {
         ? clampCycleIndex(Math.min(parsed.selectedCycle, highestCycleUnlocked))
         : Math.min(DEFAULT_CYCLE_PROGRESS.selectedCycle, highestCycleUnlocked);
     const cyclesCleared = sanitizeCyclesCleared(parsed.cyclesCleared);
+    const cyclesSinceLastAnchor =
+      typeof parsed.cyclesSinceLastAnchor === 'number'
+        ? Math.max(0, Math.floor(parsed.cyclesSinceLastAnchor))
+        : 0;
+    const anchoredNodes = sanitizeAnchoredNodes(parsed.anchoredNodes);
 
     const recompileDepth = Math.max(
       0,
@@ -185,6 +205,8 @@ export function loadSave(): SaveData | null {
       highestCycleUnlocked,
       selectedCycle,
       cyclesCleared,
+      cyclesSinceLastAnchor,
+      anchoredNodes,
       economyV2: true,
       moduleTreeV3: true,
       economyV4: true,

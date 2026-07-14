@@ -1,4 +1,5 @@
 import {
+  devRequestKillAll,
   devRequestWaveJump,
   devSetInvincible,
   devSetShowEnemyHpBars,
@@ -17,7 +18,6 @@ import { clearAllPlayerData } from '../store/playerReset';
 import {
   clampCycleIndex,
   DEFAULT_CYCLE_PROGRESS,
-  MAX_CYCLES,
   sanitizeCyclesCleared,
 } from '../store/cycleTypes';
 import { clearTutorialProgress } from '../tutorial/tutorialPersistence';
@@ -29,6 +29,7 @@ import { resetTutorialSignals } from '../tutorial/tutorialSignals';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { DEFAULT_PRESTIGE } from '../store/prestigeTypes';
 import {
+  clampUpgradeLevel,
   DEFAULT_UPGRADES,
   UPGRADE_CATALOG,
   type UpgradeId,
@@ -52,6 +53,8 @@ function persist(state: ReturnType<typeof useGameStore.getState>): void {
     highestCycleUnlocked: state.highestCycleUnlocked,
     selectedCycle: state.selectedCycle,
     cyclesCleared: state.cyclesCleared,
+    cyclesSinceLastAnchor: state.cyclesSinceLastAnchor,
+    anchoredNodes: state.anchoredNodes,
   });
 }
 
@@ -85,6 +88,24 @@ export function devSetBankShards(amount: number): void {
 
 export function devAddRunShards(amount: number): void {
   useGameStore.getState().addRunShards(amount);
+}
+
+export function devAddBankAnchorFragments(amount: number): void {
+  const state = useGameStore.getState();
+  const bankAnchorFragments = Math.max(0, state.bankAnchorFragments + amount);
+  persist({ ...state, bankAnchorFragments });
+  useGameStore.setState({ bankAnchorFragments });
+}
+
+export function devAddSeedFragments(amount: number): void {
+  const state = useGameStore.getState();
+  const seedFragments = Math.max(0, state.seedFragments + amount);
+  persist({ ...state, seedFragments });
+  useGameStore.setState({ seedFragments });
+}
+
+export function devKillAllEnemies(): void {
+  devRequestKillAll();
 }
 
 export function devSetBreachProgress(percent: number): void {
@@ -134,12 +155,17 @@ export function devTogglePrestigeUnlocked(): void {
   useGameStore.setState({ prestigeUnlocked });
 }
 
+/** Dev "Max" jumps to this level for Soft Cap (uncapped) modules instead of literal Infinity. */
+export const DEV_UNCAPPED_PREVIEW_LEVEL = 20;
+
 export function devMaxAllUpgrades(): void {
   const state = useGameStore.getState();
   const upgrades = { ...DEFAULT_UPGRADES } as UpgradeLevels;
 
   for (const definition of UPGRADE_CATALOG) {
-    upgrades[definition.id] = definition.maxLevel;
+    upgrades[definition.id] = Number.isFinite(definition.maxLevel)
+      ? definition.maxLevel
+      : DEV_UNCAPPED_PREVIEW_LEVEL;
   }
 
   persist({ ...state, upgrades });
@@ -157,7 +183,7 @@ export function devSetUpgradeLevel(id: UpgradeId, level: number): void {
   if (!definition) return;
 
   const state = useGameStore.getState();
-  const clampedLevel = Math.max(0, Math.min(definition.maxLevel, Math.floor(level)));
+  const clampedLevel = clampUpgradeLevel(id, level);
   const upgrades = { ...state.upgrades, [id]: clampedLevel };
   persist({ ...state, upgrades });
   useGameStore.setState({ upgrades });
@@ -170,6 +196,14 @@ export function devUnlockCycle(cycle: number): void {
   const selectedCycle = Math.min(state.selectedCycle, highestCycleUnlocked);
   persist({ ...state, highestCycleUnlocked, selectedCycle });
   useGameStore.setState({ highestCycleUnlocked, selectedCycle });
+}
+
+/** Itère et marque comme complétés (cyclesCleared) tous les cycles de 1 à target inclus. */
+export function devUnlockCyclesUpTo(target: number): void {
+  const boundedTarget = Math.max(1, Math.floor(target));
+  for (let cycle = 1; cycle <= boundedTarget; cycle += 1) {
+    devMarkCycleCleared(cycle);
+  }
 }
 
 export function devClearCycleFlags(): void {
@@ -185,7 +219,7 @@ export function devMarkCycleCleared(cycle: number): void {
   const state = useGameStore.getState();
   const target = clampCycleIndex(cycle);
   const cyclesCleared = sanitizeCyclesCleared([...state.cyclesCleared, target]);
-  const highestCycleUnlocked = Math.min(MAX_CYCLES, Math.max(state.highestCycleUnlocked, target + 1));
+  const highestCycleUnlocked = Math.max(state.highestCycleUnlocked, target + 1);
   persist({ ...state, cyclesCleared, highestCycleUnlocked });
   useGameStore.setState({ cyclesCleared, highestCycleUnlocked });
 }

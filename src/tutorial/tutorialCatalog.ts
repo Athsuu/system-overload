@@ -58,8 +58,15 @@ export interface TutorialSnapshot {
   waveIndex: number;
   wavePhase: WavePhase;
   runOutcome: 'victory_boss' | 'defeat_breach' | null;
+  selectedCycle: number;
+  activeCycle: number;
   signals: TutorialSignals;
   dismissedIds: ReadonlySet<string>;
+}
+
+/** Hub uses selected cycle; in-run uses the active run cycle. */
+export function getSnapshotCycle(snapshot: TutorialSnapshot): number {
+  return snapshot.gameState === 'PLAYING' ? snapshot.activeCycle : snapshot.selectedCycle;
 }
 
 export interface TutorialStep {
@@ -225,7 +232,7 @@ export function buildTutorialSteps(): TutorialStep[] {
       label: ARCH_LABEL,
       title: steps.overclockTitle,
       body: T.overclockRisk,
-      unlockWhen: () => false,
+      unlockWhen: (s) => s.upgrades.overclock >= 1,
       completeWhen: SKIP_ONLY,
     },
     {
@@ -267,7 +274,7 @@ export function buildTutorialSteps(): TutorialStep[] {
       label: ARCH_LABEL,
       title: strings.hud.fluxDriveLabel,
       body: T.fluxDriveLore,
-      unlockWhen: () => false,
+      unlockWhen: (s) => s.upgrades.fluxDrive >= 1 && getSnapshotCycle(s) === 1,
       completeWhen: (s) => s.signals.fluxDriveToggled,
     },
   ];

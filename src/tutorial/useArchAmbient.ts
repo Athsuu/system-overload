@@ -18,6 +18,8 @@ export function useArchAmbient(enabled: boolean) {
   const waveIndex = useGameStore((state) => state.waveIndex);
   const wavePhase = useGameStore((state) => state.wavePhase);
   const runOutcome = useGameStore((state) => state.runOutcome);
+  const selectedCycle = useGameStore((state) => state.selectedCycle);
+  const activeCycle = useGameStore((state) => state.activeCycle);
 
   const [ambientRevision, setAmbientRevision] = useState(0);
   const [signalRevision, setSignalRevision] = useState(0);
@@ -39,6 +41,8 @@ export function useArchAmbient(enabled: boolean) {
       waveIndex,
       wavePhase,
       runOutcome,
+      selectedCycle,
+      activeCycle,
       signals: getTutorialSignals(),
       dismissedIds: new Set<string>(),
     };
@@ -52,19 +56,21 @@ export function useArchAmbient(enabled: boolean) {
     waveIndex,
     wavePhase,
     runOutcome,
+    selectedCycle,
+    activeCycle,
     signalRevision,
   ]);
 
   const archIntroDismissed = useMemo(() => {
     void progressRevision;
-    void ambientRevision;
     return isStepDismissed('welcome');
-  }, [progressRevision, ambientRevision]);
+  }, [progressRevision]);
 
   const activeLine = useMemo(() => {
     if (!enabled) return null;
+    void ambientRevision;
     return getActiveArchAmbient(snapshot, archIntroDismissed);
-  }, [enabled, snapshot, archIntroDismissed]);
+  }, [enabled, snapshot, archIntroDismissed, ambientRevision]);
 
   return { activeLine };
 }

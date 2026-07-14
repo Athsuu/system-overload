@@ -27,7 +27,7 @@ Des **corrupted processes**, des threads instables spawnés par l'effondrement, 
 Entre les runs, le **Module Tree** radial matérialise le travail d'**ARCH** sur **le même** Node-0, deux boucles cumulées :
 
 - **Hex Shards**, monnaie gagnée à chaque kill en run (compteur live), transférée au coffre en fin de run ; dépensée sur le module tree.
-- **Anchor Fragments**, données d'ancrage extraites **uniquement** en tuant le **Breach Anchor** (boss) ; débloquent les modules **capstone**.
+- **Anchor Fragments**, puces matérielles extraites du **Breach Anchor**, **+1 tous les 3 Cycles réussis** ; branchées sur un module déjà acheté pour le **Surcharger** (Hardware Supercharge : rendement ×2, Surcharge globale alourdie).
 
 ARCH ne **répare** pas seulement à l'échec : elle fait tourner un **modèle heuristique en continu** sur chaque run, victoire ou défaite. Le **Meltdown** est le signal le plus critique (renforcement ciblé immédiat) ; mais chaque run nourrit aussi des **optimisations plus lentes**, thermique, rendement d'extraction, modélisation de la menace.
 
@@ -35,7 +35,7 @@ Au départ, un seul module est visible : **Node-0 Boot**, l'initialisation du th
 
 **Objectif long terme (narratif)** : l'**Uplink**, extraire la Graine hors de l'Archive en collapse. Pas de mécanique dédiée dans cette version.
 
-**Rythme cible** : runs ≤ **4 minutes** (échecs souvent 1,5–3 min) ; méta complète ~~**4–5 h** (~~60–80 runs).
+**Rythme cible** : runs courtes une fois équipé (échecs souvent 1,5–3 min) ; premier clear du Cycle 1 depuis une sauvegarde neuve = **15-20 minutes cumulées** (plusieurs tentatives + achats hub, voir rééquilibrage) ; méta complète ~~**4–5 h** (~~60–80 runs).
 
 ---
 
@@ -52,7 +52,7 @@ Au départ, un seul module est visible : **Node-0 Boot**, l'initialisation du th
 | Que protège-t-on ?                | **La Graine**, code source originel et pur de l'Archive Zéro.                                                                                                               |
 | Que veux-je ?                     | **Contenir la Breach**, détruire le **Breach Anchor**, extraire des **Hex Shards** ; à terme, préparer l'**Uplink**.                                                         |
 | Que se passe-t-il si j'échoue ?   | **Meltdown**, Overload à 100 %, signal critique pour ARCH (renforcement ciblé immédiat) ; le thread s'effondre, run terminée, retour hub. **Même Node-0**, jamais remplacé. |
-| Que se passe-t-il si je réussis ? | **Breach Contained**, Breach Anchor détruit ; Hex Shards → vault ; **+1 Anchor Fragment** (boss uniquement) ; données de run intégrées à l'optimisation continue d'ARCH.        |
+| Que se passe-t-il si je réussis ? | **Breach Contained**, Breach Anchor détruit ; Hex Shards → vault ; **+1 Anchor Fragment tous les 3 Cycles réussis** ; données de run intégrées à l'optimisation continue d'ARCH.        |
 
 
 ---
@@ -69,7 +69,7 @@ Pas d'histoire linéaire avec cinématiques. L'univers est **implicite**, lu à 
 - **La Breach** : concept de rupture / surcharge de l'Archive.
 - **Overload** : jauge live en run (barre HUD), la pression montante vers Meltdown.
 - **Les Hex Shards** : fragments de données stables, gagnés par kill en run (compteur live), transférés au vault en fin de run, dépensés sur le module tree.
-- **Anchor Fragments** : données d'ancrage du Breach Anchor, **+1 au premier clear boss de chaque Cycle** (replays du même cycle = shards uniquement).
+- **Anchor Fragments** : puces matérielles du Breach Anchor, **+1 tous les 3 Cycles réussis** ; branchées sur un module possédé pour le Surcharger (Hardware Supercharge, Risk/Reward).
 - **Quarantaine** : bulle d'exécution isolée par ARCH, Node-0 combat **depuis** la dernière zone tenable.
 - **Uplink** : objectif de fin de jeu (narratif), extraction / sauvetage de la Graine.
 
@@ -86,13 +86,13 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 
 | Monnaie              | Terme UI (EN)    | Comment on la gagne                                                                 | À quoi elle sert                       |
 | -------------------- | ---------------- | ----------------------------------------------------------------------------------- | -------------------------------------- |
-| **Hex Shards**       | Hex Shards       | Kills en run (compteur live) ; transférés au vault en fin de run                  | Presque tous les modules du module tree |
-| **Anchor Fragments** | Anchor Fragments | **Premier clear boss par Cycle** (+1) ; replays = shards seulement                           | Modules **capstone** marqués anchor      |
+| **Hex Shards**       | Hex Shards       | Kills en run (compteur live) ; transférés au vault en fin de run                  | Tous les modules du module tree (y compris Overclock, Flux Drive) |
+| **Anchor Fragments** | Anchor Fragments | **+1 tous les 3 Cycles réussis** (`cyclesSinceLastAnchor`) ; replays sans clear = shards seulement | **Hardware Supercharge** : ancrer un module possédé (rendement ×2, +25 % Surcharge globale / module actif) |
 
 
-**Pas de minijeu de conversion**, Hex Shards et Anchor Fragments restent distinctes. ARCH commente les moments (premier fragment, victoire boss) ; elle ne gère pas d'échange.
+**Pas de minijeu de conversion**, Hex Shards et Anchor Fragments restent distinctes. ARCH commente les moments (fragment gagné, victoire boss) ; elle ne gère pas d'échange.
 
-**Bonus victoire boss** : Hex Shards de run + bonus fixe ; fragment d'ancre en plus.
+**Bonus victoire boss** : Hex Shards de run + bonus fixe ; fragment d'ancre en plus tous les 3 Cycles réussis.
 
 ---
 
@@ -118,8 +118,8 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 **Présentation (1ère carte tuto)** :  
 *« I'm ARCH, Archive Recovery & Containment Heuristic. I compiled you into quarantine. Listen. we don't have much time. »*
 
-**Premier Anchor Fragment** (écran de fin, une seule fois) :  
-*« Anchor data secured. Capstone modules are online. spend fragments on the marked nodes. »*
+**Anchor Fragment gagné** (écran de fin, tous les 3 Cycles réussis) :  
+*« Anchor chip secured. Socket it into a module — supercharge the yield, if you can take the Overload. »*
 
 **Meltdown, pool ARCH** (3 variantes, rotation sans répétition immédiate — deck mélangé, une phrase ne revient qu'après les deux autres ; détail technique dans [dialogues.md](dialogues.md)) :
 1. *« I caught you in time. Margin was thinner than last time. Reinforcing now. »*
@@ -154,7 +154,7 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 | **Meltdown**           | Défaite, thread overloaded                                      |
 | **Breach Contained**   | Victoire, menace contenue                                       |
 | **Hex Shards**         | Monnaie unique, gagnée en run, stockée au vault, dépensée sur le module tree |
-| **Anchor Fragments**   | Monnaie boss, modules capstone                                  |
+| **Anchor Fragments**   | Monnaie boss (+1 / 3 Cycles réussis), Hardware Supercharge des modules |
 | **the Seed**           | Code source originel pur de l'Archive Zéro                       |
 | **Zero Archive**       | Le monde / la machine en collapse                                |
 | **Uplink**             | Objectif narratif fin de jeu, extraction de la Graine           |
@@ -293,7 +293,7 @@ Tutoriel contextuel (cartes ARCH), screenplay Acte I :
 - **3 cycles** jouables au lancement (architecture extensible).
 - Chaque cycle = **10 vagues + Breach Anchor** ; scaling continu (Cycle 2 vague 1 ≈ difficulté Cycle 1 vague 11).
 - **Hub** : sélecteur `CYCLE n` + flèches + Start Run ; cycles débloqués rejouables.
-- **1er clear boss** d'un cycle : +1 Anchor Fragment + déblocage du cycle suivant.
+- **1er clear boss** d'un cycle : déblocage du cycle suivant + incrémente le compteur `cyclesSinceLastAnchor` (**+1 Anchor Fragment tous les 3 Cycles réussis**).
 - **Re-clear** : Hex Shards seulement.
 - Victoire boss → **retour hub** (nouvelle run).
 
@@ -324,19 +324,23 @@ L'Archive Zéro atteint une phase où les patchs incrémentaux du module tree ne
 - **Recompile Depth** (compteur de recompilations)
 - Réglages joueur
 
-### Gain de Seed Fragments
+### Gain de Seed Fragments (rééquilibrage — formule superlinéaire)
 
-`seedFragments = 1 (base) + nombre de cycles clear + bonus Seed Resonance`. Exemple : Cycle 1-2-3 clear sans Seed Resonance = 1 + 3 = **4 Seed Fragments**.
+`n = nombre de cycles clear` ; `seedFragments = round((1 + n + floor(n^1.6 / 4)) × (1 + bonus Seed Resonance))`. Exemples sans Seed Resonance : n=3 (minimum pour débloquer Recompile) → **5** ; n=10 → **20** ; n=20 → **51**. Pousser profond avant de recompiler paie disproportionnellement plus qu'un rush minimal.
 
-### Core Protocols (5 modules permanents)
+En plus des Seed Fragments, chaque Recompile augmente un multiplicateur permanent (**Profondeur de Recompilation**, ×1.08/Recompile composé) appliqué directement aux dégâts de purge et au rendement d'éclats, ressenti dès la run suivante sans rien devoir acheter.
 
-| Protocole | Nom UI | Effet | Niveau max | Coût (Seed Fragments) |
-|-----------|--------|-------|------------|------------------------|
-| **Residual Memory** | Residual Memory | +50 Hex Shards au départ après chaque Recompile, par rang | 3 | 2 / 3 / 5 |
-| **Boot Reinforcement** | Boot Reinforcement | Renforce la purge de base de Node-0 Boot (+5 dégâts de frappe) | 1 | 1 |
-| **Thermal Baseline** | Thermal Baseline | -5 % de montée passive d'Overload, par rang | 3 | 2 / 4 / 6 |
-| **Extraction Protocol** | Extraction Protocol | +10 % de Hex Shards gagnés par kill, par rang | 3 | 3 / 5 / 8 |
-| **Seed Resonance** | Seed Resonance | +1 Seed Fragment gagné à chaque future Recompile, par rang | 2 | 4 / 7 |
+### Core Protocols (5 modules permanents, déplafonnés)
+
+Coût = `costBase × costGrowth^rang` (jamais de niveau max, jamais "MAX").
+
+| Protocole | Nom UI | Effet par rang | Coût de base | Croissance du coût |
+|-----------|--------|-----------------|---------------|---------------------|
+| **Residual Memory** | Residual Memory | +150 Hex Shards au départ après chaque Recompile | 2 | ×1.25 |
+| **Boot Reinforcement** | Boot Reinforcement | +15 % dégâts de purge totaux (multiplicatif) | 1 | ×1.35 |
+| **Thermal Baseline** | Thermal Baseline | ×0.9 décroissance de la montée passive d'Overload (composé) | 2 | ×1.30 |
+| **Extraction Protocol** | Extraction Protocol | +15 % de Hex Shards gagnés par kill | 3 | ×1.28 |
+| **Seed Resonance** | Seed Resonance | +25 % sur le gain de Seed Fragments à chaque future Recompile | 4 | ×1.40 |
 
 > Note : le module proposé à l'origine (*Accelerated Boot*) a été remplacé par **Boot Reinforcement** en implémentation — renforce Node-0 Boot plutôt que de l'auto-acheter.
 

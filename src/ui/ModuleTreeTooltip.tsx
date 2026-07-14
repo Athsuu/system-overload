@@ -1,10 +1,12 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import {
+  ANCHOR_SUPERCHARGE_COST,
   getModuleState,
   getUpgradeCost,
   getUpgradeCurrency,
   getUpgradeDefinition,
+  isAnchorSuperchargeEligible,
   type UpgradeId,
 } from '../store/upgradeCatalog';
 import { getModuleNode, getParentRequirementLabel, getModuleGlyphId, getUpgradeBranch } from '../store/moduleTree';
@@ -15,6 +17,7 @@ import { playOneShotAnimation } from './animations';
 import { ModuleBranchIcon } from './moduleTreeBranchIcons';
 import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
 import { DARK_HEX } from '../theme/darkHexTerminal';
+import { formatCompactNumber } from './formatNumber';
 
 const STAT_GREEN = '#4ade80';
 export const MODULE_TREE_TOOLTIP_TITLE_ID = 'module-tree-popover-title';
@@ -75,6 +78,9 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
   const bankAnchorFragments = useGameStore((state) => state.bankAnchorFragments);
   const upgrades = useGameStore((state) => state.upgrades);
   const purchaseUpgrade = useGameStore((state) => state.purchaseUpgrade);
+  const anchored = useGameStore((state) => state.anchoredNodes[selectedId]);
+  const purchaseAnchorSupercharge = useGameStore((state) => state.purchaseAnchorSupercharge);
+  const toggleAnchorSupercharge = useGameStore((state) => state.toggleAnchorSupercharge);
   const strings = useGameStrings();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -109,6 +115,22 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
     playOneShotAnimation(event.currentTarget, 'so-animate-purchase-flash');
   };
 
+  const isSuperchargeEligible = isAnchorSuperchargeEligible(selectedId) && level >= 1;
+  const isAnchored = anchored !== undefined;
+  const anchorActive = anchored === true;
+  const canSupercharge = bankAnchorFragments >= ANCHOR_SUPERCHARGE_COST;
+
+  const handleSupercharge = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!purchaseAnchorSupercharge(selectedId)) return;
+    triggerSfx('purchase');
+    playOneShotAnimation(event.currentTarget, 'so-animate-purchase-flash');
+  };
+
+  const handleToggleSupercharge = () => {
+    toggleAnchorSupercharge(selectedId);
+    triggerSfx('uiConfirm');
+  };
+
   return (
     <div
       ref={panelRef}
@@ -141,9 +163,11 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
               {definition.name}
             </p>
             <p className="mt-0.5 text-[13px] tracking-wide text-white/30 uppercase">
-              {strings.ui.levelFormat
-                .replace('{current}', String(level))
-                .replace('{max}', String(definition.maxLevel))}
+              {Number.isFinite(definition.maxLevel)
+                ? strings.ui.levelFormat
+                    .replace('{current}', String(level))
+                    .replace('{max}', String(definition.maxLevel))
+                : strings.ui.levelFormatUncapped.replace('{n}', String(level))}
             </p>
           </div>
         </div>
@@ -169,7 +193,7 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
           </span>
           {!isMaxed && (
             <span className="font-mono" style={{ color: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.gold }}>
-              {balance.toLocaleString()} / {cost.toLocaleString()}
+              {formatCompactNumber(balance)} / {formatCompactNumber(cost)}
             </span>
           )}
         </div>
@@ -203,6 +227,61 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
             {isMaxed ? strings.ui.max : isAnchor ? strings.ui.purchaseAnchor : strings.ui.purchase}
           </button>
         </div>
+
+        {isSuperchargeEligible && (
+          <div className="mt-3 border-t border-white/8 pt-2.5">
+            <p className="mb-1.5 text-[13px] tracking-wider text-white/40 uppercase">
+              {strings.hardwareSupercharge.sectionTitle}
+            </p>
+
+            {isAnchored ? (
+              <button
+                type="button"
+                onClick={handleToggleSupercharge}
+                className="flex w-full items-center justify-between rounded-full border px-3 py-1.5 transition"
+                style={{
+                  borderColor: anchorActive ? DARK_HEX.breachGlow : '#3a3a42',
+                  backgroundColor: anchorActive ? '#2a1508' : '#15151a',
+                }}
+              >
+                <span
+                  className="text-[13px] font-semibold tracking-wide uppercase"
+                  style={{ color: anchorActive ? DARK_HEX.breachGlow : 'rgba(255,255,255,0.4)' }}
+                >
+                  {anchorActive ? strings.hardwareSupercharge.toggleOn : strings.hardwareSupercharge.toggleOff}
+                </span>
+                <span
+                  className="h-4 w-8 rounded-full transition"
+                  style={{ backgroundColor: anchorActive ? DARK_HEX.breachGlow : '#3a3a42' }}
+                >
+                  <span
+                    className="block h-4 w-4 rounded-full bg-white transition-transform"
+                    style={{ transform: anchorActive ? 'translateX(1rem)' : 'translateX(0)' }}
+                  />
+                </span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={!canSupercharge}
+                  onClick={handleSupercharge}
+                  className="w-full rounded border px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase transition disabled:cursor-not-allowed disabled:opacity-35"
+                  style={getPurchaseButtonStyle(canSupercharge, true)}
+                >
+                  {strings.hardwareSupercharge.superchargeButton} ·{' '}
+                  {strings.hardwareSupercharge.costFormat.replace('{n}', String(ANCHOR_SUPERCHARGE_COST))}
+                </button>
+                <p className="mt-1.5 text-[12px]" style={{ color: '#4ade80' }}>
+                  {strings.hardwareSupercharge.bonusLabel}
+                </p>
+                <p className="text-[12px]" style={{ color: DARK_HEX.breachGlow }}>
+                  {strings.hardwareSupercharge.malusLabel}
+                </p>
+              </>
+            )}
+          </div>
+        )}
     </div>
   );
 }

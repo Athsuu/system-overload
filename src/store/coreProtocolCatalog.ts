@@ -1,36 +1,36 @@
 import { getGameStrings } from '../i18n';
 import type { CoreProtocolId, CoreProtocolLevels } from './prestigeTypes';
 
-export type CoreProtocolState = 'available' | 'unaffordable' | 'maxed';
+export type CoreProtocolState = 'available' | 'unaffordable';
 
 export interface CoreProtocolDefinition {
   id: CoreProtocolId;
   name: string;
   description: string;
-  maxLevel: number;
-  costByLevel: readonly number[];
+  costBase: number;
+  costGrowth: number;
 }
 
 /** Hex Shards granted on Recompile per Residual Memory rank. */
-export const RESIDUAL_MEMORY_SHARDS_PER_LEVEL = 50;
+export const RESIDUAL_MEMORY_SHARDS_PER_LEVEL = 150;
 
-/** Flat purge hit damage bonus per Boot Reinforcement rank (strengthens Node-0 Boot baseline). */
-export const BOOT_REINFORCEMENT_DAMAGE_PER_LEVEL = 5;
+/** Purge hit damage multiplier bonus per Boot Reinforcement rank (%, applied to total purgeHitDamage). */
+export const BOOT_REINFORCEMENT_DAMAGE_PERCENT_PER_LEVEL = 15;
 
-/** Passive Overload reduction per Thermal Baseline rank (% of base passive heat). */
-export const THERMAL_BASELINE_REDUCTION_PERCENT_PER_LEVEL = 5;
+/** Passive Overload decay factor per Thermal Baseline rank — heat *= this per rank (exponential falloff). */
+export const THERMAL_BASELINE_DECAY_FACTOR_PER_LEVEL = 0.9;
 
 /** Global shard gain multiplier bonus per Extraction Protocol rank. */
-export const EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL = 10;
+export const EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL = 15;
 
-/** Extra Seed Fragments per Recompile per Seed Resonance rank. */
-export const SEED_RESONANCE_FRAGMENTS_PER_LEVEL = 1;
+/** Seed Fragments gain bonus per Recompile per Seed Resonance rank (%, additive stacking). */
+export const SEED_RESONANCE_PERCENT_PER_LEVEL = 25;
 
 export const CORE_PROTOCOL_CATALOG: CoreProtocolDefinition[] = [
   {
     id: 'residualMemory',
-    maxLevel: 3,
-    costByLevel: [2, 3, 5],
+    costBase: 2,
+    costGrowth: 1.25,
     get name() {
       return getGameStrings().seedProtocols.protocols.residualMemory.name;
     },
@@ -40,8 +40,8 @@ export const CORE_PROTOCOL_CATALOG: CoreProtocolDefinition[] = [
   },
   {
     id: 'bootReinforcement',
-    maxLevel: 1,
-    costByLevel: [1],
+    costBase: 1,
+    costGrowth: 1.35,
     get name() {
       return getGameStrings().seedProtocols.protocols.bootReinforcement.name;
     },
@@ -51,8 +51,8 @@ export const CORE_PROTOCOL_CATALOG: CoreProtocolDefinition[] = [
   },
   {
     id: 'thermalBaseline',
-    maxLevel: 3,
-    costByLevel: [2, 4, 6],
+    costBase: 2,
+    costGrowth: 1.30,
     get name() {
       return getGameStrings().seedProtocols.protocols.thermalBaseline.name;
     },
@@ -62,8 +62,8 @@ export const CORE_PROTOCOL_CATALOG: CoreProtocolDefinition[] = [
   },
   {
     id: 'extractionProtocol',
-    maxLevel: 3,
-    costByLevel: [3, 5, 8],
+    costBase: 3,
+    costGrowth: 1.28,
     get name() {
       return getGameStrings().seedProtocols.protocols.extractionProtocol.name;
     },
@@ -73,8 +73,8 @@ export const CORE_PROTOCOL_CATALOG: CoreProtocolDefinition[] = [
   },
   {
     id: 'seedResonance',
-    maxLevel: 2,
-    costByLevel: [4, 7],
+    costBase: 4,
+    costGrowth: 1.40,
     get name() {
       return getGameStrings().seedProtocols.protocols.seedResonance.name;
     },
@@ -91,7 +91,7 @@ export function getCoreProtocolDefinition(id: CoreProtocolId): CoreProtocolDefin
 }
 
 export function getCoreProtocolCost(definition: CoreProtocolDefinition, level: number): number {
-  return definition.costByLevel[level] ?? definition.costByLevel[definition.costByLevel.length - 1] ?? 0;
+  return Math.ceil(definition.costBase * definition.costGrowth ** level);
 }
 
 export function getCoreProtocolState(
@@ -101,10 +101,8 @@ export function getCoreProtocolState(
 ): CoreProtocolState {
   const definition = getCoreProtocolDefinition(id);
   const level = levels[id];
-  if (level >= definition.maxLevel) return 'maxed';
   const cost = getCoreProtocolCost(definition, level);
-  if (seedFragments < cost) return 'unaffordable';
-  return 'available';
+  return seedFragments < cost ? 'unaffordable' : 'available';
 }
 
 export function sanitizeCoreProtocols(raw: Partial<CoreProtocolLevels> | undefined): CoreProtocolLevels {
@@ -114,7 +112,7 @@ export function sanitizeCoreProtocols(raw: Partial<CoreProtocolLevels> | undefin
   for (const definition of CORE_PROTOCOL_CATALOG) {
     const value = raw[definition.id];
     if (typeof value === 'number' && Number.isFinite(value)) {
-      levels[definition.id] = Math.max(0, Math.min(definition.maxLevel, Math.floor(value)));
+      levels[definition.id] = Math.max(0, Math.floor(value));
     }
   }
 

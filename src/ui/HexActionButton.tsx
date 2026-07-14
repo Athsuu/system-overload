@@ -3,6 +3,7 @@ import type { HubSfxId } from '../audio/types';
 import { triggerSfx } from '../audio/sfxApi';
 import { hexagonPoints } from './moduleTreeGeometry';
 import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
+import { HexButtonLabel } from './HexButtonLabel';
 
 interface HexActionButtonProps {
   label: string;
@@ -17,10 +18,10 @@ interface HexActionButtonProps {
 }
 
 const SIZE_CONFIG = {
-  md: { width: 100, height: 88, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[14px]' },
-  lg: { width: 100, height: 88, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[15px]' },
-  hubRun: { width: 125, height: 110, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[18px]' },
-  xl: { width: 180, height: 158, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, textClass: 'text-[16px]' },
+  md: { width: 100, height: 88, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, baseFontPx: 14 },
+  lg: { width: 100, height: 88, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, baseFontPx: 15 },
+  hubRun: { width: 125, height: 110, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, baseFontPx: 17 },
+  xl: { width: 180, height: 158, viewBox: '0 0 100 88', cx: 50, cy: 44, outerR: 46, innerR: 40, baseFontPx: 16 },
 } as const;
 
 export function HexActionButton({
@@ -45,7 +46,6 @@ export function HexActionButton({
     : variant === 'primary'
       ? MODULE_TREE_VISUAL.edgeActive
       : MODULE_TREE_VISUAL.gold;
-  const lines = label.split('\n');
 
   const handleClick = () => {
     if (disabled || !onClick) return;
@@ -92,18 +92,18 @@ export function HexActionButton({
           strokeOpacity={disabled ? 0.3 : variant === 'primary' ? 0.7 : 0.45}
         />
       </svg>
-      <span
-        className={`relative font-bold tracking-[0.12em] text-white uppercase ${config.textClass}`}
-        style={{
-          textShadow: disabled ? 'none' : `0 0 12px ${MODULE_TREE_VISUAL.edgeActive}66`,
+      <HexButtonLabel
+        label={label}
+        disabled={disabled}
+        layout={{
+          width: config.width,
+          height: config.height,
+          innerR: config.innerR,
+          cx: config.cx,
+          cy: config.cy,
+          baseFontPx: config.baseFontPx,
         }}
-      >
-        {lines.map((line, i) => (
-          <span key={i} className="block">
-            {line}
-          </span>
-        ))}
-      </span>
+      />
     </button>
   );
 }

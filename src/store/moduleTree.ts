@@ -97,6 +97,8 @@ const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   threadCoolant: 'thermique',
   killBreachRelief: 'thermique',
   meltdownThreshold: 'thermique',
+  overclock: 'degats',
+  fluxDrive: 'thermique',
 };
 
 const NODE_ICONS: Record<UpgradeId, string> = {
@@ -113,10 +115,13 @@ const NODE_ICONS: Record<UpgradeId, string> = {
   threadCoolant: '◌',
   killBreachRelief: '◇',
   meltdownThreshold: '▲',
+  overclock: '',
+  fluxDrive: '',
 };
 
 const MODULE_ICON_BRANCH: Partial<Record<UpgradeId, ModuleIconBranch>> = {
   node0Boot: 'flux',
+  fluxDrive: 'flux',
 };
 
 export function getModuleIconBranch(id: UpgradeId, branch: BranchId): ModuleIconBranch {
@@ -132,6 +137,7 @@ export function getModuleGlyphId(id: UpgradeId, branch: BranchId): ModuleGlyphId
   if (id === 'shardSalvage') return 'shard';
   if (id === 'shardYield') return 'yield';
   if (id === 'shardMagnet') return 'magnet';
+  if (id === 'fluxDrive') return 'flux';
   return getModuleIconBranch(id, branch);
 }
 
@@ -179,8 +185,10 @@ const PURGE_CADENCE_POS = positionFromParent(PURGE_STRIKE_POS, 'upLeft');
 const PURGE_REACH_POS = positionFromAxial(1, 1);
 const PURGE_SPLASH_POS = positionFromAxial(1, 2);
 const MELTDOWN_THRESHOLD_POS = positionFromAxial(2, -1);
-const KILL_BREACH_RELIEF_POS = positionFromParent(THREAD_COOLANT_POS, 'downRight');
+const KILL_BREACH_RELIEF_POS = positionFromAxial(2, -2);
 const LATENCY_INJECTION_POS = positionFromAxial(-1, 3);
+const OVERCLOCK_POS = positionFromAxial(1, 0);
+const FLUX_DRIVE_POS = positionFromAxial(-1, 1);
 
 /** Radial module tree — Node-0 Boot root; branches rebuilt incrementally. */
 export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
@@ -190,6 +198,14 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     parentId: 'root',
     position: NODE0_BOOT_POS,
     branch: 'thermique',
+  },
+  {
+    id: 'meltdownThreshold',
+    kind: 'upgrade',
+    parentId: 'node0Boot',
+    position: THREAD_COOLANT_POS,
+    branch: 'thermique',
+    requires: requireLevel('node0Boot', 1),
   },
   {
     id: 'shardSalvage',
@@ -266,26 +282,34 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
   {
     id: 'threadCoolant',
     kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: THREAD_COOLANT_POS,
-    branch: 'thermique',
-    requires: requireLevel('node0Boot', 1),
-  },
-  {
-    id: 'meltdownThreshold',
-    kind: 'upgrade',
-    parentId: 'threadCoolant',
+    parentId: 'meltdownThreshold',
     position: MELTDOWN_THRESHOLD_POS,
     branch: 'thermique',
-    requires: requireLevel('threadCoolant', 1),
+    requires: requireLevel('meltdownThreshold', 1),
   },
   {
     id: 'killBreachRelief',
     kind: 'upgrade',
-    parentId: 'threadCoolant',
+    parentId: 'meltdownThreshold',
     position: KILL_BREACH_RELIEF_POS,
     branch: 'thermique',
-    requires: requireLevel('threadCoolant', 1),
+    requires: requireLevel('meltdownThreshold', 1),
+  },
+  {
+    id: 'overclock',
+    kind: 'upgrade',
+    parentId: 'node0Boot',
+    position: OVERCLOCK_POS,
+    branch: 'degats',
+    requires: requireLevel('node0Boot', 1),
+  },
+  {
+    id: 'fluxDrive',
+    kind: 'upgrade',
+    parentId: 'node0Boot',
+    position: FLUX_DRIVE_POS,
+    branch: 'thermique',
+    requires: requireLevel('node0Boot', 1),
   },
 ];
 
@@ -317,6 +341,10 @@ export function isNodeRevealed(
   upgrades: import('./upgradeCatalog').UpgradeLevels,
 ): boolean {
   if (node.parentId === 'root') return true;
+
+  const parentNode = MODULE_TREE_GRAPH.find((entry) => entry.id === node.parentId);
+  if (!parentNode || !isNodeRevealed(parentNode, upgrades)) return false;
+
   return getParentLevel(node.parentId, upgrades) >= 1;
 }
 

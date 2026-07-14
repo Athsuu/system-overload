@@ -14,7 +14,7 @@ import {
 } from '../store/moduleTree';
 import { useGameStore } from '../store/useGameStore';
 import { ModuleBranchIcon } from '../ui/moduleTreeBranchIcons';
-import { devSetUpgradeLevel } from './devActions';
+import { devSetUpgradeLevel, DEV_UNCAPPED_PREVIEW_LEVEL } from './devActions';
 import { DevFloatingTooltip } from './DevFloatingTooltip';
 
 function getGlyphAccentColor(
@@ -220,7 +220,13 @@ export function DevUpgradePanel() {
           </button>
           <button
             type="button"
-            onClick={() => setLevel(selectedDefinition.maxLevel)}
+            onClick={() =>
+              setLevel(
+                Number.isFinite(selectedDefinition.maxLevel)
+                  ? selectedDefinition.maxLevel
+                  : DEV_UNCAPPED_PREVIEW_LEVEL,
+              )
+            }
             className="rounded border border-white/10 px-2 py-1 text-[14px] text-white/60 hover:border-white/25 hover:text-white"
           >
             Max

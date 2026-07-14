@@ -1,13 +1,16 @@
 import {
+  FLUX_DRIVE_TIME_SCALE,
   getUpgradeDefinition,
-  MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL,
+  isUnlimitedUpgrade,
+  MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL,
   PURGE_CADENCE_PERCENT_PER_LEVEL,
-  PURGE_STRIKE_DAMAGE_PER_LEVEL,
+  PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
-  SHARD_SALVAGE_BONUS_PER_LEVEL,
+  SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL,
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
+import { getOverclockCooldownMs, getOverclockDurationMs } from '../game/overclock';
 import { BASE_BREACH_CAP, getKillBreachRelief, getRunConfig, getShardReward, resolvePurgeHitDamage } from '../game/runConfig';
 import {
   getEliteBreakerDamageBonusPercent,
@@ -43,7 +46,8 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   const labels = getGameStrings().tooltipStats;
   const definition = getUpgradeDefinition(id);
   const level = upgrades[id];
-  const nextLevel = level < definition.maxLevel ? level + 1 : null;
+  const nextLevel =
+    isUnlimitedUpgrade(definition) || level + 1 < definition.maxLevel ? level + 1 : null;
   const cur = upgrades;
   const nxt = nextLevel !== null ? withLevel(upgrades, id, nextLevel) : null;
 
@@ -54,10 +58,19 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   }
 
   if (id === 'shardSalvage') {
-    const current = `+${level * SHARD_SALVAGE_BONUS_PER_LEVEL}`;
-    const next =
-      nextLevel !== null ? `+${nextLevel * SHARD_SALVAGE_BONUS_PER_LEVEL}` : null;
-    return [line(labels.shardBonusPerKill, current, nextLevel, next)];
+    const currentBonus = Math.round((SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL ** level - 1) * 100);
+    const nextBonus =
+      nextLevel !== null
+        ? Math.round((SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL ** nextLevel - 1) * 100)
+        : null;
+    return [
+      line(
+        labels.shardYieldBonus,
+        `+${currentBonus}%`,
+        nextLevel,
+        nextBonus !== null ? `+${nextBonus}%` : null,
+      ),
+    ];
   }
 
   if (id === 'shardYield') {
@@ -105,12 +118,18 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   }
 
   if (id === 'purgeStrike') {
-    const bonus = level * PURGE_STRIKE_DAMAGE_PER_LEVEL;
-    const nextBonus = nextLevel !== null ? nextLevel * PURGE_STRIKE_DAMAGE_PER_LEVEL : null;
+    const growthMultiplier = PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL ** level;
+    const nextGrowthMultiplier =
+      nextLevel !== null ? PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL ** nextLevel : null;
     const total = String(getRunConfig(cur).purgeHitDamage);
     const nextTotal = nxt ? String(getRunConfig(nxt).purgeHitDamage) : null;
     return [
-      line(labels.purgeDamageBonus, `+${bonus}`, nextLevel, nextBonus !== null ? `+${nextBonus}` : null),
+      line(
+        labels.purgeDamageBonus,
+        `×${growthMultiplier.toFixed(2)}`,
+        nextLevel,
+        nextGrowthMultiplier !== null ? `×${nextGrowthMultiplier.toFixed(2)}` : null,
+      ),
       line(labels.purgeHitDamage, total, nextLevel, nextTotal),
     ];
   }
@@ -227,10 +246,23 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     return [line(labels.latencySlowBonus, current, nextLevel, next)];
   }
 
+  if (id === 'overclock') {
+    return [
+      line(labels.overclockDuration, `${(getOverclockDurationMs() / 1000).toFixed(0)}s`, null, null),
+      line(labels.overclockCooldown, `${(getOverclockCooldownMs() / 1000).toFixed(0)}s`, null, null),
+    ];
+  }
+
+  if (id === 'fluxDrive') {
+    return [line(labels.fluxDriveSpeed, `×${FLUX_DRIVE_TIME_SCALE}`, null, null)];
+  }
+
   if (id === 'meltdownThreshold') {
-    const currentCap = BASE_BREACH_CAP + level * MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL;
+    const currentCap = Math.round(BASE_BREACH_CAP * MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL ** level);
     const nextCap =
-      nextLevel !== null ? BASE_BREACH_CAP + nextLevel * MELTDOWN_THRESHOLD_PERCENT_PER_LEVEL : null;
+      nextLevel !== null
+        ? Math.round(BASE_BREACH_CAP * MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL ** nextLevel)
+        : null;
     return [
       line(
         labels.meltdownThreshold,

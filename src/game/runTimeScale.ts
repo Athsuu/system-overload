@@ -4,7 +4,10 @@ import { getRunTimeScale } from './runConfig';
 
 function readTimeScale(): number {
   const state = useGameStore.getState();
-  return getRunTimeScale(state.upgrades, state.fluxDriveEnabled) * getDevRunSpeedMultiplier();
+  return (
+    getRunTimeScale(state.upgrades, state.fluxDriveEnabled, state.anchoredNodes) *
+    getDevRunSpeedMultiplier()
+  );
 }
 
 export function scaleDeltaMs(deltaMs: number): number {

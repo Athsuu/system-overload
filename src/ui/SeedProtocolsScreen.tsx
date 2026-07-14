@@ -11,20 +11,6 @@ import { RecompileConfirmModal } from './RecompileConfirmModal';
 import { SEED_PROTOCOL_IDS } from './seedProtocolLayout';
 import { getCoreProtocolTierVisual, SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
 
-function LevelPips({ level, max, color }: { level: number; max: number; color: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      {Array.from({ length: max }, (_, i) => (
-        <span
-          key={i}
-          className="h-1.5 w-1.5 rounded-full transition-colors"
-          style={{ backgroundColor: i < level ? color : 'rgba(255,255,255,0.12)' }}
-        />
-      ))}
-    </div>
-  );
-}
-
 function MonolithTierCard({
   id,
   isSelected,
@@ -42,7 +28,7 @@ function MonolithTierCard({
   const level = coreProtocols[id];
   const state = getCoreProtocolState(id, seedFragments, coreProtocols);
   const visual = getCoreProtocolTierVisual(state, isSelected, level);
-  const cost = state !== 'maxed' ? getCoreProtocolCost(definition, level) : 0;
+  const cost = getCoreProtocolCost(definition, level);
 
   const handlePurchase = () => {
     const ok = purchaseCoreProtocol(id);
@@ -72,7 +58,9 @@ function MonolithTierCard({
         <span className="text-[13px] font-semibold tracking-[0.16em] uppercase" style={{ color: visual.titleColor }}>
           {definition.name}
         </span>
-        <LevelPips level={level} max={definition.maxLevel} color={visual.pipColor} />
+        <span className="font-mono text-[13px] font-semibold tabular-nums" style={{ color: visual.pipColor }}>
+          {strings.ui.levelFormatUncapped.replace('{n}', String(level))}
+        </span>
       </div>
 
       {isSelected && (
@@ -80,27 +68,21 @@ function MonolithTierCard({
           <p className="text-[13px] leading-relaxed" style={{ color: visual.textColor }}>
             {definition.description}
           </p>
-          {state === 'maxed' ? (
-            <p className="mt-3 text-center text-[12px] tracking-[0.2em] uppercase" style={{ color: visual.textColor }}>
-              {strings.ui.max}
-            </p>
-          ) : (
-            <button
-              type="button"
-              disabled={state !== 'available'}
-              onClick={(event) => {
-                event.stopPropagation();
-                handlePurchase();
-              }}
-              className="mt-3 w-full rounded-2xl border px-4 py-2 text-[12px] font-semibold tracking-[0.18em] uppercase transition disabled:cursor-not-allowed disabled:opacity-35"
-              style={{
-                borderColor: `${SEED_PROTOCOL_VISUAL.accent}66`,
-                color: SEED_PROTOCOL_VISUAL.accentMuted,
-              }}
-            >
-              {strings.ui.purchase} · {cost} {strings.currency.seedFragmentsShort}
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={state !== 'available'}
+            onClick={(event) => {
+              event.stopPropagation();
+              handlePurchase();
+            }}
+            className="mt-3 w-full rounded-2xl border px-4 py-2 text-[12px] font-semibold tracking-[0.18em] uppercase transition disabled:cursor-not-allowed disabled:opacity-35"
+            style={{
+              borderColor: `${SEED_PROTOCOL_VISUAL.accent}66`,
+              color: SEED_PROTOCOL_VISUAL.accentMuted,
+            }}
+          >
+            {strings.ui.purchase} · {cost} {strings.currency.seedFragmentsShort}
+          </button>
         </div>
       )}
     </div>

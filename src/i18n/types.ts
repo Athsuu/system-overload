@@ -76,6 +76,9 @@ export interface TooltipStatLabels {
   breachReliefPerKill: string;
   meltdownThreshold: string;
   max: string;
+  overclockDuration: string;
+  overclockCooldown: string;
+  fluxDriveSpeed: string;
 }
 
 export interface TutorialStepText {
@@ -107,6 +110,7 @@ export interface UiStrings {
   waveClear: string;
   overclock: string;
   levelFormat: string;
+  levelFormatUncapped: string;
   previous: string;
   next: string;
   gotIt: string;
@@ -183,6 +187,16 @@ export interface GameStrings {
     shardsLoreTooltip: string;
     anchorLoreTooltip: string;
     seedLoreTooltip: string;
+    anchorProgressFormat: string;
+  };
+  hardwareSupercharge: {
+    sectionTitle: string;
+    superchargeButton: string;
+    costFormat: string;
+    bonusLabel: string;
+    malusLabel: string;
+    toggleOn: string;
+    toggleOff: string;
   };
   pause: {
     title: string;

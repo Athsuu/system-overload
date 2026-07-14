@@ -1,19 +1,30 @@
-import { useApplication } from '@pixi/react';
-import { useEffect, useRef } from 'react';
+import { useApplication, useTick } from '@pixi/react';
+import type { Container } from 'pixi.js';
+import { useCallback, useEffect, useRef } from 'react';
 import { applyAudioVolumes, ensureAudioUnlocked } from '../audio/sfxApi';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
 import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
-import { createOverclockState, requestOverclockActivation, type OverclockState } from './overclock';
+import { createOverclockState, requestOverclockActivation, syncOverclockDisplay, type OverclockState } from './overclock';
 import { isOverclockUnlocked } from '../store/upgradeCatalog';
 import { DissipationNodes } from './DissipationNodes';
 import { EffectEngine } from './EffectEngine';
 import type { GameEffect } from './effects';
+import { BadgeFlyParticleEngine } from './juice/BadgeFlyParticleEngine';
+import { createBadgeFlyParticlePool, type BadgeFlyParticle } from './juice/badgeFlyParticles';
+import { createChromaticAberrationState } from './juice/chromaticAberration';
+import { createScreenShake, getScreenShakeOffset, tickScreenShake } from './juice/screenShake';
 import { PurgeZoneEngine } from './PurgeZoneEngine';
 import { LootPickupEngine, type LootPickup } from './loot';
-import { purgePointerRef, resetPurgePointer } from './purgeInput';
+import {
+  activatePurgePointer,
+  resetPurgePointer,
+  seedPurgePointer,
+  trackClientPointer,
+} from './purgeInput';
 import { RunTimerEngine } from './RunTimerEngine';
 import { resetLeakBurstTracker, resetMeltdownGuard } from './overload';
+import { scaleDeltaMs } from './runTimeScale';
 import { resetWaveRuntime, WaveEngine } from './WaveEngine';
 import type { DissipationNode } from './types';
 
@@ -29,7 +40,11 @@ export function GameArena() {
   const nodesRef = useRef<DissipationNode[]>([]);
   const effectsRef = useRef<GameEffect[]>([]);
   const pickupsRef = useRef<LootPickup[]>([]);
+  const badgeParticlesRef = useRef<BadgeFlyParticle[]>(createBadgeFlyParticlePool());
   const overclockRef = useRef<OverclockState>(createOverclockState());
+  const screenShakeRef = useRef(createScreenShake());
+  const chromaticAberrationRef = useRef(createChromaticAberrationState());
+  const arenaContainerRef = useRef<Container | null>(null);
   const waveRuntimeRef = useRef({
     state: 'active' as const,
     waveIndex: 1,
@@ -53,8 +68,14 @@ export function GameArena() {
       nodesRef.current = [];
       effectsRef.current = [];
       pickupsRef.current = [];
+      for (const particle of badgeParticlesRef.current) {
+        particle.active = false;
+      }
       resetPurgePointer();
       overclockRef.current = createOverclockState();
+      syncOverclockDisplay(overclockRef.current);
+      screenShakeRef.current = createScreenShake();
+      chromaticAberrationRef.current = createChromaticAberrationState();
       resetWaveRuntime(waveRuntimeRef);
       resetLeakBurstTracker();
       resetMeltdownGuard();
@@ -76,64 +97,139 @@ export function GameArena() {
     }
   }, [isPlaying]);
 
+  // Position écran brute — indépendante de l'état de jeu (clic « Lancer la run » inclus).
+  useEffect(() => {
+    const onRawPointerMove = (event: PointerEvent) => {
+      trackClientPointer(event.clientX, event.clientY);
+    };
+    const onRawPointerDown = (event: PointerEvent) => {
+      trackClientPointer(event.clientX, event.clientY);
+    };
+    window.addEventListener('pointermove', onRawPointerMove);
+    window.addEventListener('pointerdown', onRawPointerDown);
+    return () => {
+      window.removeEventListener('pointermove', onRawPointerMove);
+      window.removeEventListener('pointerdown', onRawPointerDown);
+    };
+  }, []);
+
   useEffect(() => {
     if (!isPlaying) return;
 
-    const canvas = app.canvas;
+    let seedFrameId = 0;
+    let cancelled = false;
+    let listenersAttached = false;
 
-    const updatePointer = (clientX: number, clientY: number) => {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-
-      const scaleX = app.screen.width / rect.width;
-      const scaleY = app.screen.height / rect.height;
-      purgePointerRef.x = (clientX - rect.left) * scaleX;
-      purgePointerRef.y = (clientY - rect.top) * scaleY;
-      purgePointerRef.active = true;
+    const trySeedPurgePointer = () => {
+      if (cancelled || tutorialRunSpotlightActive || !app?.renderer) return;
+      if (seedPurgePointer(app)) return;
+      seedFrameId = requestAnimationFrame(trySeedPurgePointer);
     };
 
-    const onPointerMove = (event: PointerEvent) => {
-      if (tutorialRunSpotlightActive) return;
-      ensureAudioUnlocked();
-      updatePointer(event.clientX, event.clientY);
+    const attachPointerListeners = (): (() => void) | undefined => {
+      if (cancelled || listenersAttached || !app?.renderer) return undefined;
+      listenersAttached = true;
+
+      const onPointerMove = (event: PointerEvent) => {
+        if (tutorialRunSpotlightActive) return;
+        ensureAudioUnlocked();
+        trackClientPointer(event.clientX, event.clientY);
+        activatePurgePointer(app, event.clientX, event.clientY);
+      };
+
+      const onPointerDown = (event: PointerEvent) => {
+        if (tutorialRunSpotlightActive) return;
+        trackClientPointer(event.clientX, event.clientY);
+        activatePurgePointer(app, event.clientX, event.clientY);
+      };
+
+      const onPointerEnter = (event: PointerEvent) => {
+        if (tutorialRunSpotlightActive) return;
+        trackClientPointer(event.clientX, event.clientY);
+        activatePurgePointer(app, event.clientX, event.clientY);
+      };
+
+      const onPointerLeave = () => {
+        resetPurgePointer();
+      };
+
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.code !== 'Space' || useGameStore.getState().gameState !== 'PLAYING') return;
+        if (tutorialRunSpotlightActive) return;
+        if (!isOverclockUnlocked(useGameStore.getState().upgrades)) return;
+        event.preventDefault();
+        requestOverclockActivation();
+      };
+
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerdown', onPointerDown);
+      window.addEventListener('pointerenter', onPointerEnter);
+      window.addEventListener('pointerleave', onPointerLeave);
+      window.addEventListener('keydown', onKeyDown);
+
+      return () => {
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerdown', onPointerDown);
+        window.removeEventListener('pointerenter', onPointerEnter);
+        window.removeEventListener('pointerleave', onPointerLeave);
+        window.removeEventListener('keydown', onKeyDown);
+      };
     };
 
-    const onPointerLeave = () => {
-      purgePointerRef.active = false;
+    let detachListeners: (() => void) | undefined;
+
+    const bootstrap = () => {
+      if (cancelled) return;
+
+      if (!app?.renderer) {
+        seedFrameId = requestAnimationFrame(bootstrap);
+        return;
+      }
+
+      detachListeners = attachPointerListeners();
+      trySeedPurgePointer();
     };
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== 'Space' || useGameStore.getState().gameState !== 'PLAYING') return;
-      if (tutorialRunSpotlightActive) return;
-      if (!isOverclockUnlocked(useGameStore.getState().upgrades)) return;
-      event.preventDefault();
-      requestOverclockActivation();
-    };
-
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerleave', onPointerLeave);
-    window.addEventListener('keydown', onKeyDown);
+    bootstrap();
 
     return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerleave', onPointerLeave);
-      window.removeEventListener('keydown', onKeyDown);
+      cancelled = true;
+      cancelAnimationFrame(seedFrameId);
+      detachListeners?.();
       resetPurgePointer();
     };
   }, [app, isPlaying, tutorialRunSpotlightActive]);
 
+  const shakeTick = useCallback(
+    (ticker: { deltaMS: number }) => {
+      const container = arenaContainerRef.current;
+      if (!container) return;
+
+      tickScreenShake(screenShakeRef.current, scaleDeltaMs(ticker.deltaMS));
+      const offset = getScreenShakeOffset(screenShakeRef.current);
+      container.x = offset.x;
+      container.y = offset.y;
+    },
+    [],
+  );
+
+  useTick({ callback: shakeTick, isEnabled: isRunLive });
+
   return (
-    <>
+    <pixiContainer ref={arenaContainerRef}>
       <PurgeZoneEngine
         isPlaying={isRunLive}
         nodesRef={nodesRef}
         effectsRef={effectsRef}
         pickupsRef={pickupsRef}
         overclockRef={overclockRef}
+        screenShakeRef={screenShakeRef}
+        chromaticAberrationRef={chromaticAberrationRef}
       />
-      <LootPickupEngine isPlaying={isRunLive} pickupsRef={pickupsRef} />
+      <LootPickupEngine isPlaying={isRunLive} pickupsRef={pickupsRef} badgeParticlesRef={badgeParticlesRef} />
+      <BadgeFlyParticleEngine isPlaying={isRunLive} particlesRef={badgeParticlesRef} />
       <EffectEngine isPlaying={isRunLive} effectsRef={effectsRef} />
-      <RunTimerEngine isPlaying={isRunLive} overclockRef={overclockRef} />
+      <RunTimerEngine isPlaying={isRunLive} overclockRef={overclockRef} screenShakeRef={screenShakeRef} />
       <WaveEngine
         isPlaying={isRunLive}
         nodesRef={nodesRef}
@@ -141,7 +237,12 @@ export function GameArena() {
         pickupsRef={pickupsRef}
         waveRuntimeRef={waveRuntimeRef}
       />
-      <DissipationNodes nodesRef={nodesRef} effectsRef={effectsRef} isPlaying={isRunLive} />
-    </>
+      <DissipationNodes
+        nodesRef={nodesRef}
+        effectsRef={effectsRef}
+        isPlaying={isRunLive}
+        chromaticAberrationRef={chromaticAberrationRef}
+      />
+    </pixiContainer>
   );
 }

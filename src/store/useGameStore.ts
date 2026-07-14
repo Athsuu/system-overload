@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { saveGame, type SaveData } from './persistence';
-import { loadSettings } from './settingsPersistence';
+import { loadSettings, saveFluxDriveEnabled } from './settingsPersistence';
 import { DEFAULT_PRESTIGE, DEFAULT_CORE_PROTOCOLS, type CoreProtocolId } from './prestigeTypes';
 import {
   getCoreProtocolCost,
@@ -14,22 +14,27 @@ import {
 } from './prestigeLogic';
 import { skipTutorialsAfterRecompile } from './playerReset';
 import {
+  ANCHOR_SUPERCHARGE_COST,
   BOSS_VICTORY_SHARD_BONUS,
   DEFAULT_UPGRADES,
+  getUpgradeCatalogEntry,
   getUpgradeCost,
-  getUpgradeCurrency,
-  getUpgradeDefinition,
+  getUpgradeLevel,
+  isAnchorSuperchargeEligible,
   isModuleUnlocked,
+  isUpgradeMaxed,
+  type AnchoredNodes,
   type UpgradeId,
   type UpgradeLevels,
 } from './upgradeCatalog';
+import { ANCHOR_CYCLES_PER_FRAGMENT } from '../game/anchorSupercharge';
 import {
   clampCycleIndex,
   DEFAULT_CYCLE_PROGRESS,
   isCycleCleared,
-  MAX_CYCLES,
 } from './cycleTypes';
 import { getBreachCap } from '../game/runConfig';
+import { resetRunElapsedMs } from '../game/runElapsed';
 import { getModuleNode } from './moduleTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { clearRunArchAmbientHeard } from '../tutorial/archAmbientPersistence';
@@ -64,6 +69,8 @@ interface GameStore {
   highestCycleUnlocked: number;
   selectedCycle: number;
   cyclesCleared: number[];
+  cyclesSinceLastAnchor: number;
+  anchoredNodes: AnchoredNodes;
   activeCycle: number;
   runOutcome: RunOutcome | null;
   prestigeUnlockedThisRun: boolean;
@@ -84,6 +91,8 @@ interface GameStore {
   openSeedProtocols: () => void;
   closeSeedProtocols: () => void;
   purchaseUpgrade: (id: UpgradeId) => boolean;
+  purchaseAnchorSupercharge: (id: UpgradeId) => boolean;
+  toggleAnchorSupercharge: (id: UpgradeId) => void;
   purchaseCoreProtocol: (id: CoreProtocolId) => boolean;
   recompile: () => boolean;
   startRun: (cycle?: number) => void;
@@ -108,6 +117,8 @@ function buildSaveSnapshot(state: {
   highestCycleUnlocked: number;
   selectedCycle: number;
   cyclesCleared: number[];
+  cyclesSinceLastAnchor: number;
+  anchoredNodes: AnchoredNodes;
 }): SaveData {
   return {
     bankShards: state.bankShards,
@@ -121,6 +132,8 @@ function buildSaveSnapshot(state: {
     highestCycleUnlocked: state.highestCycleUnlocked,
     selectedCycle: state.selectedCycle,
     cyclesCleared: state.cyclesCleared,
+    cyclesSinceLastAnchor: state.cyclesSinceLastAnchor,
+    anchoredNodes: state.anchoredNodes,
   };
 }
 
@@ -148,6 +161,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,
   selectedCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
   cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
+  cyclesSinceLastAnchor: 0,
+  anchoredNodes: {},
   activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
   runOutcome: null,
   prestigeUnlockedThisRun: false,
@@ -215,14 +230,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       const firstClearThisCycle =
         outcome === 'victory_boss' && !isCycleCleared(state.cyclesCleared, state.activeCycle);
-      const anchorGain = firstClearThisCycle ? 1 : 0;
+
+      let cyclesSinceLastAnchor = state.cyclesSinceLastAnchor;
+      let anchorGain = 0;
+      if (firstClearThisCycle) {
+        cyclesSinceLastAnchor += 1;
+        if (cyclesSinceLastAnchor >= ANCHOR_CYCLES_PER_FRAGMENT) {
+          anchorGain = 1;
+          cyclesSinceLastAnchor = 0;
+        }
+      }
       const bankAnchorFragments = state.bankAnchorFragments + anchorGain;
 
       let cyclesCleared = state.cyclesCleared;
       let highestCycleUnlocked = state.highestCycleUnlocked;
       if (outcome === 'victory_boss' && firstClearThisCycle) {
         cyclesCleared = [...cyclesCleared, state.activeCycle].sort((a, b) => a - b);
-        highestCycleUnlocked = Math.min(MAX_CYCLES, state.activeCycle + 1);
+        highestCycleUnlocked = state.activeCycle + 1;
       }
 
       const selectedCycle = Math.min(state.selectedCycle, highestCycleUnlocked);
@@ -232,6 +256,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         bankShards,
         bankAnchorFragments,
         cyclesCleared,
+        cyclesSinceLastAnchor,
         highestCycleUnlocked,
         selectedCycle,
       };
@@ -241,6 +266,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         bankShards,
         bankAnchorFragments,
         cyclesCleared,
+        cyclesSinceLastAnchor,
         highestCycleUnlocked,
         selectedCycle,
         runShards: 0,
@@ -264,15 +290,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({ gameState: state.seedProtocolsReturnState })),
   purchaseUpgrade: (id) => {
     const state = get();
-    const definition = getUpgradeDefinition(id);
+    const entry = getUpgradeCatalogEntry(id);
+    if (!entry) return false;
+
     const moduleNode = getModuleNode(id);
-    const level = state.upgrades[id];
+    const level = getUpgradeLevel(state.upgrades, id);
 
     if (!isModuleUnlocked(id, state.upgrades, moduleNode.requires)) return false;
-    if (level >= definition.maxLevel) return false;
+    if (isUpgradeMaxed(entry, level)) return false;
 
-    const cost = getUpgradeCost(definition, level);
-    const currency = getUpgradeCurrency(id);
+    const cost = getUpgradeCost(entry, level);
+    if (cost <= 0) return false;
+    const currency = entry.currency;
 
     if (currency === 'anchor') {
       if (state.bankAnchorFragments < cost) return false;
@@ -293,11 +322,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ bankShards, upgrades });
     return true;
   },
+  purchaseAnchorSupercharge: (id) => {
+    const state = get();
+    if (!isAnchorSuperchargeEligible(id)) return false;
+    if (state.upgrades[id] < 1) return false;
+    if (state.anchoredNodes[id] !== undefined) return false;
+    if (state.bankAnchorFragments < ANCHOR_SUPERCHARGE_COST) return false;
+
+    const bankAnchorFragments = state.bankAnchorFragments - ANCHOR_SUPERCHARGE_COST;
+    const anchoredNodes = { ...state.anchoredNodes, [id]: true };
+    persistProgress({ ...state, bankAnchorFragments, anchoredNodes });
+    set({ bankAnchorFragments, anchoredNodes });
+    return true;
+  },
+  toggleAnchorSupercharge: (id) => {
+    const state = get();
+    if (state.anchoredNodes[id] === undefined) return;
+    const anchoredNodes = { ...state.anchoredNodes, [id]: !state.anchoredNodes[id] };
+    persistProgress({ ...state, anchoredNodes });
+    set({ anchoredNodes });
+  },
   purchaseCoreProtocol: (id) => {
     const state = get();
     const definition = getCoreProtocolDefinition(id);
     const level = state.coreProtocols[id];
-    if (level >= definition.maxLevel) return false;
 
     const protocolState = getCoreProtocolState(id, state.seedFragments, state.coreProtocols);
     if (protocolState !== 'available') return false;
@@ -323,6 +371,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const highestCycleUnlocked = DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked;
     const selectedCycle = DEFAULT_CYCLE_PROGRESS.selectedCycle;
     const cyclesCleared = [...DEFAULT_CYCLE_PROGRESS.cyclesCleared];
+    const cyclesSinceLastAnchor = 0;
+    const anchoredNodes: AnchoredNodes = {};
 
     skipTutorialsAfterRecompile();
 
@@ -336,6 +386,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       highestCycleUnlocked,
       selectedCycle,
       cyclesCleared,
+      cyclesSinceLastAnchor,
+      anchoredNodes,
       prestigeUnlocked: recompileDepth > 0,
       prestigeLevel: recompileDepth,
     };
@@ -352,6 +404,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       highestCycleUnlocked,
       selectedCycle,
       cyclesCleared,
+      cyclesSinceLastAnchor,
+      anchoredNodes,
       activeCycle: selectedCycle,
       gameState: 'SEED_PROTOCOLS',
       seedProtocolsReturnState: 'UPGRADING',
@@ -366,6 +420,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   startRun: (cycle) => {
     clearRunArchAmbientHeard();
+    resetRunElapsedMs();
     const state = get();
     const requested = cycle ?? state.selectedCycle;
     const activeCycle = clampCycleIndex(Math.min(requested, state.highestCycleUnlocked));
@@ -385,7 +440,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       showWaveClear: false,
     });
   },
-  toggleFluxDriveEnabled: () => {},
+  toggleFluxDriveEnabled: () => {
+    const state = get();
+    if (state.upgrades.fluxDrive < 1) return;
+    const fluxDriveEnabled = !state.fluxDriveEnabled;
+    saveFluxDriveEnabled(fluxDriveEnabled);
+    markTutorialSignal('fluxDriveToggled');
+    set({ fluxDriveEnabled });
+  },
   setWaveIndex: (waveIndex) => set({ waveIndex }),
   setWavePhase: (wavePhase) => set({ wavePhase }),
   setShowWaveClear: (showWaveClear) => set({ showWaveClear }),
@@ -432,6 +494,8 @@ export function resetToFreshPlayer(): void {
     highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,
     selectedCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
+    cyclesSinceLastAnchor: 0,
+    anchoredNodes: {},
     activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     runOutcome: null,
     prestigeUnlockedThisRun: false,

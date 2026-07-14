@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
 import { useGameStore } from '../store/useGameStore';
 import { canRecompile } from '../store/prestigeLogic';
-import { MAX_CYCLES } from '../store/cycleTypes';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { useGameStrings } from '../i18n/useGameStrings';
@@ -47,8 +46,7 @@ export function RunEndScreen() {
   const displayAnchors = useCountUp(lastRunAnchorFragments, 600);
   const showRewards = lastRunShards > 0 || lastRunAnchorFragments > 0;
 
-  const showRecompileBanner =
-    isVictory && activeCycle === MAX_CYCLES && canRecompile(cyclesCleared);
+  const showRecompileBanner = isVictory && canRecompile(cyclesCleared);
 
   const accentColor = isVictory ? DARK_HEX.gold : DARK_HEX.breach;
   const accentGlow = isVictory ? DARK_HEX.goldMuted : 'rgba(255, 77, 0, 0.22)';

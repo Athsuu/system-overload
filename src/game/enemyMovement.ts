@@ -1,6 +1,7 @@
 import type { ScreenBounds, Vec2 } from './constants';
 import { getEnemyHexRadius } from './enemyClass';
 import type { EnemyClass } from './enemyClass';
+import { getAnchorMultiplier } from './anchorSupercharge';
 import {
   getEnemyMaxHp,
   getEnemySpeed,
@@ -146,7 +147,10 @@ export function tickEnemyMovement(
 ): void {
   const store = useGameStore.getState();
   const slowLevel = store.upgrades.latencyInjection || 0;
-  const slowMult = getLatencySlowMultiplier(slowLevel);
+  const slowMult = getLatencySlowMultiplier(
+    slowLevel,
+    getAnchorMultiplier(store.anchoredNodes, 'latencyInjection'),
+  );
   const config = getRunConfig(store.upgrades);
 
   for (let index = nodes.length - 1; index >= 0; index -= 1) {

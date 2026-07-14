@@ -25,4 +25,6 @@ export interface LootPickupRadii {
 export interface CollectedLoot {
   kind: LootKind;
   amount: number;
+  x: number;
+  y: number;
 }

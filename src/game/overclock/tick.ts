@@ -13,14 +13,13 @@ export function tickOverclock(
     state.activeTimerMs -= deltaMs;
     if (state.activeTimerMs <= 0) {
       state.active = false;
+      state.activeTimerMs = 0;
+      state.activeDurationMs = 0;
       state.cooldownTimerMs = cooldownMs;
     }
-    return;
-  }
-
-  if (state.cooldownTimerMs > 0) {
+  } else if (state.cooldownTimerMs > 0) {
     state.cooldownTimerMs = Math.max(0, state.cooldownTimerMs - deltaMs);
   }
 
-  syncOverclockDisplay(state.active, state.cooldownTimerMs, cooldownMs);
+  syncOverclockDisplay(state);
 }

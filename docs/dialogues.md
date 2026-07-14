@@ -34,10 +34,10 @@ Les autres lignes ci-dessous sont des **tutoriels contextuels** (pas de `groupId
 | `purge_zone` | `tutorial.purgeAction` | Purge Zone | Zone de purge | You're live. Your purge zone is the only weapon inside quarantine. Hold it over corrupted processes to destroy them. Every purge hit and every passing second feeds Overload. | Tu es en ligne. Ta zone de purge est la seule arme en quarantaine. Maintiens-la sur les processus corrompus pour les détruire. Chaque coup de purge et chaque seconde qui passe alimente la Surcharge. | `runsStarted >= 1` · écran `PLAYING` | `featured-center` (anchored) |
 | `overload` | `tutorial.overloadStakes` + `tutorial.overloadGoal` | Overload | Surcharge | Overload is the live Breach meter on your thread. Keep it under control. At 100% Overload. Meltdown. The quarantine fails. Contain the threat before quarantine breaks. | La Surcharge est le compteur de Brèche en direct sur ton thread. Garde-le sous contrôle. À 100 % de Surcharge. Fusion. La quarantaine cède. Contiens la menace avant que la quarantaine ne cède. | `runsStarted >= 1` · `PLAYING` | `overload-bar` (spotlight) |
 | `run_shards` | `tutorial.hexShardsUnified` | Hex Shards | Éclats hex | Hex Shards are stable data fragments salvaged from corrupted processes. They drop when you purge a target. Sweep your purge zone over them to collect. Spend them on the Module Tree to reinforce yourself. | Les Éclats hex sont des fragments de données stables récupérés sur les processus corrompus. Ils tombent au sol quand tu purges une cible. Passe ta zone de purge dessus pour les ramasser. Dépense-les sur l'arbre de modules pour te renforcer. | `runsStarted >= 1` · `PLAYING` | `hex-shards` (spotlight) |
-| `overclock` | `tutorial.overclockRisk` | Overclock | Overclock | Overclock surges purge output, but Overload builds faster while active. Press Space when you can handle the pressure. | L'Overclock booste la purge, mais la Surcharge monte plus vite tant qu'il est actif. Espace quand tu peux encaisser la pression. | `[DÉSACTIVÉ]` `unlockWhen: () => false` | `overclock` (spotlight) |
+| `overclock` | `tutorial.overclockRisk` | Overclock | Overclock | Overclock surges purge output, but Overload builds faster while active. Press Space when you can handle the pressure. | L'Overclock booste la purge, mais la Surcharge monte plus vite tant qu'il est actif. Espace quand tu peux encaisser la pression. | Module **Overclock** acheté (`upgrades.overclock >= 1`) · écran `PLAYING` | `overclock` (spotlight) |
 | `module_tree` | `tutorial.moduleTreeLore` | Module Enhancements | Améliorations | Between runs, spend Hex Shards on hex nodes. Every upgrade hardens the quarantine before the next breach. | Entre les runs, dépense les Éclats hex sur les nœuds hex. Chaque amélioration renforce la quarantaine avant la prochaine brèche. | Écran `UPGRADING` · se complète si `upgradePurchased` | `module-tree` (anchored) |
 | `prestige` | `tutorial.prestigeReveal` | Breach Contained | Brèche contenue | Breach Anchor down. I'm opening a deeper reconfiguration layer. Prestige. Core reconfiguration, permanent gains. The Uplink is still ahead. We take this anyway. | Ancre de Brèche neutralisée. J'ouvre une couche de reconfiguration plus profonde. Prestige. Reconfiguration du noyau, gains permanents. L'Uplink est encore devant. On y va quand même. | `prestigeUnlocked` · écrans `RUN_END` ou `MENU` | `featured-center` (featured) |
-| `flux_drive` | `tutorial.fluxDriveLore` | Flux Drive | Flux Drive | Flux Drive doubles simulation speed inside quarantine. Faster combat, faster timers, faster Overload. Toggle only if you can handle the pressure. | Flux Drive double la vitesse de simulation en quarantaine. Combat plus rapide, timers plus rapides, Surcharge plus rapide. Active seulement si tu encaisses la pression. | `[DÉSACTIVÉ]` `unlockWhen: () => false` | `flux-drive` (anchored) |
+| `flux_drive` | `tutorial.fluxDriveLore` | Flux Drive | Flux Drive | Flux Drive doubles simulation speed inside quarantine. Faster combat, faster timers, faster Overload. Toggle only if you can handle the pressure. | Flux Drive double la vitesse de simulation en quarantaine. Combat plus rapide, timers plus rapides, Surcharge plus rapide. Active seulement si tu encaisses la pression. | Module **Flux Drive** acheté · **Cycle 1** sélectionné ou actif · se complète au premier toggle | `flux-drive` (anchored) |
 
 **Labels carte** : `arch.channelLabel` pour toutes ces étapes.
 
@@ -56,7 +56,7 @@ Prérequis commun : étape tutoriel `welcome` dismissée (`requiresArchMet: true
 | `wave_midpoint` | `archAmbient.waveMidpoint` | Midpoint confirmed. The Archive isn't stable yet. Keep purging. | Mi-parcours confirmé. L'Archive n'est pas encore stable. Continue la purge. | `PLAYING` · `waveIndex === 5` · pas intermission | 1× par **run** |
 | `overload_critical` | `archAmbient.overloadCritical` | Thread pressure critical. I'm losing the channel. | Pression du thread critique. Je perds le canal. | `PLAYING` · Overload ≥ 80 % (relatif au cap Meltdown) | 1× par **run** |
 | `boss_incoming` | `archAmbient.bossIncoming` | That's the Breach Anchor, the rupture point. End it. | C'est l'Ancre de Brèche, le point de rupture. Finis-la. | `PLAYING` · `waveIndex >= 11` ou phase boss | 1× par **run** |
-| `flux_drive_ready` | `archAmbient.fluxDrive` | Flux Drive online. Double speed, double risk. Your call. | Flux Drive en ligne. Double vitesse, double risque. À toi de voir. | `[DÉSACTIVÉ]` `unlockWhen: () => false` | 1× par **profil** (`persistScope: profile`) |
+| `flux_drive_ready` | `archAmbient.fluxDrive` | Flux Drive online. Double speed, double risk. Your call. | Flux Drive en ligne. Double vitesse, double risque. À toi de voir. | Hub **MENU** · module **Flux Drive** acheté · **Cycle 1** sélectionné · carte **au-dessus de CYCLE / START RUN** | 1× par **profil** (`persistScope: profile`) |
 
 **Label run** : `arch.runRelayLabel` (EN : `ARCH // RELAY`), affiché au-dessus du ping in-run, pas dans le corps du dialogue.
 
@@ -75,15 +75,15 @@ Composant : `RunEndScreen.tsx` · condition : `runOutcome === 'victory_boss'`.
 ### Pool ARCH (rotation, 1 variante aléatoire par victoire boss)
 
 Sélection : `pickVictoryArchVariantIndex(anchorEarned)` · deck des indices restants en `sessionStorage` (`zero-archive-victory-arch-remaining`).  
-**Règle sans Anchor Fragment** (clear boss déjà fait sur ce cycle) : toujours la variante générale `[0]`.  
-**Règle avec premier Anchor Fragment** (`anchorFragmentEarnedThisRun`) : deck `[0,1]` mélangé aléatoirement ; une phrase ne revient qu'après l'autre.
+**Règle sans Anchor Fragment** (pas de gain ce clear) : toujours la variante générale `[0]`.  
+**Règle avec Anchor Fragment gagné** (`anchorFragmentEarnedThisRun`, tous les 3 Cycles réussis — voir §3bis lexique) : deck `[0,1]` mélangé aléatoirement ; une phrase ne revient qu'après l'autre.
 
 | # | Clé i18n | Texte EN | Texte FR | Éligibilité |
 |---|----------|----------|----------|-------------|
 | 1 | `runEnd.victoryArchVariants[0]` | Anchor down. Hex Shards to vault. We bought time. Don't waste it. | Ancre down. Éclats hex au coffre. On a gagné du temps. Ne le gâche pas. | Toujours |
-| 2 | `runEnd.victoryArchVariants[1]` | Anchor data secured. Capstone modules are online. Spend fragments on the marked nodes. | Données d'ancre sécurisées. Les modules capstone sont en ligne. Dépense les fragments sur les nœuds marqués. | Premier clear boss du cycle (Anchor Fragment gagné) |
+| 2 | `runEnd.victoryArchVariants[1]` | Anchor chip secured. Socket it into a module — supercharge the yield, if you can take the Overload. | Puce d'ancrage sécurisée. Branche-la sur un module : surcharge le rendement, si tu tiens la Surcharge. | Anchor Fragment gagné ce clear (tous les 3 Cycles) |
 
-Référence narrative validée : `docs/narrative.md` § ARCH, *Premier Anchor Fragment* (variante `[1]`).
+Référence narrative validée : `docs/narrative.md` § ARCH, *Anchor Fragment gagné* (variante `[1]`).
 
 ---
 

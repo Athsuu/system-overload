@@ -81,3 +81,15 @@ export function consumeDevWaveJump(): number | null {
   devPendingWaveJump = null;
   return waveIndex;
 }
+
+let devPendingKillAll = false;
+
+export function devRequestKillAll(): void {
+  devPendingKillAll = true;
+}
+
+export function consumeDevKillAllRequest(): boolean {
+  const requested = devPendingKillAll;
+  devPendingKillAll = false;
+  return requested;
+}

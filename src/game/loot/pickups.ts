@@ -95,7 +95,7 @@ export function tickLootPickups(
     }
 
     if (distance <= radii.collectRadius) {
-      collected.push({ kind: pickup.kind, amount: pickup.amount });
+      collected.push({ kind: pickup.kind, amount: pickup.amount, x: pickup.x, y: pickup.y });
       pickups.splice(index, 1);
     }
   }

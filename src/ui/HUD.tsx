@@ -1,25 +1,76 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getBreachPercent } from '../game/runConfig';
+import { formatRunElapsedMs, runElapsedMsRef } from '../game/runElapsed';
 import { overclockDisplayRef, requestOverclockActivation } from '../game/overclock';
 import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { useGameStore } from '../store/useGameStore';
-import { isOverclockUnlocked } from '../store/upgradeCatalog';
+import { isFluxDriveUnlocked, isOverclockUnlocked } from '../store/upgradeCatalog';
 import { BREACH_URGENT_THRESHOLD, DARK_HEX } from '../theme/darkHexTerminal';
 import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
 import { OverclockButton } from './OverclockButton';
 import { ArchRunDialogue } from './ArchRunDialogue';
 
 function FluxDriveToggle() {
-  return null;
+  const gameState = useGameStore((state) => state.gameState);
+  const upgrades = useGameStore((state) => state.upgrades);
+  const fluxDriveEnabled = useGameStore((state) => state.fluxDriveEnabled);
+  const toggleFluxDriveEnabled = useGameStore((state) => state.toggleFluxDriveEnabled);
+  const strings = useGameStrings();
+
+  if (!isFluxDriveUnlocked(upgrades) || gameState !== 'PLAYING') return null;
+
+  return (
+    <div
+      data-tutorial-anchor="flux-drive"
+      className="pointer-events-auto absolute left-8 bottom-32 z-20 flex flex-col items-start gap-2"
+    >
+      <span
+        className="text-[14px] font-semibold tracking-[0.22em] uppercase"
+        style={{ color: fluxDriveEnabled ? DARK_HEX.breachGlow : DARK_HEX.gold }}
+      >
+        {strings.hud.fluxDriveLabel}
+      </span>
+      <button
+        type="button"
+        onClick={toggleFluxDriveEnabled}
+        className="rounded border px-4 py-1.5 text-xs font-bold tracking-[0.18em] uppercase transition hover:scale-[1.04] active:scale-[0.98]"
+        style={{
+          borderColor: fluxDriveEnabled ? DARK_HEX.breachGlow : DARK_HEX.lockedStroke,
+          color: fluxDriveEnabled ? DARK_HEX.breachGlow : 'rgba(255,255,255,0.6)',
+          backgroundColor: '#1a0808',
+          boxShadow: fluxDriveEnabled ? `0 0 12px ${DARK_HEX.breachGlow}55` : undefined,
+        }}
+      >
+        {fluxDriveEnabled ? strings.hud.fluxDriveOn : strings.hud.fluxDriveOff}
+      </button>
+    </div>
+  );
 }
 
 function WaveCounter() {
+  const gameState = useGameStore((state) => state.gameState);
   const activeCycle = useGameStore((state) => state.activeCycle);
   const waveIndex = useGameStore((state) => state.waveIndex);
   const wavePhase = useGameStore((state) => state.wavePhase);
   const showWaveClear = useGameStore((state) => state.showWaveClear);
   const strings = useGameStrings();
+  const [elapsedLabel, setElapsedLabel] = useState('00:00');
+
+  useEffect(() => {
+    if (gameState !== 'PLAYING') return;
+
+    setElapsedLabel(formatRunElapsedMs(runElapsedMsRef.value));
+
+    let frameId = 0;
+    const loop = () => {
+      setElapsedLabel(formatRunElapsedMs(runElapsedMsRef.value));
+      frameId = requestAnimationFrame(loop);
+    };
+
+    frameId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frameId);
+  }, [gameState]);
 
   const isBoss = wavePhase === 'boss' || waveIndex > REGULAR_WAVE_COUNT;
   const currentWave = Math.min(waveIndex, REGULAR_WAVE_COUNT);
@@ -29,6 +80,9 @@ function WaveCounter() {
         .replace('{cycle}', String(activeCycle))
         .replace('{wave}', String(currentWave))
         .replace('{max}', String(REGULAR_WAVE_COUNT));
+
+  const statusClass = 'text-sm tracking-[0.3em] uppercase';
+  const statusColor = isBoss && !showWaveClear ? DARK_HEX.breach : DARK_HEX.goldMuted;
 
   return (
     <div className="pointer-events-none absolute top-6 left-1/2 z-20 -translate-x-1/2 text-center">
@@ -41,15 +95,13 @@ function WaveCounter() {
           {strings.ui.waveClear}
         </p>
       ) : (
-        <p
-          className={`tracking-[0.3em] uppercase ${
-            isBoss ? 'text-[14px]' : 'font-mono text-sm normal-case tracking-wide text-white/70'
-          }`}
-          style={{ color: isBoss ? DARK_HEX.breach : DARK_HEX.goldMuted }}
-        >
+        <p className={statusClass} style={{ color: statusColor }}>
           {isBoss ? strings.ui.bossIncoming : label}
         </p>
       )}
+      <p className={`mt-1 ${statusClass}`} style={{ color: DARK_HEX.goldMuted }}>
+        {elapsedLabel}
+      </p>
     </div>
   );
 }
@@ -61,8 +113,6 @@ function OverclockIndicator() {
   const runSpotlightActive = useRunTutorialSpotlightActive();
   const strings = useGameStrings();
   const [display, setDisplay] = useState(overclockDisplayRef);
-  const [ringPercent, setRingPercent] = useState(0);
-  const smoothedRef = useRef(0);
 
   useEffect(() => {
     if (!overclockUnlocked || gameState !== 'PLAYING') return;
@@ -70,11 +120,6 @@ function OverclockIndicator() {
     let frameId = 0;
 
     const loop = () => {
-      const target = overclockDisplayRef.active
-        ? 100
-        : (1 - overclockDisplayRef.cooldownRatio) * 100;
-      smoothedRef.current += (target - smoothedRef.current) * 0.18;
-      setRingPercent(smoothedRef.current);
       setDisplay({ ...overclockDisplayRef });
       frameId = requestAnimationFrame(loop);
     };
@@ -85,7 +130,8 @@ function OverclockIndicator() {
 
   if (!overclockUnlocked) return null;
 
-  const ready = !display.active && ringPercent >= 99.5;
+  const ringPercent = display.active ? display.activeRatio * 100 : display.chargeRatio * 100;
+  const ready = !display.active && display.chargeRatio >= 0.999;
   const canActivate = ready && !runSpotlightActive;
 
   const handleActivate = () => {

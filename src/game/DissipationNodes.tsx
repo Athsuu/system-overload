@@ -1,6 +1,6 @@
 import { useApplication, useTick } from '@pixi/react';
 import { Container, Graphics } from 'pixi.js';
-import { useCallback, useLayoutEffect, useRef, type RefObject } from 'react';
+import { useCallback, useLayoutEffect, useRef, type MutableRefObject, type RefObject } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
 import { isDevInvincible, isDevShowEnemyHpBars } from '../dev/devFlags';
@@ -8,6 +8,12 @@ import { drawCorruptedProcess, tickCorruptProcessAnim } from './corruptedProcess
 import { drawEnemyHpBar } from './enemyHpBar';
 import { tickEnemyMovement } from './enemyMovement';
 import { pushFlowEscapeFlash, type GameEffect } from './effects';
+import {
+  createChromaticAberrationFilter,
+  isChromaticAberrationActive,
+  tickChromaticAberration,
+  type ChromaticAberrationState,
+} from './juice/chromaticAberration';
 import { applyImpactOverload } from './overload';
 import { getRunConfig } from './runConfig';
 import { scaleDeltaMs, scaleDeltaSeconds } from './runTimeScale';
@@ -17,12 +23,19 @@ interface DissipationNodesProps {
   nodesRef: RefObject<DissipationNode[]>;
   effectsRef: RefObject<GameEffect[]>;
   isPlaying: boolean;
+  chromaticAberrationRef: MutableRefObject<ChromaticAberrationState>;
 }
 
-export function DissipationNodes({ nodesRef, effectsRef, isPlaying }: DissipationNodesProps) {
+export function DissipationNodes({
+  nodesRef,
+  effectsRef,
+  isPlaying,
+  chromaticAberrationRef,
+}: DissipationNodesProps) {
   const { app } = useApplication();
   const graphicsRef = useRef<Graphics | null>(null);
   const containerRef = useRef<Container | null>(null);
+  const aberrationFilterRef = useRef(createChromaticAberrationFilter());
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -43,9 +56,10 @@ export function DissipationNodes({ nodesRef, effectsRef, isPlaying }: Dissipatio
     (ticker: { deltaMS: number }) => {
       const graphics = graphicsRef.current;
       const nodes = nodesRef.current;
+      const container = containerRef.current;
       if (!graphics || !nodes) return;
 
-      if (isPlaying && useGameStore.getState().gameState === 'PLAYING') {
+      if (isPlaying && app?.renderer && useGameStore.getState().gameState === 'PLAYING') {
         const bounds = getScreenBounds(app.screen.width, app.screen.height);
         const config = getRunConfig(useGameStore.getState().upgrades);
         const deltaMs = scaleDeltaMs(ticker.deltaMS);
@@ -56,6 +70,14 @@ export function DissipationNodes({ nodesRef, effectsRef, isPlaying }: Dissipatio
           pushFlowEscapeFlash(effectsRef.current ?? [], node.x, node.y, node.waveIndex);
         });
         tickCorruptProcessAnim(nodes, deltaMs);
+
+        tickChromaticAberration(chromaticAberrationRef.current, deltaMs);
+      }
+
+      if (container) {
+        container.filters = isChromaticAberrationActive(chromaticAberrationRef.current)
+          ? [aberrationFilterRef.current]
+          : null;
       }
 
       graphics.clear();
@@ -67,7 +89,7 @@ export function DissipationNodes({ nodesRef, effectsRef, isPlaying }: Dissipatio
         }
       }
     },
-    [app.screen.height, app.screen.width, effectsRef, isPlaying, nodesRef],
+    [app, chromaticAberrationRef, effectsRef, isPlaying, nodesRef],
   );
 
   useTick(tick);
