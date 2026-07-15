@@ -1,14 +1,14 @@
 import { useRef, useState } from 'react';
-import type { GameState } from '../store/useGameStore';
-import type { TreeNodeId } from '../store/moduleTree';
-import { markTutorialSignal } from '../tutorial/tutorialSignals';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { CycleRunLauncher } from './hub/CycleRunLauncher';
-import { HubCornerControls } from './hub/HubCornerControls';
-import { ModuleTreeViewport } from './module-tree/ModuleTreeViewport';
-import { TerminalBackdrop } from './hub/TerminalBackdrop';
-import { ArchGlitchLine } from './arch/ArchGlitchText';
+import type { GameState } from '../../store/useGameStore';
+import type { TreeNodeId } from '../../store/moduleTree';
+import { markTutorialSignal } from '../../tutorial/tutorialSignals';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { CycleRunLauncher } from '../hub/CycleRunLauncher';
+import { HubCornerControls } from '../hub/HubCornerControls';
+import { ModuleTreeViewport } from '../module-tree/ModuleTreeViewport';
+import { TerminalBackdrop } from '../hub/TerminalBackdrop';
+import { ArchGlitchLine } from '../arch/ArchGlitchText';
 
 interface ModuleTreeScreenProps {
   mode: Extract<GameState, 'MENU' | 'UPGRADING'>;

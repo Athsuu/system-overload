@@ -1,5 +1,5 @@
-import { useGameStrings } from '../i18n/useGameStrings';
-import { TerminalBackdrop } from './hub/TerminalBackdrop';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { TerminalBackdrop } from '../hub/TerminalBackdrop';
 
 export function MainMenuBackdrop() {
   const strings = useGameStrings();

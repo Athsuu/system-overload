@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
-import { ensureAudioUnlocked } from '../audio/sfxApi';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { canQuitApp, quitApp } from '../platform/canQuitApp';
-import { hasSave } from '../store/persistence';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { clearProgressionData } from '../store/playerReset';
-import { useGameStore, persistCurrentProgress, resetToFreshPlayer } from '../store/useGameStore';
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { ConfirmNewGameModal } from './settings/ConfirmNewGameModal';
-import { HexActionButton } from './shared/HexActionButton';
+import { ensureAudioUnlocked } from '../../audio/sfxApi';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { canQuitApp, quitApp } from '../../platform/canQuitApp';
+import { hasSave } from '../../store/persistence';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { clearProgressionData } from '../../store/playerReset';
+import { useGameStore, persistCurrentProgress, resetToFreshPlayer } from '../../store/useGameStore';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { ConfirmNewGameModal } from '../settings/ConfirmNewGameModal';
+import { HexActionButton } from '../shared/HexActionButton';
 import { MainMenuBackdrop } from './MainMenuBackdrop';
-import { ArchGlitchLine } from './arch/ArchGlitchText';
+import { ArchGlitchLine } from '../arch/ArchGlitchText';
 
 export function MainMenuScreen() {
   const strings = useGameStrings();

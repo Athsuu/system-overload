@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { getCoreProtocolCost, getCoreProtocolDefinition, getCoreProtocolState } from '../store/coreProtocolCatalog';
-import { canRecompile } from '../store/prestigeLogic';
-import type { CoreProtocolId } from '../store/prestigeTypes';
-import { useGameStore } from '../store/useGameStore';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { triggerSfx } from '../audio/sfxApi';
-import { HubCornerControls } from './hub/HubCornerControls';
-import { ArchGlitchLine } from './arch/ArchGlitchText';
-import { RecompileConfirmModal } from './hub/RecompileConfirmModal';
-import { SEED_PROTOCOL_IDS } from './hub/seedProtocolLayout';
-import { getCoreProtocolTierVisual, SEED_PROTOCOL_VISUAL } from './hub/seedProtocolTheme';
+import { getCoreProtocolCost, getCoreProtocolDefinition, getCoreProtocolState } from '../../store/coreProtocolCatalog';
+import { canRecompile } from '../../store/prestigeLogic';
+import type { CoreProtocolId } from '../../store/prestigeTypes';
+import { useGameStore } from '../../store/useGameStore';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { triggerSfx } from '../../audio/sfxApi';
+import { HubCornerControls } from '../hub/HubCornerControls';
+import { ArchGlitchLine } from '../arch/ArchGlitchText';
+import { RecompileConfirmModal } from '../hub/RecompileConfirmModal';
+import { SEED_PROTOCOL_IDS } from '../hub/seedProtocolLayout';
+import { getCoreProtocolTierVisual, SEED_PROTOCOL_VISUAL } from '../hub/seedProtocolTheme';
 
 function MonolithTierCard({
   id,

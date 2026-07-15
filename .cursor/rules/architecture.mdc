@@ -45,18 +45,25 @@ alwaysApply: false
 - **Existant à plat** → ne **pas** déplacer en masse ; déplacer **uniquement** quand on touche cette zone **dans la même tâche**.
 - **Interdit** : refactor d'architecture « pour ranger » sans demande PO explicite.
 
-Sous-dossiers déjà en place : `game/loot/`, `game/overclock/`, `game/juice/`, `dev/devUi/`, `dev/moduleTreeEditor/`, `ui/transitions/`.
+Sous-dossiers en place : `game/loot/`, `game/overclock/`, `game/juice/`, `dev/devUi/`, `dev/moduleTreeEditor/`, `ui/transitions/`, `ui/screens/`, `ui/hud/`, `ui/hub/`, `ui/settings/`, `ui/shared/`, `ui/module-tree/`, `ui/arch/`.
 
-## Sous-dossiers cibles (nouveaux fichiers)
+## Sous-dossiers UI (créés)
 
 ```
 src/ui/
-  screens/       MainMenu, ModuleTreeScreen, SeedProtocols, RunEnd…
-  hud/           HUD, Pause, OverclockButton…
+  screens/       MainMenu, ModuleTreeScreen, SeedProtocols, RunEnd, Pause, SettingsOverlay
+  hud/           HUD, OverclockButton, ArenaHexOverlay
+  hub/           CycleRunLauncher, CurrencyBadge, TerminalBackdrop, prestige…
   module-tree/   ModuleTree*, hooks pan/zoom, theme arbre
   arch/          Arch*, TutorialCoach, overlays tutoriel
   shared/        popovers, boutons hex, formatNumber…
+  settings/      SettingsPanel, SettingsGearButton, ConfirmNewGameModal
+  transitions/   ScreenTransitionOverlay, launchScreenTransition…
+```
 
+Sous-dossiers cibles `game/` (nouveaux fichiers) :
+
+```
 src/game/
   loot/          (existant)
   overclock/     (existant)
@@ -71,7 +78,7 @@ src/game/
 # Module tree (4 zones — ne pas fusionner)
 
 - **Données** : `src/store/moduleTree.ts`, `moduleTreeHexGrid.ts`
-- **Rendu joueur** : `src/ui/` (ou `ui/module-tree/`)
+- **Rendu joueur** : `src/ui/module-tree/`
 - **Placeholders dev** : `src/dev/moduleTreeEditor/`
 - **Effets gameplay** : `src/game/moduleEffects.ts` (`MODULE_EFFECT_REGISTRY` + `compute*`)
 

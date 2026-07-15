@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
-import { useGameStore } from '../store/useGameStore';
-import { canRecompile } from '../store/prestigeLogic';
-import { markTutorialSignal } from '../tutorial/tutorialSignals';
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { ArchRunEndRelay } from './arch/ArchRunEndRelay';
-import { HexActionButton } from './shared/HexActionButton';
-import { pickMeltdownArchVariantIndex } from './arch/meltdownArchRotation';
-import { pickVictoryArchVariantIndex } from './arch/victoryArchRotation';
-import { useCountUp } from './shared/useCountUp';
-import { useScreenTransition } from './transitions/useScreenTransition';
-import { RecompileConfirmModal } from './hub/RecompileConfirmModal';
-import { SEED_PROTOCOL_VISUAL } from './hub/seedProtocolTheme';
+import { REGULAR_WAVE_COUNT } from '../../game/waveConfig';
+import { useGameStore } from '../../store/useGameStore';
+import { canRecompile } from '../../store/prestigeLogic';
+import { markTutorialSignal } from '../../tutorial/tutorialSignals';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { ArchRunEndRelay } from '../arch/ArchRunEndRelay';
+import { HexActionButton } from '../shared/HexActionButton';
+import { pickMeltdownArchVariantIndex } from '../arch/meltdownArchRotation';
+import { pickVictoryArchVariantIndex } from '../arch/victoryArchRotation';
+import { useCountUp } from '../shared/useCountUp';
+import { useScreenTransition } from '../transitions/useScreenTransition';
+import { RecompileConfirmModal } from '../hub/RecompileConfirmModal';
+import { SEED_PROTOCOL_VISUAL } from '../hub/seedProtocolTheme';
 
 export function RunEndScreen() {
   const lastRunShards = useGameStore((state) => state.lastRunShards);

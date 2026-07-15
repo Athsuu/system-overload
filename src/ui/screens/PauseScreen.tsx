@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { getBreachPercent } from '../game/runConfig';
-import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { useGameStore } from '../store/useGameStore';
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { HexActionButton } from './shared/HexActionButton';
-import { SettingsPanel } from './settings/SettingsPanel';
-import { useScreenTransition } from './transitions/useScreenTransition';
+import { getBreachPercent } from '../../game/runConfig';
+import { REGULAR_WAVE_COUNT } from '../../game/waveConfig';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useGameStore } from '../../store/useGameStore';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { HexActionButton } from '../shared/HexActionButton';
+import { SettingsPanel } from '../settings/SettingsPanel';
+import { useScreenTransition } from '../transitions/useScreenTransition';
 
 export function PauseScreen() {
   const breachProgress = useGameStore((state) => state.breachProgress);

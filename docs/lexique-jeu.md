@@ -256,13 +256,26 @@ Tu peux dire « touche **l’arène** » ou « touche **le hub** », l’agent s
 | Tu dis… | Dossier |
 |---------|---------|
 | Arène, combat, ennemis, 60 FPS | `src/game/` |
-| Menus, HUD, module tree, écrans | `src/ui/` |
+| Menus, HUD, module tree, écrans | `src/ui/` (voir sous-dossiers ci-dessous) |
 | Éclats, saves, upgrades, états jeu | `src/store/` |
 | Couleurs, thème | `src/theme/` |
 | Textes FR/EN | `src/i18n/locales/` |
-| Tutoriels ARCH | `src/tutorial/` + `TutorialCoach` |
+| Tutoriels ARCH | `src/tutorial/` + `src/ui/arch/TutorialCoach.tsx` |
 | Sauvegarde fichier | `persistence.ts` · clé `system-overload-save` |
-| Réglages joueur | `settingsPersistence.ts` |
+| Réglages joueur | `settingsPersistence.ts` · `src/ui/settings/` |
+
+Sous-dossiers `src/ui/` :
+
+| Dossier | Contenu |
+|---------|---------|
+| `screens/` | Menu principal, hub arbre, protocoles Seed, pause, fin de run |
+| `hud/` | HUD run, Overclock, fond hex arène |
+| `hub/` | Lanceur run, monnaie, stats, backdrops, Recompile |
+| `module-tree/` | Rendu arbre modules, tooltips, pan/zoom |
+| `arch/` | Canal ARCH, tutoriels, glitch text |
+| `shared/` | Boutons hex, popovers, hooks transverses |
+| `settings/` | Panneau réglages, modales |
+| `transitions/` | Transitions plein écran entre hub et arène |
 
 ---
 
@@ -342,7 +355,7 @@ Quand tu demandes un **nouveau module** sur l'arbre, l'agent suit cette liste da
 | 2 | **Arbre** | `src/store/moduleTree.ts` | Nœud graph, position hex, branche, `requires` |
 | 3 | **Effets** | `src/game/moduleEffects.ts` | Ligne dans `MODULE_EFFECT_REGISTRY` + formule dans `compute*` |
 | 4 | **Textes** | `src/i18n/locales/en.ts` + `fr.ts` + `types.ts` | Nom + description (les deux langues) |
-| 5 | **Tooltip** | `src/ui/upgradeTooltipStats.ts` | Stats affichées au survol du nœud |
+| 5 | **Tooltip** | `src/ui/module-tree/upgradeTooltipStats.ts` | Stats affichées au survol du nœud |
 | 6 | **Lexique** | `docs/lexique-jeu.md` | §4 (module) + cette section si besoin |
 
 ### Étapes optionnelles (selon le module)

@@ -1,5 +1,5 @@
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { SettingsPanel } from './settings/SettingsPanel';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { SettingsPanel } from '../settings/SettingsPanel';
 
 export function SettingsOverlay() {
   return (
