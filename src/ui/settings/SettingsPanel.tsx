@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { triggerSfx } from '../audio/sfxApi';
-import type { LanguageMode } from '../i18n/types';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { useGameStore } from '../store/useGameStore';
-import { useSettingsStore, type SettingsSection } from '../store/useSettingsStore';
-import { DARK_HEX } from '../theme/darkHexTerminal';
+import { triggerSfx } from '../../audio/sfxApi';
+import type { LanguageMode } from '../../i18n/types';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { useGameStore } from '../../store/useGameStore';
+import { useSettingsStore, type SettingsSection } from '../../store/useSettingsStore';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
 
 function VolumeSlider({
   label,

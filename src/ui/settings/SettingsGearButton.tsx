@@ -1,8 +1,8 @@
-import { useGameStrings } from '../i18n/useGameStrings';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { triggerSfx } from '../audio/sfxApi';
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { hexagonPoints } from './module-tree/moduleTreeGeometry';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { triggerSfx } from '../../audio/sfxApi';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { hexagonPoints } from '../module-tree/moduleTreeGeometry';
 
 export function SettingsGearButton() {
   const openSettings = useSettingsStore((state) => state.openSettings);

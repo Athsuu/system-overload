@@ -7,7 +7,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { clearProgressionData } from '../store/playerReset';
 import { useGameStore, persistCurrentProgress, resetToFreshPlayer } from '../store/useGameStore';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { ConfirmNewGameModal } from './ConfirmNewGameModal';
+import { ConfirmNewGameModal } from './settings/ConfirmNewGameModal';
 import { HexActionButton } from './shared/HexActionButton';
 import { MainMenuBackdrop } from './MainMenuBackdrop';
 import { ArchGlitchLine } from './arch/ArchGlitchText';

@@ -1,7 +1,7 @@
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { triggerSfx } from '../audio/sfxApi';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { HexActionButton } from './shared/HexActionButton';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { triggerSfx } from '../../audio/sfxApi';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { HexActionButton } from '../shared/HexActionButton';
 interface ConfirmNewGameModalProps {
   onCancel: () => void;
   onConfirm: () => void;
