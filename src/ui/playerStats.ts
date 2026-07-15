@@ -6,7 +6,13 @@ import {
   getShardReward,
   resolvePurgeSplashDamage,
 } from '../game/runConfig';
-import { getShardYieldBonusPercent } from '../game/moduleEffects';
+import {
+  computeVictoryShardBonus,
+  getBreachDissipationPerSec,
+  getLeakSealingReductionPercent,
+  getPurgeAmplifierDamageBonusPercent,
+} from '../game/moduleEffects';
+import { BOSS_VICTORY_SHARD_BONUS, SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL } from '../store/upgradeCatalog';
 import { getGameStrings } from '../i18n';
 import type { UpgradeLevels } from '../store/upgradeCatalog';
 
@@ -66,16 +72,25 @@ function getUnlockedPlayerStatLines(
   const aoe = computePurgeAoeProfile(upgrades);
   const lines: PlayerStatLine[] = [];
 
-  if (upgrades.shardYield > 0) {
+  if (upgrades.shardSalvage > 0) {
+    const bonusPercent = Math.round((SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL ** upgrades.shardSalvage - 1) * 100);
     lines.push({
-      id: 'shardYield',
+      id: 'shardSalvage',
       label: labels.shardYieldBonus,
-      value: `+${getShardYieldBonusPercent(upgrades.shardYield)}%`,
+      value: `+${bonusPercent}%`,
     });
     lines.push({
       id: 'shardPayoutExample',
       label: labels.shardBonusPerKill,
-      value: String(getShardReward(config, 5, 'normal')),
+      value: String(getShardReward(config, 5)),
+    });
+  }
+
+  if (upgrades.victoryShardBonus > 0) {
+    lines.push({
+      id: 'victoryShardBonus',
+      label: labels.victoryShardTotal,
+      value: String(BOSS_VICTORY_SHARD_BONUS + computeVictoryShardBonus(upgrades)),
     });
   }
 
@@ -98,10 +113,11 @@ function getUnlockedPlayerStatLines(
 
   if (upgrades.killBreachRelief > 0) {
     const breachRelief = getKillBreachRelief(upgrades, 1);
+    const reliefLabel = breachRelief.toFixed(2).replace(/\.?0+$/, '');
     lines.push({
       id: 'breachReliefPerKill',
       label: labels.breachReliefPerKill,
-      value: `−${breachRelief.toFixed(1)}%`,
+      value: `−${reliefLabel}%`,
     });
   }
 
@@ -110,6 +126,30 @@ function getUnlockedPlayerStatLines(
       id: 'latencySlow',
       label: labels.latencySlowBonus,
       value: `-${upgrades.latencyInjection * 10}%`,
+    });
+  }
+
+  if (upgrades.breachDissipation > 0) {
+    lines.push({
+      id: 'breachDissipation',
+      label: labels.breachDissipationPerSec,
+      value: `−${getBreachDissipationPerSec(upgrades.breachDissipation).toFixed(2)}`,
+    });
+  }
+
+  if (upgrades.leakSealing > 0) {
+    lines.push({
+      id: 'leakSealing',
+      label: labels.leakSealingReduction,
+      value: `−${getLeakSealingReductionPercent(upgrades.leakSealing)}%`,
+    });
+  }
+
+  if (upgrades.purgeAmplifier > 0) {
+    lines.push({
+      id: 'purgeAmplifier',
+      label: labels.purgeAmplifierBonus,
+      value: `+${getPurgeAmplifierDamageBonusPercent(upgrades.purgeAmplifier)}%`,
     });
   }
 

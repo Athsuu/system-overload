@@ -1,25 +1,35 @@
 import {
+  BASE_BREACH_CAP,
+  getBreachCap,
+  getKillBreachRelief,
+  getRunConfig,
+} from '../game/runConfig';
+import {
+  BOSS_VICTORY_SHARD_BONUS,
   FLUX_DRIVE_TIME_SCALE,
   getUpgradeDefinition,
-  isUnlimitedUpgrade,
   MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL,
   PURGE_CADENCE_PERCENT_PER_LEVEL,
-  PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL,
+  PURGE_STRIKE_DAMAGE_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
   SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL,
+  VICTORY_SHARD_BONUS_FLAT_BY_LEVEL,
   type UpgradeId,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
 import { getOverclockCooldownMs, getOverclockDurationMs } from '../game/overclock';
-import { BASE_BREACH_CAP, getKillBreachRelief, getRunConfig, getShardReward, resolvePurgeHitDamage } from '../game/runConfig';
 import {
-  getEliteBreakerDamageBonusPercent,
+  computeVictoryShardBonus,
+  getBreachDissipationPerSec,
+  getLeakSealingReductionPercent,
+  getPurgeAmplifierDamageBonusPercent,
   getPurgeReachBonusPercent,
   getPurgeSplashDamagePercent,
   getPurgeSplashRadiusBonusPercent,
-  getShardYieldBonusPercent,
   resolvePurgeSplashDamage,
 } from '../game/moduleEffects';
+import { getEnemyLevel, getLeakPenaltyForLevel } from '../game/enemyScaling';
+import { useGameStore } from '../store/useGameStore';
 import { getLootPickupRadii, getShardMagnetMagnetRadius } from '../game/loot';
 import { getGameStrings } from '../i18n';
 
@@ -42,12 +52,25 @@ function line(
   return { label, current, next: nextLevel !== null ? next : null };
 }
 
+function formatBreachReliefPercent(value: number): string {
+  return value.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function previewLeakPenalty(upgrades: UpgradeLevels, localWave: number): number {
+  const cap = getBreachCap(upgrades);
+  const cycle = useGameStore.getState().selectedCycle;
+  const level = getEnemyLevel(cycle, localWave);
+  const base = getLeakPenaltyForLevel(level, cap);
+  const reduction = getLeakSealingReductionPercent(upgrades.leakSealing);
+  if (reduction <= 0) return base;
+  return Math.round(base * (1 - reduction / 100));
+}
+
 export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): TooltipStatLine[] {
   const labels = getGameStrings().tooltipStats;
   const definition = getUpgradeDefinition(id);
   const level = upgrades[id];
-  const nextLevel =
-    isUnlimitedUpgrade(definition) || level + 1 < definition.maxLevel ? level + 1 : null;
+  const nextLevel = level + 1 < definition.maxLevel ? level + 1 : null;
   const cur = upgrades;
   const nxt = nextLevel !== null ? withLevel(upgrades, id, nextLevel) : null;
 
@@ -73,25 +96,30 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     ];
   }
 
-  if (id === 'shardYield') {
-    const exampleWave = 5;
-    const currentBonus = getShardYieldBonusPercent(level);
-    const nextBonus = nextLevel !== null ? getShardYieldBonusPercent(nextLevel) : null;
-    const currentPayout = getShardReward(getRunConfig(cur), exampleWave, 'normal');
-    const nextPayout =
-      nextLevel !== null ? getShardReward(getRunConfig(nxt!), exampleWave, 'normal') : null;
+  if (id === 'victoryShardBonus') {
+    const currentBonus = computeVictoryShardBonus(cur);
+    const currentTotal = BOSS_VICTORY_SHARD_BONUS + currentBonus;
+    const nextTotal = nxt ? BOSS_VICTORY_SHARD_BONUS + computeVictoryShardBonus(nxt) : null;
+    const flatAtLevel =
+      level > 0 ? VICTORY_SHARD_BONUS_FLAT_BY_LEVEL[Math.min(level, VICTORY_SHARD_BONUS_FLAT_BY_LEVEL.length) - 1] : 0;
+    const nextFlat =
+      nextLevel !== null
+        ? VICTORY_SHARD_BONUS_FLAT_BY_LEVEL[
+            Math.min(nextLevel, VICTORY_SHARD_BONUS_FLAT_BY_LEVEL.length) - 1
+          ]
+        : null;
     return [
       line(
-        labels.shardYieldBonus,
-        `+${currentBonus}%`,
+        labels.victoryShardBonus,
+        `+${flatAtLevel}`,
         nextLevel,
-        nextBonus !== null ? `+${nextBonus}%` : null,
+        nextFlat !== null ? `+${nextFlat}` : null,
       ),
       line(
-        labels.shardBonusPerKill,
-        String(currentPayout),
+        labels.victoryShardTotal,
+        String(currentTotal),
         nextLevel,
-        nextPayout !== null ? String(nextPayout) : null,
+        nextTotal !== null ? String(nextTotal) : null,
       ),
     ];
   }
@@ -118,41 +146,18 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   }
 
   if (id === 'purgeStrike') {
-    const growthMultiplier = PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL ** level;
-    const nextGrowthMultiplier =
-      nextLevel !== null ? PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL ** nextLevel : null;
+    const flatBonus = level * PURGE_STRIKE_DAMAGE_PER_LEVEL;
+    const nextFlatBonus = nextLevel !== null ? nextLevel * PURGE_STRIKE_DAMAGE_PER_LEVEL : null;
     const total = String(getRunConfig(cur).purgeHitDamage);
     const nextTotal = nxt ? String(getRunConfig(nxt).purgeHitDamage) : null;
     return [
       line(
         labels.purgeDamageBonus,
-        `×${growthMultiplier.toFixed(2)}`,
+        `+${flatBonus}`,
         nextLevel,
-        nextGrowthMultiplier !== null ? `×${nextGrowthMultiplier.toFixed(2)}` : null,
+        nextFlatBonus !== null ? `+${nextFlatBonus}` : null,
       ),
       line(labels.purgeHitDamage, total, nextLevel, nextTotal),
-    ];
-  }
-
-  if (id === 'eliteBreaker') {
-    const baseDamage = getRunConfig(cur).purgeHitDamage;
-    const nextBaseDamage = nxt ? getRunConfig(nxt).purgeHitDamage : baseDamage;
-    const currentBonus = getEliteBreakerDamageBonusPercent(level);
-    const nextBonus =
-      nextLevel !== null ? getEliteBreakerDamageBonusPercent(nextLevel) : null;
-    const eliteDamage = String(resolvePurgeHitDamage(baseDamage, 'elite', level));
-    const nextEliteDamage =
-      nextLevel !== null
-        ? String(resolvePurgeHitDamage(nextBaseDamage, 'elite', nextLevel))
-        : null;
-    return [
-      line(
-        labels.elitePurgeDamageBonus,
-        `+${currentBonus}%`,
-        nextLevel,
-        nextBonus !== null ? `+${nextBonus}%` : null,
-      ),
-      line(labels.elitePurgeHitDamage, eliteDamage, nextLevel, nextEliteDamage),
     ];
   }
 
@@ -228,8 +233,8 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   }
 
   if (id === 'killBreachRelief') {
-    const current = getKillBreachRelief(cur, 1).toFixed(1);
-    const next = nxt ? getKillBreachRelief(nxt, 1).toFixed(1) : null;
+    const current = formatBreachReliefPercent(getKillBreachRelief(cur, 1));
+    const next = nxt ? formatBreachReliefPercent(getKillBreachRelief(nxt, 1)) : null;
     return [
       line(
         labels.breachReliefPerKill,
@@ -255,6 +260,59 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
 
   if (id === 'fluxDrive') {
     return [line(labels.fluxDriveSpeed, `×${FLUX_DRIVE_TIME_SCALE}`, null, null)];
+  }
+
+  if (id === 'breachDissipation') {
+    const current = getBreachDissipationPerSec(level);
+    const next = nextLevel !== null ? getBreachDissipationPerSec(nextLevel) : null;
+    return [
+      line(
+        labels.breachDissipationPerSec,
+        `−${current.toFixed(2)}`,
+        nextLevel,
+        next !== null ? `−${next.toFixed(2)}` : null,
+      ),
+    ];
+  }
+
+  if (id === 'leakSealing') {
+    const exampleWave = 7;
+    const currentReduction = getLeakSealingReductionPercent(level);
+    const nextReduction =
+      nextLevel !== null ? getLeakSealingReductionPercent(nextLevel) : null;
+    const currentPenalty = previewLeakPenalty(cur, exampleWave);
+    const nextPenalty = nxt !== null ? previewLeakPenalty(nxt, exampleWave) : null;
+    return [
+      line(
+        labels.leakSealingReduction,
+        `−${currentReduction}%`,
+        nextLevel,
+        nextReduction !== null ? `−${nextReduction}%` : null,
+      ),
+      line(
+        labels.leakPenaltyExample,
+        String(currentPenalty),
+        nextLevel,
+        nextPenalty !== null ? String(nextPenalty) : null,
+      ),
+    ];
+  }
+
+  if (id === 'purgeAmplifier') {
+    const currentBonus = getPurgeAmplifierDamageBonusPercent(level);
+    const nextBonus =
+      nextLevel !== null ? getPurgeAmplifierDamageBonusPercent(nextLevel) : null;
+    const currentDamage = String(getRunConfig(cur).purgeHitDamage);
+    const nextDamage = nxt ? String(getRunConfig(nxt).purgeHitDamage) : null;
+    return [
+      line(
+        labels.purgeAmplifierBonus,
+        `+${currentBonus}%`,
+        nextLevel,
+        nextBonus !== null ? `+${nextBonus}%` : null,
+      ),
+      line(labels.purgeHitDamage, currentDamage, nextLevel, nextDamage),
+    ];
   }
 
   if (id === 'meltdownThreshold') {

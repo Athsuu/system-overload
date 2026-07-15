@@ -26,6 +26,14 @@ import { RunTimerEngine } from './RunTimerEngine';
 import { resetLeakBurstTracker, resetMeltdownGuard } from './overload';
 import { scaleDeltaMs } from './runTimeScale';
 import { resetWaveRuntime, WaveEngine } from './WaveEngine';
+import { getScreenBounds } from './constants';
+import { isDevMenuEnabled } from '../dev/isDevMenuEnabled';
+import {
+  getDevAutoplaySnapshot,
+  isDevAutoplayPurgeInputLocked,
+  tickDevAutoplay,
+} from '../dev/devAutoplay';
+import { devTryActivateAutoplayOnRunStart } from '../dev/devAutoplayActions';
 import type { DissipationNode } from './types';
 
 export function GameArena() {
@@ -79,6 +87,9 @@ export function GameArena() {
       resetWaveRuntime(waveRuntimeRef);
       resetLeakBurstTracker();
       resetMeltdownGuard();
+      if (isDevMenuEnabled()) {
+        devTryActivateAutoplayOnRunStart(app.screen.width, app.screen.height);
+      }
       useGameStore.getState().setWaveIndex(1);
       useGameStore.getState().setWavePhase('spawning');
     }
@@ -100,9 +111,11 @@ export function GameArena() {
   // Position écran brute — indépendante de l'état de jeu (clic « Lancer la run » inclus).
   useEffect(() => {
     const onRawPointerMove = (event: PointerEvent) => {
+      if (isDevMenuEnabled() && isDevAutoplayPurgeInputLocked()) return;
       trackClientPointer(event.clientX, event.clientY);
     };
     const onRawPointerDown = (event: PointerEvent) => {
+      if (isDevMenuEnabled() && isDevAutoplayPurgeInputLocked()) return;
       trackClientPointer(event.clientX, event.clientY);
     };
     window.addEventListener('pointermove', onRawPointerMove);
@@ -122,6 +135,7 @@ export function GameArena() {
 
     const trySeedPurgePointer = () => {
       if (cancelled || tutorialRunSpotlightActive || !app?.renderer) return;
+      if (isDevMenuEnabled() && isDevAutoplayPurgeInputLocked()) return;
       if (seedPurgePointer(app)) return;
       seedFrameId = requestAnimationFrame(trySeedPurgePointer);
     };
@@ -132,6 +146,7 @@ export function GameArena() {
 
       const onPointerMove = (event: PointerEvent) => {
         if (tutorialRunSpotlightActive) return;
+        if (isDevMenuEnabled() && isDevAutoplayPurgeInputLocked()) return;
         ensureAudioUnlocked();
         trackClientPointer(event.clientX, event.clientY);
         activatePurgePointer(app, event.clientX, event.clientY);
@@ -139,17 +154,20 @@ export function GameArena() {
 
       const onPointerDown = (event: PointerEvent) => {
         if (tutorialRunSpotlightActive) return;
+        if (isDevMenuEnabled() && isDevAutoplayPurgeInputLocked()) return;
         trackClientPointer(event.clientX, event.clientY);
         activatePurgePointer(app, event.clientX, event.clientY);
       };
 
       const onPointerEnter = (event: PointerEvent) => {
         if (tutorialRunSpotlightActive) return;
+        if (isDevMenuEnabled() && isDevAutoplayPurgeInputLocked()) return;
         trackClientPointer(event.clientX, event.clientY);
         activatePurgePointer(app, event.clientX, event.clientY);
       };
 
       const onPointerLeave = () => {
+        if (isDevMenuEnabled() && isDevAutoplayPurgeInputLocked()) return;
         resetPurgePointer();
       };
 
@@ -214,6 +232,26 @@ export function GameArena() {
   );
 
   useTick({ callback: shakeTick, isEnabled: isRunLive });
+
+  const autoplayTick = useCallback(
+    (ticker: { deltaMS: number }) => {
+      if (!isDevMenuEnabled()) return;
+
+      const snapshot = getDevAutoplaySnapshot();
+      if (!snapshot.active && !snapshot.pendingStart) return;
+
+      const bounds = getScreenBounds(app.screen.width, app.screen.height);
+      if (snapshot.pendingStart && !snapshot.active) {
+        devTryActivateAutoplayOnRunStart(app.screen.width, app.screen.height);
+      }
+      if (getDevAutoplaySnapshot().active) {
+        tickDevAutoplay(nodesRef.current, ticker.deltaMS, bounds);
+      }
+    },
+    [app],
+  );
+
+  useTick({ callback: autoplayTick, isEnabled: isRunLive && isDevMenuEnabled() });
 
   return (
     <pixiContainer ref={arenaContainerRef}>

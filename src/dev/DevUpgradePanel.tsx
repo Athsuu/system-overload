@@ -15,6 +15,7 @@ import {
 import { useGameStore } from '../store/useGameStore';
 import { ModuleBranchIcon } from '../ui/moduleTreeBranchIcons';
 import { devSetUpgradeLevel, DEV_UNCAPPED_PREVIEW_LEVEL } from './devActions';
+import { DevButton } from './DevButton';
 import { DevFloatingTooltip } from './DevFloatingTooltip';
 
 function getGlyphAccentColor(
@@ -128,7 +129,7 @@ export function DevUpgradePanel() {
 
   return (
     <div className="space-y-2">
-      <div className="max-h-32 overflow-y-auto rounded-lg border border-white/8 bg-black/30 pr-1">
+      <div className="so-dev-scroll max-h-32 overflow-y-auto rounded-lg border border-white/8 bg-black/30 pr-1">
         {sortedTreeNodes.map((treeNode) => {
           const definition = getUpgradeDefinition(treeNode.id);
           const moduleNode = getModuleNode(treeNode.id);
@@ -195,31 +196,17 @@ export function DevUpgradePanel() {
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setLevel(0)}
-            className="rounded border border-white/10 px-2 py-1 text-[14px] text-white/60 hover:border-white/25 hover:text-white"
-          >
-            0
-          </button>
-          <button
-            type="button"
-            onClick={() => setLevel(Math.max(0, currentLevel - 1))}
-            disabled={currentLevel <= 0}
-            className="rounded border border-white/10 px-2.5 py-1 text-xs text-white/70 hover:border-cyan-500/30 disabled:opacity-30"
-          >
+          <DevButton onClick={() => setLevel(0)}>0</DevButton>
+          <DevButton onClick={() => setLevel(Math.max(0, currentLevel - 1))} disabled={currentLevel <= 0}>
             −
-          </button>
-          <button
-            type="button"
+          </DevButton>
+          <DevButton
             onClick={() => setLevel(Math.min(selectedDefinition.maxLevel, currentLevel + 1))}
             disabled={currentLevel >= selectedDefinition.maxLevel}
-            className="rounded border border-white/10 px-2.5 py-1 text-xs text-white/70 hover:border-cyan-500/30 disabled:opacity-30"
           >
             +
-          </button>
-          <button
-            type="button"
+          </DevButton>
+          <DevButton
             onClick={() =>
               setLevel(
                 Number.isFinite(selectedDefinition.maxLevel)
@@ -227,10 +214,9 @@ export function DevUpgradePanel() {
                   : DEV_UNCAPPED_PREVIEW_LEVEL,
               )
             }
-            className="rounded border border-white/10 px-2 py-1 text-[14px] text-white/60 hover:border-white/25 hover:text-white"
           >
             Max
-          </button>
+          </DevButton>
         </div>
 
         <p className="mt-2 text-[14px] leading-relaxed text-white/40">{selectedDefinition.description}</p>

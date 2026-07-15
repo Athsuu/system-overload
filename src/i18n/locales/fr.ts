@@ -103,10 +103,6 @@ export const FR_STRINGS: GameStrings = {
     upgradesTitle: 'Améliorations',
     upgradesSubtitle: LORE.moduleTree.betweenRuns,
   },
-  moduleTree: {
-    placeholderTitle: 'Module réservé',
-    placeholderBody: 'Emplacement design. Ce nœud sera remplacé dans une mise à jour.',
-  },
   mainMenu: {
     newGame: 'Nouvelle partie',
     continue: 'Continuer',
@@ -229,9 +225,9 @@ export const FR_STRINGS: GameStrings = {
       name: 'Récupération d\'éclats',
       description: 'Extrait plus d\'Éclats hex de chaque processus corrompu purgé',
     },
-    shardYield: {
-      name: 'Rendement d\'extraction',
-      description: 'Augmente le rendement de base en Éclats hex à chaque kill',
+    victoryShardBonus: {
+      name: 'Prime victoire',
+      description: 'Gagne des Éclats hex bonus quand tu contiens l\'Ancre de brèche',
     },
     shardMagnet: {
       name: 'Aimant d\'éclats',
@@ -240,10 +236,6 @@ export const FR_STRINGS: GameStrings = {
     purgeStrike: {
       name: 'Frappe de purge',
       description: 'Augmente les dégâts de purge contre les processus corrompus',
-    },
-    eliteBreaker: {
-      name: 'Briseur d\'élite',
-      description: 'Frappe plus fort les processus corrompus lourds avec ta zone de purge',
     },
     purgeCadence: {
       name: 'Cadence de purge',
@@ -281,6 +273,18 @@ export const FR_STRINGS: GameStrings = {
       name: 'Flux Drive',
       description: 'Débloque le toggle Flux Drive : double la vitesse de simulation en quarantaine',
     },
+    breachDissipation: {
+      name: 'Dissipation Breach',
+      description: 'Évacue la pression Breach avec le temps pendant la run. Actif à chaque cycle',
+    },
+    leakSealing: {
+      name: 'Joint d\'étanchéité',
+      description: 'Réduit les pics Breach quand un processus corrompu traverse la zone. Actif à chaque cycle',
+    },
+    purgeAmplifier: {
+      name: 'Amplificateur de purge',
+      description: 'Renforce les dégâts de purge contre tous les processus corrompus. Actif à chaque cycle',
+    },
   },
   branches: {
     degats: 'Dégâts',
@@ -290,10 +294,10 @@ export const FR_STRINGS: GameStrings = {
   tooltipStats: {
     purgeHitDamage: 'Dégâts de purge',
     purgeDamageBonus: 'Bonus dégâts purge',
-    elitePurgeDamageBonus: 'Bonus processus lourd',
-    elitePurgeHitDamage: 'Dégâts purge vs lourd',
     shardBonusPerKill: 'Éclats hex / kill',
     shardYieldBonus: 'Bonus rendement éclats',
+    victoryShardBonus: 'Prime victoire',
+    victoryShardTotal: 'Total victoire boss',
     shardPickupRadius: 'Rayon de collecte',
     shardPickupReachBonus: 'Rayon d\'attraction',
     purgeCadence: 'Cadence de purge',
@@ -310,6 +314,10 @@ export const FR_STRINGS: GameStrings = {
     overclockDuration: 'Durée Overclock',
     overclockCooldown: 'Cooldown Overclock',
     fluxDriveSpeed: 'Vitesse simulation',
+    breachDissipationPerSec: 'Drain Breach / s',
+    leakSealingReduction: 'Réduction pénalité fuite',
+    leakPenaltyExample: 'Pénalité fuite (ex. vague)',
+    purgeAmplifierBonus: 'Bonus dégâts purge',
   },
   playerStats: {
     title: 'NODE-0 // STATS',

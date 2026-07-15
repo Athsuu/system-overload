@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react';
 import { isDevInvincible } from './devActions';
+import { forceStopDevAutoplayRun } from './devAutoplayGuard';
+import { DevButton } from './DevButton';
 import { DevDebugTab } from './DevDebugTab';
 import { DevMenuHeader } from './DevMenuHeader';
 import { DevNavStateTab } from './DevNavStateTab';
+import { DevModuleTreeTab } from './moduleTreeEditor/DevModuleTreeTab';
+import { DevPlaytestTab } from './DevPlaytestTab';
 import { DevProgressionTab } from './DevProgressionTab';
 import { DevStatsLabTab } from './DevStatsLabTab';
-
-type DevTabId = 'nav' | 'stats' | 'progression' | 'debug';
-
-const DEV_TABS: { id: DevTabId; label: string }[] = [
-  { id: 'nav', label: 'Nav & État' },
-  { id: 'stats', label: 'Labo Stats' },
-  { id: 'progression', label: 'Progression' },
-  { id: 'debug', label: 'Debug' },
-];
+import { DEV_TABS, type DevTabId } from './devTabTypes';
+import { DevTabBar } from './devUi';
 
 export function DevMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +19,11 @@ export function DevMenu() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'x' && event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+        forceStopDevAutoplayRun();
+        return;
+      }
       if (event.key === '`' || (event.key === 'd' && event.ctrlKey && event.shiftKey)) {
         event.preventDefault();
         setIsOpen((open) => !open);
@@ -50,43 +52,31 @@ export function DevMenu() {
             <span className="text-[14px] font-bold tracking-widest text-amber-400 uppercase">
               Menu Dev
             </span>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="text-xs text-white/40 hover:text-white/70"
-            >
-              Fermer
-            </button>
+            <DevButton onClick={() => setIsOpen(false)}>Fermer</DevButton>
           </div>
 
-          <DevMenuHeader invincible={invincible} onInvincibleChange={setInvincible} />
+          <DevMenuHeader
+            invincible={invincible}
+            measureFps={isOpen}
+            onInvincibleChange={setInvincible}
+          />
 
-          <div className="flex shrink-0 gap-1 border-b border-white/8 px-3 pt-2">
-            {DEV_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`rounded-t-lg px-3 py-1.5 text-[13px] font-medium tracking-wide uppercase transition ${
-                  activeTab === tab.id
-                    ? 'border border-b-0 border-amber-500/30 bg-amber-500/10 text-amber-300'
-                    : 'text-white/40 hover:text-white/70'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <DevTabBar tabs={DEV_TABS} activeTab={activeTab} onSelect={setActiveTab} />
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+          <div className="so-dev-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
             {activeTab === 'nav' && <DevNavStateTab />}
             {activeTab === 'stats' && <DevStatsLabTab />}
             {activeTab === 'progression' && <DevProgressionTab />}
+            {activeTab === 'playtest' && <DevPlaytestTab />}
+            {activeTab === 'moduletree' && <DevModuleTreeTab />}
             {activeTab === 'debug' && <DevDebugTab onCloseMenu={() => setIsOpen(false)} />}
           </div>
 
           <div className="shrink-0 border-t border-white/8 px-4 py-2">
-            <p className="text-[13px] text-white/30">Raccourci : ` ou Ctrl+Shift+D</p>
+            <p className="text-[13px] leading-relaxed text-white/35">
+              Raccourcis : <span className="text-white/50">`</span> ou Ctrl+Shift+D · arrêt robot
+              Ctrl+Shift+X
+            </p>
           </div>
         </div>
       )}

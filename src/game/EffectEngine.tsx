@@ -2,7 +2,7 @@ import { useTick } from '@pixi/react';
 import { Container, Graphics } from 'pixi.js';
 import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
-import { getEnemyHexRadius } from './enemyClass';
+import { getEnemyHexRadius } from './encounter';
 import {
   drawCorruptDeathEffect,
   drawCorruptSpawnFlash,
@@ -24,7 +24,7 @@ interface EffectEngineProps {
 function drawPurgeHit(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = (1 - progress) * 0.85;
-  const baseRadius = getEnemyHexRadius(effect.enemyClass);
+  const baseRadius = getEnemyHexRadius(effect.isBossEncounter);
   const ringRadius = baseRadius * (0.92 + progress * 0.35);
 
   drawFlatTopHexStroke(

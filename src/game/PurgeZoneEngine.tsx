@@ -22,14 +22,13 @@ import {
   tickPurgeVisualShake,
   triggerPurgeVisualShake,
 } from './purgeZone';
-import { getRunConfig, resolvePurgeHitDamage } from './runConfig';
+import { getRunConfig } from './runConfig';
 import {
   getPurgeSplashRadius,
   resolvePurgeSplashDamage,
 } from './moduleEffects';
 import { getAnchorMultiplier } from './anchorSupercharge';
 import { scaleDeltaMs } from './runTimeScale';
-import { BOSS_WAVE_INDEX } from './waveScaling';
 import type { LootPickup } from './loot';
 import type { DissipationNode } from './types';
 
@@ -112,7 +111,6 @@ export function PurgeZoneEngine({
       nodes: DissipationNode[],
       targets: DissipationNode[],
       baseDamage: number,
-      eliteBreakerLevel: number,
       splashLevel: number,
       purgeRadius: number,
       purgeX: number,
@@ -122,7 +120,6 @@ export function PurgeZoneEngine({
       intervalMs: number,
       criticalChance: number,
       criticalMultiplier: number,
-      eliteBreakerAnchorMultiplier: number,
       splashAnchorMultiplier: number,
     ) => {
       let kills = 0;
@@ -136,14 +133,14 @@ export function PurgeZoneEngine({
 
         node.hp -= crit.damage;
         node.flashTimer = FLASH_DURATION_MS;
-        pushPurgeHit(effects, node.x, node.y, node.waveIndex, node.enemyClass);
+        pushPurgeHit(effects, node.x, node.y, node.waveIndex, node.isBossEncounter);
         hitCount += 1;
 
         emitDamageApplied({
           x: node.x,
           y: node.y,
           waveIndex: node.waveIndex,
-          enemyClass: node.enemyClass,
+          isBossEncounter: node.isBossEncounter,
           damage: crit.damage,
           isCritical: crit.isCritical,
         });
@@ -156,23 +153,16 @@ export function PurgeZoneEngine({
         if (node.hp > 0) return;
 
         kills += 1;
-        if (node.enemyClass === 'elite') {
-          const isBoss = node.waveIndex >= BOSS_WAVE_INDEX;
-          triggerScreenShake(screenShakeRef.current, isBoss ? 'bossDeath' : 'eliteDeath');
+        if (node.isBossEncounter) {
+          triggerScreenShake(screenShakeRef.current, 'bossDeath');
         }
         handleEnemyKill(node, pickups);
-        pushDeathEffect(effects, node.x, node.y, node.waveIndex, node.enemyClass);
+        pushDeathEffect(effects, node.x, node.y, node.waveIndex, node.isBossEncounter);
         nodes.splice(index, 1);
       };
 
       for (const node of targets) {
-        const damage = resolvePurgeHitDamage(
-          baseDamage,
-          node.enemyClass,
-          eliteBreakerLevel,
-          eliteBreakerAnchorMultiplier,
-        );
-        applyDamage(node, damage);
+        applyDamage(node, baseDamage);
       }
 
       const hadMainPurgeHit = hitCount > 0;
@@ -241,9 +231,7 @@ export function PurgeZoneEngine({
 
       const store = useGameStore.getState();
       const config = getRunConfig(store.upgrades);
-      const eliteBreakerLevel = store.upgrades.eliteBreaker;
       const splashLevel = store.upgrades.purgeSplash;
-      const eliteBreakerAnchorMultiplier = getAnchorMultiplier(store.anchoredNodes, 'eliteBreaker');
       const splashAnchorMultiplier = getAnchorMultiplier(store.anchoredNodes, 'purgeSplash');
       const cadenceMult = overclockRef.current.active ? OVERCLOCK_CADENCE_MULT : 1;
       const intervalMs = config.purgeIntervalMs / cadenceMult;
@@ -263,7 +251,6 @@ export function PurgeZoneEngine({
           nodes,
           targets,
           config.purgeHitDamage,
-          eliteBreakerLevel,
           splashLevel,
           config.purgeRadius,
           pointer.x,
@@ -273,7 +260,6 @@ export function PurgeZoneEngine({
           intervalMs,
           config.criticalChance,
           config.criticalMultiplier,
-          eliteBreakerAnchorMultiplier,
           splashAnchorMultiplier,
         );
         return;
@@ -297,7 +283,6 @@ export function PurgeZoneEngine({
         nodes,
         refreshedTargets,
         config.purgeHitDamage,
-        eliteBreakerLevel,
         splashLevel,
         config.purgeRadius,
         pointer.x,
@@ -307,7 +292,6 @@ export function PurgeZoneEngine({
         intervalMs,
         config.criticalChance,
         config.criticalMultiplier,
-        eliteBreakerAnchorMultiplier,
         splashAnchorMultiplier,
       );
     },

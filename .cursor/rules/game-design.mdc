@@ -1,0 +1,58 @@
+---
+description: Game design Zero Archive — boucle run, économie, méta, contrôles, game feel
+globs: src/game/**/*,src/store/**/*,docs/lexique-jeu.md
+alwaysApply: false
+---
+
+# Game design (résumé — aligné build actuel)
+
+Référence détaillée PO : **`docs/lexique-jeu.md`** (§3 économie, §5 run, §3bis supercharge, §14 modules).
+
+## Boucle run
+
+- **Start Run** → action immédiate, pas de phase de préparation.
+- **10 vagues** + **boss** (vague 11, Breach Anchor) par **Cycle** ; scaling ennemi par cycle + vague (`enemyScaling.ts`).
+- En run : zone de purge (souris) → kills → montée **Breach/Overload** → **Breach Contained** (boss) ou **Meltdown**.
+- Transitions hub ↔ arène : feed terminal (`src/ui/transitions/`).
+
+## Contrôles
+
+- **Souris** : zone de purge (joueur = **Node-0**, pas d'opérateur externe, pas de sprite joueur).
+- **Overclock** : actif si module **Overclock** acheté (≥1) — **Espace** ou bouton HUD (`isOverclockUnlocked` → `upgrades.overclock >= 1`).
+- **Flux Drive** : actif si module **Flux Drive** acheté — toggle HUD ×2 simulation (`getRunTimeScale` ; ×3 si Flux Drive ancré ON).
+
+## Économie & méta (hub)
+
+| Élément | Comportement actuel |
+|---------|---------------------|
+| **Hex Shards** | Drop au sol (`src/game/loot/`), collecte zone de purge → crédit **coffre** (`bankShards`) |
+| **Module tree** | 17 modules, achat en Éclats hex, révélation au 1er rang parent |
+| **Anchor Fragments** | +1 tous les **3 cycles réussis** — sert au **Hardware Supercharge** (pas d'achat de modules) |
+| **Hardware Supercharge** | 1 Fragment → ancrer module possédé ; ON = ×2 effet module (+25 % heat/passif **par** module ancré actif) ; exceptions Overclock / Flux Drive (lexique §3bis) |
+| **Cycles** | Progression hub par cycle ; cycle N+1 après clear du cycle N |
+| **Recompile** (prestige) | Débloqué après **clear Cycle 3** ; hard reset (modules, éclats, ancres, cycles) → **Seed Fragments** + **Recompile Depth** (×1.08/run profondeur) |
+| **Seed Protocols** | Écran hub (`SEED_PROTOCOLS`) — 5 **Core Protocols** permanents (Fragments de Graine) |
+
+## Ressenti
+
+Nerveux, terminal en surcharge — pas fantasy biologique.
+
+## Game feel (ajustements numériques)
+
+Quand le PO demande « +X % » ou « -X % » :
+- **Calculer le résultat** et écrire la **valeur finale** dans les constantes.
+- **Ne pas** laisser de multiplicateur interphelin (`* 1.35`, etc.) sauf demande explicite PO.
+- Les formules runtime liées aux upgrades / cycles / prestige restent autorisées.
+
+## Nouveau module (rappel)
+
+Pipeline **`docs/lexique-jeu.md` §14** — catalogue, arbre, effets (`moduleEffects.ts`), i18n, tooltips, lexique.
+`purchaseUpgrade` est générique : ne pas patcher `useGameStore` par module.
+
+## Placeholders arbre
+
+Cases **P01/P02** et éditeur dev : brouillon / plan (`dev/moduleTreeEditor/`) — visibles joueur seulement quand promus dans `moduleTree.ts` (voir `architecture.mdc`).
+
+## Lore / mécaniques interdits (sans demande PO)
+
+Heart/Cœur, sprite joueur visible, gardien externe, redirection de flux, **ancienne** monnaie/mechanic **Cycles** (TFLOPS), draft entre vagues, Flux Bolts, auto-fire.

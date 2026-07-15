@@ -1,6 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
-import { getEnemyHexRadius } from './enemyClass';
+import { getEnemyHexRadius } from './encounter';
 import type { DissipationNode } from './types';
 
 const SHAKE_AMPLITUDE_PX = 9.5;
@@ -68,7 +68,7 @@ export function isEnemyInPurgeZone(
   purgeY: number,
   purgeRadius: number,
 ): boolean {
-  const enemyR = getEnemyHexRadius(node.enemyClass);
+  const enemyR = getEnemyHexRadius(node.isBossEncounter);
   const dx = node.x - purgeX;
   const dy = node.y - purgeY;
   return Math.hypot(dx, dy) <= purgeRadius + enemyR;
@@ -82,7 +82,7 @@ export function isEnemyInSplashRing(
   splashRadius: number,
 ): boolean {
   if (isEnemyInPurgeZone(node, purgeX, purgeY, purgeRadius)) return false;
-  const enemyR = getEnemyHexRadius(node.enemyClass);
+  const enemyR = getEnemyHexRadius(node.isBossEncounter);
   const dx = node.x - purgeX;
   const dy = node.y - purgeY;
   return Math.hypot(dx, dy) <= splashRadius + enemyR;

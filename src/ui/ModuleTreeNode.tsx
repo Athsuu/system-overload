@@ -19,6 +19,8 @@ interface ModuleTreeNodeProps {
   isSelected: boolean;
   isRoot?: boolean;
   isUncapped?: boolean;
+  isEditorParent?: boolean;
+  onEditorPickParent?: (parentId: UpgradeId) => void;
   onSelect: () => void;
 }
 
@@ -32,12 +34,14 @@ export function ModuleTreeNode({
   isSelected,
   isRoot = false,
   isUncapped = false,
+  isEditorParent = false,
+  onEditorPickParent,
   onSelect,
 }: ModuleTreeNodeProps) {
   const radius = isRoot ? getNodeHexRadius('node0Boot') : NODE_RADIUS;
   const visual = isRoot
-    ? getRootNodeVisualState(isSelected, level)
-    : getNodeVisualState(state, isSelected, level);
+    ? getRootNodeVisualState(isSelected || isEditorParent, level)
+    : getNodeVisualState(state, isSelected || isEditorParent, level);
   const isLocked = state === 'locked';
   const isReserved = state === 'reserved';
 
@@ -50,10 +54,14 @@ export function ModuleTreeNode({
   return (
     <g
       data-module-node
-      className={isSelected ? 'so-module-tree-node--active' : undefined}
-      style={{ cursor: 'pointer', opacity: visual.opacity }}
+      className={isSelected || isEditorParent ? 'so-module-tree-node--active' : undefined}
+      style={{ cursor: onEditorPickParent ? 'crosshair' : 'pointer', opacity: visual.opacity }}
       onPointerDown={(event) => {
         event.stopPropagation();
+        if (onEditorPickParent) {
+          onEditorPickParent(id);
+          return;
+        }
         if (isLocked) {
           triggerSfx('nodeSelect');
           onSelect();

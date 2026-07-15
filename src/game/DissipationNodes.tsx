@@ -3,9 +3,9 @@ import { Container, Graphics } from 'pixi.js';
 import { useCallback, useLayoutEffect, useRef, type MutableRefObject, type RefObject } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
-import { isDevInvincible, isDevShowEnemyHpBars } from '../dev/devFlags';
+import { isDevInvincible, isDevShowEnemyDebugOverlay } from '../dev/devFlags';
 import { drawCorruptedProcess, tickCorruptProcessAnim } from './corruptedProcessVisual';
-import { drawEnemyHpBar } from './enemyHpBar';
+import { drawEnemyHpBar, EnemyDebugOverlay } from './enemyDebugOverlay';
 import { tickEnemyMovement } from './enemyMovement';
 import { pushFlowEscapeFlash, type GameEffect } from './effects';
 import {
@@ -35,6 +35,7 @@ export function DissipationNodes({
   const { app } = useApplication();
   const graphicsRef = useRef<Graphics | null>(null);
   const containerRef = useRef<Container | null>(null);
+  const debugOverlayRef = useRef<EnemyDebugOverlay | null>(null);
   const aberrationFilterRef = useRef(createChromaticAberrationFilter());
 
   useLayoutEffect(() => {
@@ -44,8 +45,11 @@ export function DissipationNodes({
     const graphics = new Graphics();
     container.addChild(graphics);
     graphicsRef.current = graphics;
+    debugOverlayRef.current = new EnemyDebugOverlay(container);
 
     return () => {
+      debugOverlayRef.current?.destroy();
+      debugOverlayRef.current = null;
       container.removeChild(graphics);
       graphics.destroy();
       graphicsRef.current = null;
@@ -57,6 +61,7 @@ export function DissipationNodes({
       const graphics = graphicsRef.current;
       const nodes = nodesRef.current;
       const container = containerRef.current;
+      const debugOverlay = debugOverlayRef.current;
       if (!graphics || !nodes) return;
 
       if (isPlaying && app?.renderer && useGameStore.getState().gameState === 'PLAYING') {
@@ -81,13 +86,14 @@ export function DissipationNodes({
       }
 
       graphics.clear();
-      const showHpBars = isDevShowEnemyHpBars();
+      const showDebugOverlay = isDevShowEnemyDebugOverlay();
       for (const node of nodes) {
         drawCorruptedProcess(graphics, node);
-        if (showHpBars) {
+        if (showDebugOverlay) {
           drawEnemyHpBar(graphics, node);
         }
       }
+      debugOverlay?.sync(nodes, showDebugOverlay);
     },
     [app, chromaticAberrationRef, effectsRef, isPlaying, nodesRef],
   );

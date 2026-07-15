@@ -998,3 +998,27 @@ g.so-module-tree-node--active {
     opacity: 0;
   }
 }
+
+/* Menu dev — scrollbars discrètes (DA terminal sombre) */
+.so-dev-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(197, 160, 89, 0.35) transparent;
+}
+
+.so-dev-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.so-dev-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.so-dev-scroll::-webkit-scrollbar-thumb {
+  background: rgba(197, 160, 89, 0.28);
+  border-radius: 999px;
+}
+
+.so-dev-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(197, 160, 89, 0.45);
+}

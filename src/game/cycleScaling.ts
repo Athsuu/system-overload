@@ -46,3 +46,10 @@ export function getCycleHeatGrowthMult(cycle: number): number {
   const safeCycle = clampCycleIndex(cycle);
   return CYCLE_HEAT_GROWTH_PER_LEVEL ** (safeCycle - 1);
 }
+
+/** @deprecated Alias — prefer getCycleHeatGrowthMult */
+export function getCycleHeatMult(cycle: number): number {
+  return getCycleHeatGrowthMult(cycle);
+}
+
+export { REGULAR_WAVES_PER_CYCLE };

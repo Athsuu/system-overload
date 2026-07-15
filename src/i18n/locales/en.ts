@@ -103,10 +103,6 @@ export const EN_STRINGS: GameStrings = {
     upgradesTitle: 'Module Enhancements',
     upgradesSubtitle: LORE.moduleTree.betweenRuns,
   },
-  moduleTree: {
-    placeholderTitle: 'Reserved module',
-    placeholderBody: 'Design slot. Replace this node in a future update.',
-  },
   mainMenu: {
     newGame: 'New Game',
     continue: 'Continue',
@@ -229,9 +225,9 @@ export const EN_STRINGS: GameStrings = {
       name: 'Shard Salvage',
       description: 'Extract more Hex Shards from every corrupted process you purge',
     },
-    shardYield: {
-      name: 'Extraction Yield',
-      description: 'Increase the base Hex Shard yield from every kill',
+    victoryShardBonus: {
+      name: 'Victory Bonus',
+      description: 'Earn bonus Hex Shards when you contain the Breach Anchor',
     },
     shardMagnet: {
       name: 'Shard Magnet',
@@ -240,10 +236,6 @@ export const EN_STRINGS: GameStrings = {
     purgeStrike: {
       name: 'Purge Strike',
       description: 'Increase purge hit damage against corrupted processes',
-    },
-    eliteBreaker: {
-      name: 'Elite Breaker',
-      description: 'Hit heavy corrupted processes harder with your purge zone',
     },
     purgeCadence: {
       name: 'Purge Cadence',
@@ -281,6 +273,18 @@ export const EN_STRINGS: GameStrings = {
       name: 'Flux Drive',
       description: 'Unlocks the Flux Drive toggle: doubles simulation speed inside quarantine',
     },
+    breachDissipation: {
+      name: 'Breach Dissipation',
+      description: 'Bleed off Breach pressure over time during a run. Works in every cycle',
+    },
+    leakSealing: {
+      name: 'Leak Seal',
+      description: 'Reduce Breach spikes when corrupted processes slip through. Works in every cycle',
+    },
+    purgeAmplifier: {
+      name: 'Purge Amplifier',
+      description: 'Boost purge hit damage against all corrupted processes. Works in every cycle',
+    },
   },
   branches: {
     degats: 'Damage',
@@ -290,10 +294,10 @@ export const EN_STRINGS: GameStrings = {
   tooltipStats: {
     purgeHitDamage: 'Purge hit damage',
     purgeDamageBonus: 'Purge damage bonus',
-    elitePurgeDamageBonus: 'Heavy process bonus',
-    elitePurgeHitDamage: 'Purge hit vs heavy',
     shardBonusPerKill: 'Hex Shards / kill',
     shardYieldBonus: 'Shard yield bonus',
+    victoryShardBonus: 'Victory bonus',
+    victoryShardTotal: 'Victory payout total',
     shardPickupRadius: 'Shard pickup radius',
     shardPickupReachBonus: 'Shard attraction radius',
     purgeCadence: 'Purge cadence',
@@ -310,6 +314,10 @@ export const EN_STRINGS: GameStrings = {
     overclockDuration: 'Overclock duration',
     overclockCooldown: 'Overclock cooldown',
     fluxDriveSpeed: 'Simulation speed',
+    breachDissipationPerSec: 'Breach drain / sec',
+    leakSealingReduction: 'Leak penalty reduction',
+    leakPenaltyExample: 'Leak penalty (example wave)',
+    purgeAmplifierBonus: 'Purge damage bonus',
   },
   playerStats: {
     title: 'NODE-0 // STATS',

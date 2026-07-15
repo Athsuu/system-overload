@@ -9,7 +9,7 @@ import type { LootDrop } from './types';
 export function getEnemyLootDrops(node: DissipationNode): LootDrop[] {
   const store = useGameStore.getState();
   const config = getRunConfig(store.upgrades);
-  const shardAmount = getShardReward(config, node.waveIndex, node.enemyClass);
+  const shardAmount = getShardReward(config, node.waveIndex);
 
   return expandHexShardDrops(shardAmount);
 }

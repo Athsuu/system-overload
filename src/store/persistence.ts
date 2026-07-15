@@ -5,6 +5,7 @@ import {
   sanitizeCyclesCleared,
   clampCycleIndex,
 } from './cycleTypes';
+import { sanitizeBestWaveByCycle } from './waveProgress';
 import {
   DEFAULT_UPGRADES,
   UPGRADE_CATALOG,
@@ -32,10 +33,14 @@ export interface SaveData {
   cyclesCleared: number[];
   cyclesSinceLastAnchor: number;
   anchoredNodes: AnchoredNodes;
+  /** Meilleure vague atteinte par cycle — persisté pour équilibrage / snapshot dev. */
+  bestWaveByCycle: Record<number, number>;
   economyV2?: boolean;
   moduleTreeV3?: boolean;
   economyV4?: boolean;
   moduleTreeV4?: boolean;
+  /** Migration scaling ennemi continu + retrait modules elite. */
+  enemyScalingV1?: boolean;
 }
 
 interface LegacySaveData {
@@ -53,6 +58,7 @@ interface LegacySaveData {
   cyclesCleared?: unknown;
   cyclesSinceLastAnchor?: number;
   anchoredNodes?: Partial<Record<string, boolean>>;
+  bestWaveByCycle?: unknown;
   economyV2?: boolean;
   moduleTreeV3?: boolean;
   /** @deprecated legacy key — migrated to moduleTreeV3 */
@@ -61,6 +67,7 @@ interface LegacySaveData {
   moduleTreeV4?: boolean;
   /** @deprecated legacy key — migrated to moduleTreeV4 */
   skillTreeV4?: boolean;
+  enemyScalingV1?: boolean;
 }
 
 function sanitizeAnchoredNodes(raw: LegacySaveData['anchoredNodes']): AnchoredNodes {
@@ -136,6 +143,51 @@ function ensureNode0BootBaseline(upgrades: UpgradeLevels): UpgradeLevels {
   return { ...upgrades, node0Boot: 1 };
 }
 
+type LegacyEliteUpgradeId = 'eliteBreaker' | 'eliteShardScavenger';
+
+/** Coûts historiques au moment du retrait (remboursement migration). */
+const LEGACY_ELITE_MODULE_COSTS: Record<LegacyEliteUpgradeId, readonly number[]> = {
+  eliteBreaker: [150, 250, 400],
+  eliteShardScavenger: [130, 220, 350],
+};
+
+function sumLegacyUpgradePurchaseCosts(id: LegacyEliteUpgradeId, level: number): number {
+  const costs = LEGACY_ELITE_MODULE_COSTS[id];
+  const safeLevel = Math.max(0, Math.floor(level));
+  let total = 0;
+  for (let index = 0; index < Math.min(safeLevel, costs.length); index++) {
+    total += costs[index] ?? 0;
+  }
+  return total;
+}
+
+function migrateRemovedEliteModules(
+  parsed: LegacySaveData,
+  bankShards: number,
+): { bankShards: number; needsMigration: boolean } {
+  if (parsed.enemyScalingV1) {
+    return { bankShards, needsMigration: false };
+  }
+
+  const raw = parsed.upgrades as Partial<Record<LegacyEliteUpgradeId, unknown>> | undefined;
+  if (!raw) {
+    return { bankShards, needsMigration: true };
+  }
+
+  let refund = 0;
+  for (const id of ['eliteBreaker', 'eliteShardScavenger'] as const) {
+    const level = raw[id];
+    if (typeof level === 'number' && Number.isFinite(level) && level > 0) {
+      refund += sumLegacyUpgradePurchaseCosts(id, level);
+    }
+  }
+
+  return {
+    bankShards: bankShards + refund,
+    needsMigration: true,
+  };
+}
+
 export function loadSave(): SaveData | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
@@ -155,6 +207,8 @@ export function loadSave(): SaveData | null {
       parsed.moduleTreeV4 === undefined;
 
     let bankShards = migrateEconomyV2(rawBankShards, parsed);
+    const eliteMigration = migrateRemovedEliteModules(parsed, bankShards);
+    bankShards = eliteMigration.bankShards;
     let upgrades = migrateModuleTreeV3(parsed);
     upgrades = migrateLegacyNode0Boot(upgrades, parsed.upgrades);
     if (needsV4Migration) {
@@ -182,6 +236,7 @@ export function loadSave(): SaveData | null {
         ? Math.max(0, Math.floor(parsed.cyclesSinceLastAnchor))
         : 0;
     const anchoredNodes = sanitizeAnchoredNodes(parsed.anchoredNodes);
+    const bestWaveByCycle = sanitizeBestWaveByCycle(parsed.bestWaveByCycle);
 
     const recompileDepth = Math.max(
       0,
@@ -207,10 +262,12 @@ export function loadSave(): SaveData | null {
       cyclesCleared,
       cyclesSinceLastAnchor,
       anchoredNodes,
+      bestWaveByCycle,
       economyV2: true,
       moduleTreeV3: true,
       economyV4: true,
       moduleTreeV4: true,
+      enemyScalingV1: true,
     };
 
     if (
@@ -218,6 +275,7 @@ export function loadSave(): SaveData | null {
       needsModuleTreeMigration ||
       needsV4Migration ||
       needsKeyRename ||
+      eliteMigration.needsMigration ||
       upgradesBeforeBaseline !== upgrades
     ) {
       saveGame(saveData);
@@ -238,6 +296,7 @@ export function saveGame(data: SaveData): void {
       moduleTreeV3: true,
       economyV4: true,
       moduleTreeV4: true,
+      enemyScalingV1: true,
     }),
   );
 }

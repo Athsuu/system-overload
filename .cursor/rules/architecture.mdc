@@ -1,0 +1,90 @@
+---
+description: Stack, perf, carte projet, sous-dossiers domaine, module tree pipeline
+globs: src/**/*
+alwaysApply: false
+---
+
+# Stack & architecture (CRITIQUE)
+
+- **TypeScript** strict · **React + Vite** (UI) · **Zustand** (métadonnées basse fréquence) · **Tailwind** · **PixiJS** `@pixi/react` (game 60+ FPS).
+- **Pas de nouvelle lib npm** sans validation PO.
+
+## Séparation stricte
+
+1. **UI** (`src/ui/`) — menus, HUD. React, basse fréquence.
+2. **Game** (`src/game/`) — positions, collisions, particules. PixiJS + TS pur, **aucun re-rendu React** dans la boucle.
+
+**Performance — interdit** :
+- `useState` / Zustand pour coordonnées, rotations, vélocités frame par frame.
+- Déplacements 60 FPS : `useTick`, `useRef`, objets mutables uniquement.
+
+**Interdit** : `game/` qui importe `ui/`.
+
+---
+
+# Carte du projet
+
+| Zone | Dossier | Rôle |
+|------|---------|------|
+| Arène | `src/game/` | Purge, ennemis, vagues — 60 FPS PixiJS |
+| Interfaces | `src/ui/` | Menus, HUD, module tree — React + Tailwind |
+| Progression | `src/store/` | Shards, breach, upgrades, sauvegarde — Zustand |
+| Thème | `src/theme/` | Tokens visuels |
+| Tutoriels | `src/tutorial/` | Catalogue, spotlight, persistance |
+| Audio | `src/audio/` | Sons, mix |
+| Dev | `src/dev/` | Menu debug (dev only) |
+| Entrée | `src/App.tsx` | Assemblage écrans |
+
+**Fichiers clés** : `src/game/constants.ts`, `src/game/moduleEffects.ts`, `src/store/useGameStore.ts`, `src/store/upgradeCatalog.ts`, `src/store/moduleTree.ts`, `src/tutorial/tutorialCatalog.ts`.
+
+---
+
+# Organisation dossiers (incrémental — obligatoire)
+
+- **Nouvelle feature** → fichier dans le **sous-dossier domaine** adapté (ex. `ui/module-tree/`, `game/enemies/`, `ui/arch/`).
+- **Existant à plat** → ne **pas** déplacer en masse ; déplacer **uniquement** quand on touche cette zone **dans la même tâche**.
+- **Interdit** : refactor d'architecture « pour ranger » sans demande PO explicite.
+
+Sous-dossiers déjà en place : `game/loot/`, `game/overclock/`, `game/juice/`, `dev/devUi/`, `dev/moduleTreeEditor/`, `ui/transitions/`.
+
+## Sous-dossiers cibles (nouveaux fichiers)
+
+```
+src/ui/
+  screens/       MainMenu, ModuleTreeScreen, SeedProtocols, RunEnd…
+  hud/           HUD, Pause, OverclockButton…
+  module-tree/   ModuleTree*, hooks pan/zoom, theme arbre
+  arch/          Arch*, TutorialCoach, overlays tutoriel
+  shared/        popovers, boutons hex, formatNumber…
+
+src/game/
+  loot/          (existant)
+  overclock/     (existant)
+  juice/         (existant)
+  enemies/       movement, combat, scaling, visuals
+  waves/         WaveEngine, waveConfig, encounter
+  run/           runConfig, cycleScaling, runElapsed
+```
+
+---
+
+# Module tree (4 zones — ne pas fusionner)
+
+- **Données** : `src/store/moduleTree.ts`, `moduleTreeHexGrid.ts`
+- **Rendu joueur** : `src/ui/` (ou `ui/module-tree/`)
+- **Placeholders dev** : `src/dev/moduleTreeEditor/`
+- **Effets gameplay** : `src/game/moduleEffects.ts` (`MODULE_EFFECT_REGISTRY` + `compute*`)
+
+Nouveau module jouable → **`docs/lexique-jeu.md` §14** dans la même tâche. Inventaire : `MODULE_ADDITION_PIPELINE` dans `moduleEffects.ts`. Ne pas toucher `useGameStore` par module.
+
+## Imports
+
+- `ui/` ne doit pas dépendre de `dev/` pour du code joueur ; couplage dev derrière `import.meta.env.DEV` ou adapters fins.
+
+---
+
+# Méthodologie code
+
+- Changements **minimalistes** ; pas de refactor non demandé.
+- **Ne pas sur-ingénierer** : d'abord catalogue/constante/token existant (ex. `tutorialCatalog.ts`) avant hooks/flags transversaux.
+- Commentaires seulement pour maths/géométrie complexe.

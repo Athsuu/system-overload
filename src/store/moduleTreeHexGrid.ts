@@ -14,6 +14,7 @@ export const HEX_GRID_ORIGIN = NODE0_HUB_POSITION;
 
 /** Hex rings drawn around Node-0 when the dev grid is visible. */
 export const HEX_GRID_RING_RADIUS = 5;
+export const HEX_GRID_EDITOR_RING_RADIUS = 8;
 
 export interface AxialCoord {
   q: number;
@@ -173,23 +174,99 @@ export function getNearestModulePathLabel(q: number, r: number): string | null {
   return `${best.id} → ${best.steps.map((step) => DIRECTION_LABEL_FR[step]).join(' → ')}`;
 }
 
+export function formatPathFromParentAxial(
+  parentAxial: AxialCoord,
+  parentLabel: string,
+  target: AxialCoord,
+): string | null {
+  const steps = findPathSteps(parentAxial, target);
+  if (!steps || steps.length === 0) return null;
+  return `${parentLabel} → ${steps.map((step) => DIRECTION_LABEL_FR[step]).join(' → ')}`;
+}
+
+export function getDraftAtAxial(
+  q: number,
+  r: number,
+  drafts: ReadonlyArray<{ id: string; q: number; r: number }>,
+): string | null {
+  for (const draft of drafts) {
+    if (draft.q === q && draft.r === r) return draft.id;
+  }
+  return null;
+}
+
+/** Fast occupancy lookup for hex grid rendering (modules + drafts + Node-0). */
+export interface HexGridOccupancy {
+  occupied: Set<string>;
+  draftCells: Set<string>;
+}
+
+export function buildHexGridOccupancy(
+  drafts: ReadonlyArray<{ q: number; r: number }> = [],
+): HexGridOccupancy {
+  const occupied = new Set<string>([axialKey(0, 0)]);
+  const draftCells = new Set<string>();
+
+  for (const axial of MODULE_AXIAL_BY_ID.values()) {
+    occupied.add(axialKey(axial.q, axial.r));
+  }
+  for (const draft of drafts) {
+    const key = axialKey(draft.q, draft.r);
+    occupied.add(key);
+    draftCells.add(key);
+  }
+
+  return { occupied, draftCells };
+}
+
 export interface HexGridHoverInfo {
   q: number;
   r: number;
   coordLabel: string;
   pathFromNode0: string;
   pathFromNearestModule: string | null;
+  pathFromSelectedParent: string | null;
   occupantId: UpgradeId | null;
+  draftOccupantId: string | null;
+  isOccupied: boolean;
+  isOrigin: boolean;
 }
 
-export function getHexGridHoverInfo(q: number, r: number): HexGridHoverInfo {
+export function getHexGridHoverInfo(
+  q: number,
+  r: number,
+  options?: {
+    drafts?: ReadonlyArray<{ id: string; q: number; r: number }>;
+    selectedParentId?: string | null;
+    parentAxial?: AxialCoord | null;
+  },
+): HexGridHoverInfo {
+  const drafts = options?.drafts ?? [];
+  const draftOccupantId = getDraftAtAxial(q, r, drafts);
+  const occupantId = getModuleAtAxial(q, r);
+  const isOrigin = q === 0 && r === 0;
+  const isOccupied = isOrigin || occupantId !== null || draftOccupantId !== null;
+
+  let pathFromSelectedParent: string | null = null;
+  if (options?.selectedParentId && options.parentAxial) {
+    pathFromSelectedParent = formatPathFromParentAxial(
+      options.parentAxial,
+      options.selectedParentId,
+      { q, r },
+    );
+  }
+
   return {
     q,
     r,
     coordLabel: formatHexCoord(q, r),
     pathFromNode0: formatPathFromNode0(q, r),
     pathFromNearestModule: getNearestModulePathLabel(q, r),
-    occupantId: getModuleAtAxial(q, r),
+    pathFromSelectedParent,
+    occupantId,
+    draftOccupantId,
+    isOccupied,
+    isOrigin,
   };
 }
 

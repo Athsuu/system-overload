@@ -39,7 +39,11 @@ Quand tu demandes une modification, essaie d’utiliser le **mot du lexique** + 
 | **Pause** | SYSTEM HALT | Jeu figé, stats run, Reprendre / Abandonner | `PAUSED` |
 | **Fin de run** | Breach Contained / Meltdown | Victoire ou défaite, éclats gagnés | `RUN_END` |
 | **Réglages** | System Config / Settings | Volume, langue, retour menu | `SettingsPanel` · `SettingsOverlay` |
-| **Menu dev** | DEV | Outils debug (développement seulement) | `DevMenu` |
+| **Menu dev** | DEV | Outils debug (dev local). Grille 6 onglets : Nav (vagues, breach, écrans), Stats (overrides run), Progression (monnaie, modules, snapshot), Robot (playtest auto), Arbre (éditeur placeholders), Debug (visuels, tuto). Raccourcis : `` ` `` / Ctrl+Shift+D, arrêt robot Ctrl+Shift+X | `DevMenu` |
+| **Snapshot équilibrage** | balance snapshot | Menu dev → Progression (ou Robot après run) : copie progression, stats et pression ennemie pour Cursor |
+| **Record vague max** | best wave by cycle | Meilleure vague atteinte **par cycle**, sauvegardée automatiquement dans la save (persiste entre sessions, survit au Recompile) ; inclus dans le snapshot équilibrage |
+| **Robot playtest** | autoplay bot | Menu dev → Robot : joue une run à la place du joueur (~780 px/s) ; propose le snapshot à la fin |
+| **Éditeur arbre modules** | module tree editor | Menu dev → Arbre : clic parent, case libre ou lien multi-parents, bouton ×, export copier-coller. **Désactiver éditeur** coupe la grille hex, la bannière et les placeholders à l'écran (sauf si la grille était déjà allumée depuis Debug avant activation) |
 
 **Flux habituel :** Menu titre → Hub → Start Run → Arène → Fin de run → Hub (ou module tree upgrades).
 
@@ -108,26 +112,28 @@ Risk/Reward permanent sur les modules déjà achetés (Éclats hex) — voir `sr
 
 ## 4. Branches du module tree
 
-Arbre radial v4 — **13 modules** actifs :
+Arbre radial — **17 modules** actifs :
 
 | Mot à utiliser (FR) | Branche (agent) | Thème |
 |---------------------|-----------------|--------|
-| **Dégâts** | `degats` | **Purge Strike**, **Briseur d'élite**, **Purge Cadence**, **Purge Reach**, **Éclat de purge**, **Overclock** |
-| **Thermique** | `thermique` | **Node-0 Boot**, **Récupération d'éclats**, **Rendement d'extraction**, **Aimant d'éclats**, **Thread Coolant**, **Kill Vent**, **Meltdown Threshold**, **Flux Drive** |
+| **Dégâts** | `degats` | **Purge Strike**, **Amplificateur de purge**, **Purge Cadence**, **Purge Reach**, **Éclat de purge**, **Overclock** |
+| **Thermique** | `thermique` | **Node-0 Boot**, **Récupération d'éclats**, **Prime victoire**, **Aimant d'éclats**, **Thread Coolant**, **Dissipation Breach**, **Kill Vent**, **Joint d'étanchéité**, **Meltdown Threshold**, **Flux Drive** |
 | **Flux** (icône hub) | `flux` | Icône **Node-0 Boot** et **Flux Drive** |
 
 | Module (FR) | Terme UI (EN) | Position hex | Parent | Effet |
 |-------------|---------------|--------------|--------|-------|
-| **Récupération d'éclats** | Shard Salvage | (−1, 0) | Node-0 Boot | ×1.18^rang composé sur le rendement d'éclats (illimité) |
-| **Rendement d'extraction** | Extraction Yield | (−2, 0) | Récupération d'éclats | +20 % / rang sur le rendement de base (5 rangs max) |
-| **Aimant d'éclats** | Shard Magnet | (−2, +1) | Récupération d'éclats | Collecte serrée au départ (20 px), aspiration dès le rang 1 ; monte jusqu'à 92 px / 200 px (rangs 0–3) |
-| **Briseur d'élite** | Elite Breaker | (0, +2) | Purge Strike | Frappe plus fort les processus lourds (élite / boss) |
-| **Éclat de purge** | Purge Splash | (+1, +2) | Portée de purge | Dégâts d'éclaboussure autour du point de purge (hors zone directe) |
-| **Injection de latence** | Latency Injection | (−1, +3) | Cadence de purge | Ralentit les processus corrompus se trouvant dans la zone de purge active (−10 % / rang, max 3 rangs) |
-| **Overclock** | Overclock | (+1, 0) | Node-0 Boot | Débloque le bouton Overclock (Espace / HUD) — **coûte 200 Éclats hex** ; Supercharge = durée active ×2 |
-| **Flux Drive** | Flux Drive | (−1, +1) | Node-0 Boot | Débloque le toggle Flux Drive (×2 vitesse de simulation) — **coûte 280 Éclats hex** ; achetable dès l’hub (prérequis Node-0 Boot actif) ; Supercharge = vitesse ×3 au lieu de ×2 |
+| **Récupération d'éclats** | Shard Salvage | (−1, 0) | Node-0 Boot | ×1.12^rang composé sur le rendement d'éclats (max 5) |
+| **Prime victoire** | Victory Bonus | (−1, −1) | Récupération d'éclats | +8 / +16 / +24 éclats bonus à Breach Contained |
+| **Aimant d'éclats** | Shard Magnet | (−2, +1) | Récupération d'éclats | QoL collecte — 55 / 100 / 175 |
+| **Amplificateur de purge** | Purge Amplifier | (0, −2) | Purge Strike (≥5) | +5 / +10 / +15 % dégâts purge |
+| **Dissipation Breach** | Breach Dissipation | (+3, −1) | Thread Coolant (≥3) | Drain Breach −0,10 / −0,20 / −0,30 par s |
+| **Joint d'étanchéité** | Leak Seal | (+3, −2) | Kill Vent (≥2) | −10 / −20 / −30 % pénalité de fuite |
+| **Éclat de purge** | Purge Splash | (+1, +2) | Portée de purge | Dégâts d'éclaboussure hors zone directe |
+| **Injection de latence** | Latency Injection | (−1, +3) | Cadence de purge | Ralentit les processus sous la zone de purge |
+| **Overclock** | Overclock | (+1, 0) | Node-0 Boot | Débloque Overclock (Espace) — 200 éclats |
+| **Flux Drive** | Flux Drive | (−1, +1) | Node-0 Boot | Toggle ×2 vitesse simulation — 280 éclats |
 
-**Retiré (ancien arbre)** : `attackSpeed`, `purgeAoe`, `shards`, `enemies`.
+**Retiré (ancien arbre)** : `attackSpeed`, `purgeAoe`, `shards`, `enemies`, placeholders design.
 
 ---
 
@@ -142,7 +148,8 @@ Arbre radial v4 — **13 modules** actifs :
 | **Overclock** | Overclock | Module actif (Espace / bouton hex HUD), boost temporaire | `overclock` · `OverclockButton` |
 | **Flux Drive** | Flux Drive | Toggle ×2 vitesse (si débloqué) | `fluxDrive` · HUD |
 | **Vagues** | Wave | Vagues d’ennemis | `WaveEngine` · `waveConfig` |
-| **Boss** / **Ancre de brèche** | Breach Anchor | Boss de fin | `wavePhase: boss` |
+| **Niveau ennemi** | Enemy level | `(cycle − 1) × 10 + vague` — monte PV, vitesse, fuite et éclats/kill en continu (boss vague 11 = ×1,35 PV) | `enemyScaling.ts` · `runConfig.ts` |
+| **Boss** / **Ancre de brèche** | Breach Anchor | Boss de fin (vague 11) — plus grand visuellement, pas de classe « élite » | `wavePhase: boss` · `encounter.ts` |
 | **Grille hex arène** |, | Fond hex pendant le combat | `ArenaHexOverlay` |
 | **Drop d’éclats** / **loot** | Loot pickup | Entité au sol après un kill (ou autre source) ; type `LootKind` (aujourd’hui `hexShard`) ; collecte par proximité zone de purge | `src/game/loot/` |
 
@@ -175,7 +182,7 @@ Bouton stats coin hub · `PlayerStatsPanel` · `getPlayerStatSheet()`.
 
 | Toujours visible (base Node-0) | Révélé si module acheté (≥ 1 rang) |
 |--------------------------------|-------------------------------------|
-| Dégâts purge, cadence, zone principale, Surcharge passive / s, seuil Meltdown | Éclat de purge (zone + dégâts), Rendement d'extraction, Évacuation de kill |
+| Dégâts purge, cadence, zone principale, Surcharge passive / s, seuil Meltdown | Éclat de purge (zone + dégâts), Récupération d'éclats, Prime victoire, Évacuation de kill |
 
 Les tooltips module tree gardent les bonus par rang ; la fiche affiche les **totaux finaux**.
 
@@ -354,20 +361,22 @@ Chaque entrée lie un `upgradeId` à des **cibles gameplay** (`runConfig.*`, `br
 | Module | Cible gameplay | Effet résumé |
 |--------|----------------|--------------|
 | Node-0 Boot | `runConfig.purgeHitDamage` | Active dégâts de base purge |
-| Récupération d'éclats | `runConfig.shardsMultiplier` | ×1.18^rang composé sur le rendement d'éclats (illimité) |
-| Rendement d'extraction | `runConfig.shardsMultiplier` | +20 % / rang sur éclats de base (max ×2) |
+| Récupération d'éclats | `runConfig.shardsMultiplier` | ×1.12^rang composé sur le rendement d'éclats (max 5) |
+| Prime victoire | `runConfig.killBonusShards` / fin de run | +8 / +16 / +24 éclats à Breach Contained (s'ajoute au flat 15) |
 | Aimant d'éclats | `loot.hexShardRadii` | Collecte / aspiration au sol |
-| Purge Strike | `runConfig.purgeHitDamage` | Hybride : +2 flat/rang puis ×1.015^rang composé (illimité) |
-| Briseur d'élite | `purge.eliteDamageBonus` | +dégâts purge vs processus lourds |
+| Purge Strike | `runConfig.purgeHitDamage` | +5 flat/rang (max 10) ; les % viennent du prestige (Boot Reinforcement, Recompile) |
 | Purge Cadence | `runConfig.purgeIntervalMs` | Purge plus rapide |
 | Purge Reach | `runConfig.purgeRadius` | Zone principale +2,5 % / rang |
 | Éclat de purge | `purge.splashRadius`, `purge.splashDamage` | Extension éclaboussure +50 / +75 / +100 % vs zone principale ; dégâts 15 / 30 / 45 % hors zone directe |
 | Injection de latence | `purge.latencySlow` | Ralentit les processus corrompus sous la zone de purge |
 | Thread Coolant | `runConfig.passiveHeatPerSec` | −0,08 / rang (plancher 1,8 / s) |
 | Kill Vent | `breach.killRelief` | −1 Overload / kill / rang (max 5) |
-| Meltdown Threshold | `breach.cap` | ×1.05^rang composé sur le cap Breach de base (illimité — remplace l'ancien flat +8/rang) |
+| Meltdown Threshold | `breach.cap` | ×1.05^rang composé sur le cap Breach de base (max 10) |
 | Overclock | `overclock.unlock` | Débloque le bouton Overclock (Espace / HUD) |
 | Flux Drive | `runConfig.timeScale` | Débloque le toggle Flux Drive (×2 vitesse de simulation) |
+| Dissipation Breach | `breach.dissipation` | Drain passif Breach −0,10 / −0,20 / −0,30 par s |
+| Joint d'étanchéité | `breach.leakReduction` | −10 / −20 / −30 % pénalité de fuite |
+| Amplificateur de purge | `runConfig.purgeHitDamage` | +5 / +10 / +15 % dégâts purge (tous cycles) |
 
 ### Système AOE purge (zone principale + dérivés)
 

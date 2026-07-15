@@ -1,5 +1,3 @@
-import type { EnemyClass } from './enemyClass';
-
 export type GameEffectKind = 'death' | 'purgeHit' | 'spawn' | 'flowEscape' | 'splashShockwave';
 
 export interface GameEffect {
@@ -7,7 +5,7 @@ export interface GameEffect {
   x: number;
   y: number;
   waveIndex: number;
-  enemyClass: EnemyClass;
+  isBossEncounter: boolean;
   elapsedMs: number;
   durationMs: number;
   rotation: number;
@@ -19,7 +17,7 @@ export interface GameEffect {
 
 export const PURGE_HIT_DURATION_MS = 220;
 export const DEATH_DURATION_MS = 250;
-export const ELITE_DEATH_DURATION_MS = 400;
+export const BOSS_DEATH_DURATION_MS = 400;
 export const SPAWN_FLASH_DURATION_MS = 200;
 export const FLOW_ESCAPE_FLASH_MS = 180;
 
@@ -34,7 +32,7 @@ export function pushPurgeHit(
   x: number,
   y: number,
   waveIndex: number,
-  enemyClass: EnemyClass,
+  isBossEncounter: boolean,
 ): void {
   effects.push(
     createEffect({
@@ -42,7 +40,7 @@ export function pushPurgeHit(
       x,
       y,
       waveIndex,
-      enemyClass,
+      isBossEncounter,
       elapsedMs: 0,
       durationMs: PURGE_HIT_DURATION_MS,
       rotation: 0,
@@ -55,7 +53,7 @@ export function pushDeathEffect(
   x: number,
   y: number,
   waveIndex: number,
-  enemyClass: EnemyClass,
+  isBossEncounter: boolean,
 ): void {
   effects.push(
     createEffect({
@@ -63,9 +61,9 @@ export function pushDeathEffect(
       x,
       y,
       waveIndex,
-      enemyClass,
+      isBossEncounter,
       elapsedMs: 0,
-      durationMs: enemyClass === 'elite' ? ELITE_DEATH_DURATION_MS : DEATH_DURATION_MS,
+      durationMs: isBossEncounter ? BOSS_DEATH_DURATION_MS : DEATH_DURATION_MS,
     }),
   );
 }
@@ -75,7 +73,7 @@ export function pushSpawnFlash(
   x: number,
   y: number,
   waveIndex: number,
-  enemyClass: EnemyClass,
+  isBossEncounter: boolean,
 ): void {
   effects.push(
     createEffect({
@@ -83,7 +81,7 @@ export function pushSpawnFlash(
       x,
       y,
       waveIndex,
-      enemyClass,
+      isBossEncounter,
       elapsedMs: 0,
       durationMs: SPAWN_FLASH_DURATION_MS,
     }),
@@ -102,7 +100,7 @@ export function pushFlowEscapeFlash(
       x,
       y,
       waveIndex,
-      enemyClass: 'normal',
+      isBossEncounter: false,
       elapsedMs: 0,
       durationMs: FLOW_ESCAPE_FLASH_MS,
     }),
@@ -123,7 +121,7 @@ export function pushSplashShockwave(
       x,
       y,
       waveIndex: 0,
-      enemyClass: 'normal',
+      isBossEncounter: false,
       elapsedMs: 0,
       durationMs,
       innerRadius,

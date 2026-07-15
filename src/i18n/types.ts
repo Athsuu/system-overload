@@ -59,10 +59,10 @@ export interface TransitionStrings {
 export interface TooltipStatLabels {
   purgeHitDamage: string;
   purgeDamageBonus: string;
-  elitePurgeDamageBonus: string;
-  elitePurgeHitDamage: string;
   shardBonusPerKill: string;
   shardYieldBonus: string;
+  victoryShardBonus: string;
+  victoryShardTotal: string;
   shardPickupRadius: string;
   shardPickupReachBonus: string;
   purgeCadence: string;
@@ -79,6 +79,10 @@ export interface TooltipStatLabels {
   overclockDuration: string;
   overclockCooldown: string;
   fluxDriveSpeed: string;
+  breachDissipationPerSec: string;
+  leakSealingReduction: string;
+  leakPenaltyExample: string;
+  purgeAmplifierBonus: string;
 }
 
 export interface TutorialStepText {
@@ -149,10 +153,6 @@ export interface GameStrings {
   hub: {
     upgradesTitle: string;
     upgradesSubtitle: string;
-  };
-  moduleTree: {
-    placeholderTitle: string;
-    placeholderBody: string;
   };
   mainMenu: {
     newGame: string;

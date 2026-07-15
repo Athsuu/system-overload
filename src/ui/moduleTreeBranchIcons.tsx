@@ -43,30 +43,6 @@ function GlyphPaths({ glyph }: { glyph: ModuleGlyphId }) {
           />
         </>
       );
-    case 'elite':
-      return (
-        <>
-          <polygon
-            points="12 4 17 7 17 17 12 20 7 17 7 7"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            strokeOpacity={0.9}
-          />
-          <polygon
-            points="12 8 14.5 9.5 14.5 14.5 12 16 9.5 14.5 9.5 9.5"
-            fill="currentColor"
-            fillOpacity={0.85}
-          />
-          <path
-            d="M12 2 V4 M12 20 V22"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeOpacity={0.55}
-          />
-        </>
-      );
     case 'splash':
       return (
         <>
@@ -113,19 +89,26 @@ function GlyphPaths({ glyph }: { glyph: ModuleGlyphId }) {
           />
         </>
       );
-    case 'yield':
+    case 'victory':
       return (
         <>
-          <polygon
-            points="12 4 16 6.5 16 15.5 12 18 8 15.5 8 6.5"
+          <path
+            d="M8 8 H16 V11 C16 15 12 18 12 18 C12 18 8 15 8 11 Z"
             fill="currentColor"
             fillOpacity={0.22}
             stroke="currentColor"
-            strokeWidth={1.1}
-            strokeOpacity={0.85}
+            strokeWidth={1.25}
+            strokeOpacity={0.9}
           />
           <path
-            d="M12 9 V14 M9.5 11.5 L12 9 L14.5 11.5"
+            d="M12 18 V21 M9 21 H15"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeOpacity={0.75}
+          />
+          <path
+            d="M10 11 L11.5 12.5 L14.5 9.5"
             fill="none"
             stroke="currentColor"
             strokeWidth={1.5}
@@ -200,6 +183,63 @@ function GlyphPaths({ glyph }: { glyph: ModuleGlyphId }) {
             strokeWidth="1.25"
             strokeLinecap="round"
             opacity="0.45"
+          />
+        </>
+      );
+    case 'dissipate':
+      return (
+        <>
+          <path
+            d="M12 4 V20 M8 8 H16 M8 16 H16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeOpacity={0.85}
+          />
+          <path
+            d="M9 12 H15"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.25}
+            strokeLinecap="round"
+            opacity={0.55}
+          />
+        </>
+      );
+    case 'seal':
+      return (
+        <>
+          <polygon
+            points="12 4 18 7 18 17 12 20 6 17 6 7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeOpacity={0.9}
+          />
+          <path
+            d="M8 12 H16"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </>
+      );
+    case 'amplify':
+      return (
+        <>
+          <path
+            d="M13 2 L8 13 H12 L10 22 L18 10 H14 L16 2 Z"
+            fill="currentColor"
+            fillOpacity={0.75}
+          />
+          <path
+            d="M4 14 L7 11 M4 18 L8 18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.25}
+            strokeLinecap="round"
+            opacity={0.55}
           />
         </>
       );

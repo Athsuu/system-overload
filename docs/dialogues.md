@@ -1,6 +1,6 @@
 # Dialogues: Zero Archive
 
-> Référence exhaustive de tous les dialogues du jeu. Toute nouvelle ligne ajoutée au jeu **DOIT** être répercutée ici (voir `.cursorrules`).  
+> Référence exhaustive de tous les dialogues du jeu. Toute nouvelle ligne ajoutée au jeu **DOIT** être répercutée ici (voir `.cursor/rules/narrative-dialogues.mdc`).  
 > **Clé i18n** = clé technique dans `src/i18n/locales/en.ts` / `fr.ts`. **EN** = texte in-game officiel. **FR** = traduction si présente dans `fr.ts`.  
 > Source catalogue tutoriel : `src/tutorial/tutorialCatalog.ts` · ambient : `src/tutorial/archAmbientCatalog.ts`.
 
@@ -136,7 +136,7 @@ Composant : `RunEndScreen.tsx` · condition : `prestigeUnlockedThisRun` (premiè
 | 2026-07-08 | Unification terminologique **Hex Shards**, fusion tuto `run_shards` + `vault` (ID conservé : `run_shards`) ; retrait de « Run Shards » / « Available Shards » des textes joueur | Économie méta v4 · HUD · hub · run end | v0.7 |
 | 2026-07-08 | Nettoyage i18n tutoriel, retrait clés orphelines `shardsWhy`, `shardsLoop`, `vaultLore`, `breachVentHint`, `bossHint` (seule `hexShardsUnified` reste branchée) | Maintenance locales | v0.7 |
 | 2026-07-08 | Retrait des tirets cadratin (—) dans les textes lore joueur (i18n) et docs canon (`narrative`, `dialogues`, `lexique`, screenplay) | Style dialogue plus direct | v0.7 |
-| 2026-07-08 | Refonte `module_tree_intro` + retrait des deux-points superflus dans la prose ARCH (virgules/points) | Lisibilité tutos + règle `.cursorrules` | v0.7 |
+| 2026-07-08 | Refonte `module_tree_intro` + retrait des deux-points superflus dans la prose ARCH (virgules/points) | Lisibilité tutos + règle narrative Cursor | v0.7 |
 | 2026-07-09 | Pool 2 variantes `runEnd.victoryArchVariants` (rotation deck, 1 réplique ARCH par victoire boss ; variante ancre uniquement si premier clear cycle) | Écran victoire, fin double dialogue ARCH | v0.7 |
 
 ---

@@ -1,28 +1,33 @@
 import { useState } from 'react';
+import { useGameStore } from '../store/useGameStore';
 import {
+  devAddBankAnchorFragments,
   devAddBankShards,
-  devAddRunShards,
   devAddSeedFragments,
   devMaxAllUpgrades,
   devResetToNewPlayer,
   devResetUpgrades,
+  devTogglePrestigeUnlocked,
   devUnlockCyclesUpTo,
   devWipeProgress,
 } from './devActions';
+import { DevBalanceSnapshotPanel } from './DevBalanceSnapshotPanel';
 import { DevButton, DevConfirmButton } from './DevButton';
 import { DevUpgradePanel } from './DevUpgradePanel';
+import { DevFormRow, DevSection, DevToggleButton } from './devUi';
+import { DEV_HINT_CLASS, DEV_INPUT_CLASS, DEV_SELECT_CLASS } from './devUi/devStyles';
 
-type CurrencyTarget = 'vault' | 'run' | 'seed';
+type CurrencyTarget = 'vault' | 'anchor' | 'seed';
 
 const CURRENCY_LABELS: Record<CurrencyTarget, string> = {
-  vault: 'Vault Shards',
-  run: 'Run Shards',
-  seed: 'Seed Fragments (Prestige)',
+  vault: 'Hex Shards (coffre)',
+  anchor: 'Anchor Fragments',
+  seed: 'Seed Fragments (prestige)',
 };
 
 function injectCurrency(target: CurrencyTarget, amount: number): void {
   if (target === 'vault') devAddBankShards(amount);
-  else if (target === 'run') devAddRunShards(amount);
+  else if (target === 'anchor') devAddBankAnchorFragments(amount);
   else devAddSeedFragments(amount);
 }
 
@@ -30,25 +35,24 @@ function CurrencyInjector() {
   const [amount, setAmount] = useState('1000');
   const [target, setTarget] = useState<CurrencyTarget>('vault');
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = () => {
     const parsed = Number(amount);
     if (!Number.isFinite(parsed) || parsed === 0) return;
     injectCurrency(target, parsed);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-1.5">
+    <DevFormRow submitLabel="Injecter" onSubmit={handleSubmit}>
       <input
         type="number"
         value={amount}
         onChange={(event) => setAmount(event.target.value)}
-        className="w-24 rounded-md border border-white/10 bg-black/40 px-2 py-1.5 font-mono text-[13px] text-white/85 outline-none focus:border-cyan-500/40"
+        className={`w-24 ${DEV_INPUT_CLASS}`}
       />
       <select
         value={target}
         onChange={(event) => setTarget(event.target.value as CurrencyTarget)}
-        className="rounded-md border border-white/10 bg-black/40 px-2 py-1.5 text-[13px] text-white/85 outline-none focus:border-cyan-500/40"
+        className={DEV_SELECT_CLASS}
       >
         {(Object.entries(CURRENCY_LABELS) as [CurrencyTarget, string][]).map(([value, label]) => (
           <option key={value} value={value} className="bg-black">
@@ -56,81 +60,84 @@ function CurrencyInjector() {
           </option>
         ))}
       </select>
-      <button
-        type="submit"
-        className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-200 transition hover:bg-cyan-500/20"
-      >
-        Injecter
-      </button>
-    </form>
+    </DevFormRow>
   );
 }
 
 function CycleUnlocker() {
   const [target, setTarget] = useState('');
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = () => {
     const parsed = Number(target);
     if (!Number.isFinite(parsed) || parsed < 1) return;
     devUnlockCyclesUpTo(parsed);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-1.5">
+    <DevFormRow submitLabel="Débloquer" onSubmit={handleSubmit}>
       <input
         type="number"
         min={1}
         value={target}
         onChange={(event) => setTarget(event.target.value)}
-        placeholder="Target Cycle"
-        className="w-32 rounded-md border border-white/10 bg-black/40 px-2 py-1.5 font-mono text-[13px] text-white/85 outline-none focus:border-cyan-500/40"
+        placeholder="Cycle cible"
+        className={`w-32 ${DEV_INPUT_CLASS}`}
       />
-      <button
-        type="submit"
-        className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-200 transition hover:bg-cyan-500/20"
-      >
-        Débloquer
-      </button>
-    </form>
+    </DevFormRow>
+  );
+}
+
+function PrestigeToggle() {
+  const prestigeUnlocked = useGameStore((state) => state.prestigeUnlocked);
+
+  return (
+    <DevToggleButton
+      label="Prestige débloqué"
+      active={prestigeUnlocked}
+      onToggle={() => devTogglePrestigeUnlocked()}
+    />
   );
 }
 
 export function DevProgressionTab() {
   return (
     <div className="space-y-4">
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Monnaie</p>
+      <DevSection title="Snapshot équilibrage">
+        <DevBalanceSnapshotPanel />
+      </DevSection>
+
+      <DevSection title="Monnaie">
         <CurrencyInjector />
-      </div>
+      </DevSection>
 
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Cycles</p>
-        <p className="mb-2 text-[13px] text-white/30">
-          Marque comme complétés (cyclesCleared) tous les cycles de 1 au cycle cible inclus.
-        </p>
+      <DevSection title="Prestige">
+        <PrestigeToggle />
+      </DevSection>
+
+      <DevSection
+        title="Cycles"
+        description="Marque comme complétés tous les cycles de 1 au cycle cible inclus."
+      >
         <CycleUnlocker />
-      </div>
+      </DevSection>
 
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Upgrades</p>
+      <DevSection title="Modules">
         <div className="flex flex-wrap gap-1.5">
-          <DevButton onClick={() => devMaxAllUpgrades()}>Max upgrades</DevButton>
-          <DevButton onClick={() => devResetUpgrades()}>Reset upgrades</DevButton>
+          <DevButton onClick={() => devMaxAllUpgrades()}>Tout au max</DevButton>
+          <DevButton onClick={() => devResetUpgrades()}>Reset modules</DevButton>
         </div>
         <div className="mt-3">
           <DevUpgradePanel />
         </div>
-      </div>
+      </DevSection>
 
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Hard reset</p>
-        <p className="mb-2 text-[13px] text-white/30">Cliquer deux fois pour confirmer.</p>
+      <DevSection title="Hard reset">
+        <p className={`mb-2 ${DEV_HINT_CLASS}`}>Cliquer deux fois pour confirmer.</p>
         <div className="flex flex-wrap gap-1.5">
-          <DevConfirmButton onConfirm={() => devWipeProgress()}>Wipe save</DevConfirmButton>
+          <DevConfirmButton onConfirm={() => devWipeProgress()}>Effacer save</DevConfirmButton>
           <DevConfirmButton onConfirm={() => devResetToNewPlayer()}>Reset nouveau joueur</DevConfirmButton>
         </div>
-      </div>
+      </DevSection>
     </div>
   );
 }

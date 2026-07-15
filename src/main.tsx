@@ -19,6 +19,9 @@ if (save) {
     highestCycleUnlocked: save.highestCycleUnlocked,
     selectedCycle: save.selectedCycle,
     cyclesCleared: save.cyclesCleared,
+    cyclesSinceLastAnchor: save.cyclesSinceLastAnchor,
+    anchoredNodes: save.anchoredNodes,
+    bestWaveByCycle: save.bestWaveByCycle,
     activeCycle: save.selectedCycle,
   });
 }

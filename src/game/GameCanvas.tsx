@@ -1,8 +1,8 @@
 import { Application, extend } from '@pixi/react';
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Text } from 'pixi.js';
 import { GameArena } from './GameArena';
 
-extend({ Container, Graphics });
+extend({ Container, Graphics, Text });
 
 export function GameCanvas() {
   return (

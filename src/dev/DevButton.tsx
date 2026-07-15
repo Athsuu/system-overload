@@ -3,17 +3,19 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 interface DevButtonProps {
   children: ReactNode;
   onClick: () => void;
-  variant?: 'default' | 'danger';
+  variant?: 'default' | 'primary' | 'danger';
   disabled?: boolean;
 }
 
 export function DevButton({ children, onClick, variant = 'default', disabled = false }: DevButtonProps) {
   const base =
-    'rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40';
+    'rounded-lg border px-3 py-1.5 text-[13px] font-medium transition disabled:cursor-not-allowed disabled:opacity-40';
   const styles =
     variant === 'danger'
       ? 'border-red-500/30 bg-red-500/10 text-red-300 hover:border-red-400 hover:bg-red-500/20'
-      : 'border-white/10 bg-white/5 text-white/80 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200';
+      : variant === 'primary'
+        ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200 hover:border-cyan-400 hover:bg-cyan-500/20'
+        : 'border-white/10 bg-white/5 text-white/80 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200';
 
   return (
     <button type="button" className={`${base} ${styles}`} onClick={onClick} disabled={disabled}>

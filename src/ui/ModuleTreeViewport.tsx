@@ -1,34 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import {
-  getPlaceholderNode,
-  getModuleNode,
-  isPlaceholderId,
-  type TreeNodeId,
-} from '../store/moduleTree';
+import { getModuleNode, type TreeNodeId } from '../store/moduleTree';
+import { type HexGridHoverInfo } from '../store/moduleTreeHexGrid';
 import { type UpgradeId } from '../store/upgradeCatalog';
 import { getUpgradeTooltipLines } from './upgradeTooltipStats';
 import { ModuleTree } from './ModuleTree';
 import { ModuleTreeGlitchOverlay } from './ModuleTreeGlitchOverlay';
-import {
-  PLACEHOLDER_TOOLTIP_TITLE_ID,
-  ModuleTreePlaceholderTooltip,
-} from './ModuleTreePlaceholderTooltip';
 import {
   getModuleTreeTooltipHeight,
   MODULE_TREE_TOOLTIP_TITLE_ID,
   ModuleTreeTooltip,
 } from './ModuleTreeTooltip';
 import { ModuleTreePopover } from './ModuleTreePopover';
-import {
-  PLACEHOLDER_POPOVER_HEIGHT,
-  PLACEHOLDER_POPOVER_WIDTH,
-  MODULE_POPOVER_WIDTH,
-} from './moduleTreePopoverPlacement';
+import { MODULE_POPOVER_WIDTH } from './moduleTreePopoverPlacement';
 import { useModuleTreePan } from './useModuleTreePan';
 import { useDevModuleTreeHexGrid } from '../dev/useDevModuleTreeHexGrid';
-import type { HexGridHoverInfo } from '../store/moduleTreeHexGrid';
 import { ModuleTreeHexGridTooltip } from './ModuleTreeHexGridTooltip';
+import { useDevModuleTreeDraft } from '../dev/moduleTreeEditor/useDevModuleTreeDraft';
+import { formatDevModuleTreeEditorHint } from '../dev/moduleTreeEditor/devModuleTreeEditor';
+import { useDevModuleTreeEditor } from '../dev/moduleTreeEditor/useDevModuleTreeEditor';
+import { useModuleTreeEditorInteractions } from '../dev/moduleTreeEditor/useModuleTreeEditorInteractions';
 
 interface ModuleTreeViewportProps {
   selectedId: TreeNodeId | null;
@@ -64,9 +55,19 @@ export function ModuleTreeViewport({
 }: ModuleTreeViewportProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const upgrades = useGameStore((state) => state.upgrades);
-  const showHexGrid = useDevModuleTreeHexGrid();
+  const showHexGridFlag = useDevModuleTreeHexGrid();
+  const editor = useDevModuleTreeEditor();
+  const drafts = useDevModuleTreeDraft();
+  const editorActions = useModuleTreeEditorInteractions(editor, onClearSelection);
+  const showHexGrid = showHexGridFlag;
   const [hexHover, setHexHover] = useState<{
     info: HexGridHoverInfo;
+    x: number;
+    y: number;
+  } | null>(null);
+  const hoverFrameRef = useRef<number | null>(null);
+  const pendingHoverRef = useRef<{
+    info: HexGridHoverInfo | null;
     x: number;
     y: number;
   } | null>(null);
@@ -77,8 +78,9 @@ export function ModuleTreeViewport({
     if (!selectedId) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      onClearSelection();
+      if (event.key === 'Escape') {
+        onClearSelection();
+      }
     };
 
     window.addEventListener('keydown', onKeyDown);
@@ -86,25 +88,31 @@ export function ModuleTreeViewport({
   }, [onClearSelection, selectedId]);
 
   useEffect(() => {
-    if (showHexGrid) return;
+    return () => {
+      if (hoverFrameRef.current !== null) {
+        cancelAnimationFrame(hoverFrameRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (editor.enabled) return;
     setHexHover(null);
-  }, [showHexGrid]);
+  }, [editor.enabled]);
+
+  const scheduleHexHover = (info: HexGridHoverInfo | null, clientX: number, clientY: number) => {
+    pendingHoverRef.current = { info, x: clientX, y: clientY };
+    if (hoverFrameRef.current !== null) return;
+    hoverFrameRef.current = requestAnimationFrame(() => {
+      hoverFrameRef.current = null;
+      const pending = pendingHoverRef.current;
+      if (!pending) return;
+      setHexHover(pending.info ? { info: pending.info, x: pending.x, y: pending.y } : null);
+    });
+  };
 
   const popoverConfig = (() => {
     if (!selectedId) return null;
-
-    if (isPlaceholderId(selectedId)) {
-      const node = getPlaceholderNode(selectedId);
-      return {
-        canvasX: node.position.x,
-        canvasY: node.position.y,
-        nodeId: selectedId,
-        width: PLACEHOLDER_POPOVER_WIDTH,
-        height: PLACEHOLDER_POPOVER_HEIGHT,
-        titleId: PLACEHOLDER_TOOLTIP_TITLE_ID,
-        kind: 'placeholder' as const,
-      };
-    }
 
     const node = getModuleNode(selectedId);
     const statLines = getUpgradeTooltipLines(selectedId, upgrades);
@@ -115,7 +123,6 @@ export function ModuleTreeViewport({
       width: MODULE_POPOVER_WIDTH,
       height: getModuleTreeTooltipHeight(statLines.length),
       titleId: MODULE_TREE_TOOLTIP_TITLE_ID,
-      kind: 'upgrade' as const,
       upgradeId: selectedId,
     };
   })();
@@ -127,7 +134,11 @@ export function ModuleTreeViewport({
         data-tutorial-anchor="module-tree"
         className={`absolute inset-0 overflow-hidden ${isGrabbing ? 'cursor-grabbing' : 'cursor-grab'}`}
         onPointerDown={(event) => {
-          if ((event.target as Element).closest('[data-module-node], [data-module-tooltip], button')) {
+          if (
+            (event.target as Element).closest(
+              '[data-module-hex-grid], [data-module-node], [data-module-draft-delete], [data-module-tooltip], button',
+            )
+          ) {
             return;
           }
           onClearSelection();
@@ -149,9 +160,19 @@ export function ModuleTreeViewport({
             onSelectModule={onSelectModule}
             onClearSelection={onClearSelection}
             showHexGrid={showHexGrid}
-            onHexGridHover={(info, clientX, clientY) => {
-              setHexHover(info ? { info, x: clientX, y: clientY } : null);
-            }}
+            editorMode={editor.enabled}
+            selectedParentId={editor.selectedParentId}
+            draftEntries={import.meta.env.DEV ? drafts : []}
+            onHexGridHover={scheduleHexHover}
+            onHexCellClick={editorActions.cellClick}
+            editorPickParentMode={editorActions.isPickParentMode}
+            onEditorPickParent={editorActions.isEditorActive ? editorActions.pickParent : undefined}
+            onEditorLinkParent={
+              editorActions.isEditorActive && !editorActions.isPickParentMode
+                ? editorActions.linkParent
+                : undefined
+            }
+            onEditorDeleteDraft={editorActions.isEditorActive ? editorActions.deleteDraft : undefined}
           />
         </div>
 
@@ -167,11 +188,7 @@ export function ModuleTreeViewport({
             titleId={popoverConfig.titleId}
             onDismiss={onClearSelection}
           >
-            {popoverConfig.kind === 'placeholder' ? (
-              <ModuleTreePlaceholderTooltip placeholderId={popoverConfig.nodeId} />
-            ) : (
-              <ModuleTreeTooltip selectedId={popoverConfig.upgradeId as UpgradeId} />
-            )}
+            <ModuleTreeTooltip selectedId={popoverConfig.upgradeId as UpgradeId} />
           </ModuleTreePopover>
         )}
       </div>
@@ -190,7 +207,20 @@ export function ModuleTreeViewport({
       </div>
 
       {showHexGrid && hexHover && (
-        <ModuleTreeHexGridTooltip info={hexHover.info} x={hexHover.x} y={hexHover.y} />
+        <ModuleTreeHexGridTooltip
+          info={hexHover.info}
+          x={hexHover.x}
+          y={hexHover.y}
+          editorMode={editor.enabled}
+        />
+      )}
+
+      {editor.enabled && (
+        <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center px-4">
+          <p className="rounded-lg border border-cyan-500/30 bg-black/75 px-3 py-1.5 font-mono text-[12px] text-cyan-100/90">
+            {formatDevModuleTreeEditorHint(editor, 'banner')}
+          </p>
+        </div>
       )}
     </>
   );

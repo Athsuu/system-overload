@@ -2,6 +2,8 @@ import { isDevInvincible } from '../dev/devFlags';
 import { playRunEventSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
 import { applyLeakBurstMultiplier, LEAK_BURST_WINDOW_MS } from './leakPenalty';
+import { getAnchorMultiplier } from './anchorSupercharge';
+import { getBreachDissipationPerSec } from './moduleEffects';
 import {
   getEffectivePassiveHeatPerSec,
   getLeakProgressPenalty,
@@ -53,6 +55,17 @@ export function applyTimeOverload(
   overclockHeatMult = 1,
 ): void {
   addOverload(getEffectivePassiveHeatPerSec(config) * deltaSeconds * overclockHeatMult, 'time');
+
+  const store = useGameStore.getState();
+  const dissipationPerSec = getBreachDissipationPerSec(
+    store.upgrades.breachDissipation,
+    getAnchorMultiplier(store.anchoredNodes, 'breachDissipation'),
+  );
+  if (dissipationPerSec <= 0) return;
+
+  const relief = dissipationPerSec * deltaSeconds;
+  if (relief <= 0) return;
+  store.addBreachProgress(-relief);
 }
 
 export function applyImpactOverload(config: RunConfig, waveIndex: number): void {

@@ -3,57 +3,78 @@ import {
   devResetArchDialogues,
   devResetTutorial,
   devToggleModuleTreeHexGrid,
-  devToggleShowEnemyHpBars,
+  devToggleShowEnemyDebugOverlay,
   devToggleSpeed2x,
-  isDevModuleTreeHexGridVisible,
-  isDevShowEnemyHpBars,
+  isDevShowEnemyDebugOverlay,
   isDevSpeed2x,
 } from './devActions';
+import { useDevModuleTreeEditor } from './moduleTreeEditor/useDevModuleTreeEditor';
 import { DevButton } from './DevButton';
+import { DevPanel, DevSection, DevToggleButton } from './devUi';
+import { useDevModuleTreeHexGrid } from './useDevModuleTreeHexGrid';
 
 interface DevDebugTabProps {
   onCloseMenu: () => void;
 }
 
 export function DevDebugTab({ onCloseMenu }: DevDebugTabProps) {
-  const [hexGrid, setHexGrid] = useState(isDevModuleTreeHexGridVisible);
-  const [enemyHpBars, setEnemyHpBars] = useState(isDevShowEnemyHpBars);
+  const hexGrid = useDevModuleTreeHexGrid();
+  const editor = useDevModuleTreeEditor();
+  const [debugOverlay, setDebugOverlay] = useState(isDevShowEnemyDebugOverlay);
   const [speed2x, setSpeed2x] = useState(isDevSpeed2x);
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Bascules visuelles</p>
+      <DevSection title="Bascules visuelles">
+        {editor.enabled && (
+          <p className="mb-2 text-[13px] text-amber-200/80">
+            La grille hex est gérée par l&apos;éditeur arbre. Désactive-le dans l&apos;onglet Arbre
+            pour la couper.
+          </p>
+        )}
         <div className="flex flex-wrap gap-1.5">
-          <DevButton onClick={() => setHexGrid(devToggleModuleTreeHexGrid())}>
-            Grille hex {hexGrid ? 'ON' : 'OFF'}
-          </DevButton>
-          <DevButton onClick={() => setEnemyHpBars(devToggleShowEnemyHpBars())}>
-            HP ennemis {enemyHpBars ? 'ON' : 'OFF'}
-          </DevButton>
-          <DevButton onClick={() => setSpeed2x(devToggleSpeed2x())}>
-            Vitesse ×2 {speed2x ? 'ON' : 'OFF'}
-          </DevButton>
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Tutoriel</p>
-        <p className="mb-2 text-[13px] text-white/30">
-          Réaffiche les cartes ARCH depuis le début (hub). Ferme ce menu — la carte apparaît derrière.
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          <DevButton
-            onClick={() => {
-              devResetTutorial();
-              onCloseMenu();
+          <DevToggleButton
+            label="Grille hex"
+            active={hexGrid}
+            onToggle={() => {
+              devToggleModuleTreeHexGrid();
             }}
-          >
-            Reset tutoriel
-          </DevButton>
-          <DevButton onClick={() => devResetArchDialogues()}>Reset dialogues run</DevButton>
+          />
+          <DevToggleButton
+            label="Debug processus"
+            active={debugOverlay}
+            onToggle={() => {
+              setDebugOverlay(devToggleShowEnemyDebugOverlay());
+            }}
+          />
+          <DevToggleButton
+            label="Vitesse ×2"
+            active={speed2x}
+            onToggle={() => {
+              setSpeed2x(devToggleSpeed2x());
+            }}
+          />
         </div>
-      </div>
+      </DevSection>
+
+      <DevSection
+        title="Tutoriel & dialogues"
+        description="Réaffiche les cartes ARCH depuis le début (hub). Ferme ce menu, la carte apparaît derrière."
+      >
+        <DevPanel>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            <DevButton
+              onClick={() => {
+                devResetTutorial();
+                onCloseMenu();
+              }}
+            >
+              Reset tutoriel
+            </DevButton>
+            <DevButton onClick={() => devResetArchDialogues()}>Reset dialogues run</DevButton>
+          </div>
+        </DevPanel>
+      </DevSection>
     </div>
   );
 }

@@ -9,10 +9,9 @@ export type UpgradeCurrency = 'shards' | 'anchor';
 export type UpgradeId =
   | 'node0Boot'
   | 'shardSalvage'
-  | 'shardYield'
   | 'shardMagnet'
+  | 'victoryShardBonus'
   | 'purgeStrike'
-  | 'eliteBreaker'
   | 'purgeCadence'
   | 'purgeReach'
   | 'purgeSplash'
@@ -21,7 +20,10 @@ export type UpgradeId =
   | 'killBreachRelief'
   | 'meltdownThreshold'
   | 'overclock'
-  | 'fluxDrive';
+  | 'fluxDrive'
+  | 'breachDissipation'
+  | 'leakSealing'
+  | 'purgeAmplifier';
 
 export type ModuleState = 'locked' | 'available' | 'unaffordable' | 'maxed' | 'reserved';
 
@@ -31,10 +33,9 @@ export type AnchoredNodes = Partial<Record<UpgradeId, boolean>>;
 export interface UpgradeLevels {
   node0Boot: number;
   shardSalvage: number;
-  shardYield: number;
   shardMagnet: number;
+  victoryShardBonus: number;
   purgeStrike: number;
-  eliteBreaker: number;
   purgeCadence: number;
   purgeReach: number;
   purgeSplash: number;
@@ -44,6 +45,9 @@ export interface UpgradeLevels {
   meltdownThreshold: number;
   overclock: number;
   fluxDrive: number;
+  breachDissipation: number;
+  leakSealing: number;
+  purgeAmplifier: number;
 }
 
 export interface UpgradeRequirement {
@@ -57,7 +61,6 @@ export interface UpgradeDefinition {
   description: string;
   maxLevel: number;
   costByLevel: readonly number[];
-  costFormula?: (level: number) => number;
   currency: UpgradeCurrency;
 }
 
@@ -65,55 +68,44 @@ export interface UpgradeDefinition {
 export const ANCHOR_FRAGMENTS_PER_BOSS = 1;
 
 /** Flat shard bonus on boss victory (in addition to run kills). */
-export const BOSS_VICTORY_SHARD_BONUS = 25;
+export const BOSS_VICTORY_SHARD_BONUS = 15;
 
 /** Node-0 Boot : baseline gratuit — niveau 1 dès le départ, jamais achetable (pas de coût). */
 export const NODE0_BOOT_BASELINE_LEVEL = 1;
 
-/** Soft Cap économique : plus de plafond de rang, coût qui grimpe en formule (voir softCapCost). */
-/** Multiplicateur de rendement d'éclats composé par rang (remplace l'ancien flat +1/rang — voir rééquilibrage). */
-export const SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL = 1.18;
-export const SHARD_SALVAGE_COST_BASE = 5;
-/** Coût assoupli par rapport au SOFT_CAP_COST_GROWTH partagé (1.15) — reste achetable à haut niveau vu le coût de base élevé. */
-export const SHARD_SALVAGE_COST_GROWTH = 1.12;
-
-export const SHARD_YIELD_MAX_LEVEL = 5;
-/** Bonus multiplicatif sur les éclats de base par kill (+20 % / rang). */
-export const SHARD_YIELD_PERCENT_PER_LEVEL = 20;
+/** Multiplicateur de rendement d'éclats composé par rang. */
+export const SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL = 1.12;
+export const SHARD_SALVAGE_MAX_LEVEL = 5;
+export const SHARD_SALVAGE_COST_BASE = 20;
+export const SHARD_SALVAGE_COST_GROWTH = 1.28;
 
 export const SHARD_MAGNET_MAX_LEVEL = 3;
 /** Rayon de collecte (px) aux rangs 0–3 de l'Aimant d'éclats. */
 export const SHARD_MAGNET_COLLECT_RADIUS_BY_LEVEL = [20, 44, 68, 92] as const;
 /** Rayon d'attraction magnétique (px) aux rangs 0–3 — 0 = pas d'aspiration au départ. */
 export const SHARD_MAGNET_MAGNET_RADIUS_BY_LEVEL = [0, 72, 128, 200] as const;
-export const COST_SHARD_MAGNET = [130, 220, 350] as const;
+export const COST_SHARD_MAGNET = [55, 100, 175] as const;
 
-/** Frappe de purge — soft cap (base 5, growth propre). */
-export const PURGE_STRIKE_DAMAGE_PER_LEVEL = 2;
-/** Multiplicateur composé appliqué à la base (5 + flat) par rang. */
-export const PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL = 1.015;
+export const VICTORY_SHARD_BONUS_MAX_LEVEL = 3;
+/** Éclats bonus à Breach Contained aux rangs 1 / 2 / 3 (s'ajoute au flat boss). */
+export const VICTORY_SHARD_BONUS_FLAT_BY_LEVEL = [8, 16, 24] as const;
+export const COST_VICTORY_SHARD_BONUS = [100, 180, 280] as const;
+
+/** Frappe de purge — flat uniquement ; les % viennent du prestige (Boot Reinforcement, Recompile). */
+export const PURGE_STRIKE_DAMAGE_PER_LEVEL = 5;
 export const PURGE_STRIKE_MAX_LEVEL = 10;
-export const PURGE_STRIKE_COST_GROWTH = 1.18;
-export const PURGE_STRIKE_COST_BASE = 5;
+export const PURGE_STRIKE_COST_GROWTH = 1.22;
+export const PURGE_STRIKE_COST_BASE = 12;
 
 function buildShardCostCurve(base: number, growth: number, levels: number): readonly number[] {
   return Array.from({ length: levels }, (_, index) => Math.ceil(base * growth ** index));
 }
 
-/** Soft Cap économique — sentinel pour modules sans plafond de rang. */
-export const UNLIMITED_MAX_LEVEL = Number.POSITIVE_INFINITY;
-
-/** IDs sans plafond — coût via costFormula uniquement. */
-export const UNLIMITED_UPGRADE_IDS = ['shardSalvage', 'purgeStrike', 'meltdownThreshold'] as const satisfies readonly UpgradeId[];
-
-/** Soft Cap économique — coût qui grimpe à l'infini : base × growth^niveau (growth par défaut 1.15). */
-export const SOFT_CAP_COST_GROWTH = 1.15;
-
-function softCapCost(base: number, growth: number = SOFT_CAP_COST_GROWTH): (level: number) => number {
-  return (level: number) => Math.ceil(base * Math.pow(growth, level));
-}
-
-export const COST_SHARD_YIELD = buildShardCostCurve(110, 1.28, SHARD_YIELD_MAX_LEVEL);
+export const COST_SHARD_SALVAGE = buildShardCostCurve(
+  SHARD_SALVAGE_COST_BASE,
+  SHARD_SALVAGE_COST_GROWTH,
+  SHARD_SALVAGE_MAX_LEVEL,
+);
 
 export const COST_PURGE_STRIKE = buildShardCostCurve(
   PURGE_STRIKE_COST_BASE,
@@ -121,19 +113,14 @@ export const COST_PURGE_STRIKE = buildShardCostCurve(
   PURGE_STRIKE_MAX_LEVEL,
 );
 
-export const ELITE_BREAKER_MAX_LEVEL = 3;
-/** Bonus dégâts purge vs processus lourds (élite) aux rangs 1 / 2 / 3. */
-export const ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL = [25, 50, 75] as const;
-export const COST_ELITE_BREAKER = [150, 250, 400] as const;
-
 export const PURGE_SPLASH_MAX_LEVEL = 3;
 /** Extension du rayon d'éclaboussure au-delà de la zone principale (%) aux rangs 1 / 2 / 3. */
 export const PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL = [50, 75, 100] as const;
 /** Dégâts d'éclaboussure (% des dégâts purge) aux rangs 1 / 2 / 3 — hors zone directe. */
 export const PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL = [15, 30, 45] as const;
-export const COST_PURGE_SPLASH = COST_ELITE_BREAKER;
+export const COST_PURGE_SPLASH = [180, 300, 480] as const;
 
-export const COST_LATENCY_INJECTION = [140, 240, 380] as const;
+export const COST_LATENCY_INJECTION = [168, 288, 456] as const;
 export const LATENCY_INJECTION_MAX_LEVEL = 3;
 
 export const PURGE_CADENCE_MAX_LEVEL = 10;
@@ -143,9 +130,9 @@ export const PURGE_CADENCE_INTERVAL_MS_PER_LEVEL = 25;
 export const PURGE_REACH_MAX_LEVEL = 10;
 export const PURGE_REACH_AOE_PERCENT_PER_LEVEL = 2.5;
 
-/** Shared cost curve for Purge Cadence & Purge Reach (base 10, ×1.22). */
-export const PURGE_SUPPORT_COST_BASE = 10;
-export const PURGE_SUPPORT_COST_GROWTH = 1.22;
+/** Shared cost curve for Purge Cadence & Purge Reach (base 15, ×1.26). */
+export const PURGE_SUPPORT_COST_BASE = 15;
+export const PURGE_SUPPORT_COST_GROWTH = 1.26;
 
 export const COST_PURGE_CADENCE = buildShardCostCurve(
   PURGE_SUPPORT_COST_BASE,
@@ -183,10 +170,17 @@ export const COST_KILL_BREACH_RELIEF = buildShardCostCurve(
   KILL_BREACH_RELIEF_MAX_LEVEL,
 );
 
-/** Multiplicateur de cap Breach composé par rang (remplace l'ancien flat +8/rang — voir rééquilibrage). */
+/** Multiplicateur de cap Breach composé par rang. */
 export const MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL = 1.05;
-export const MELTDOWN_THRESHOLD_COST_BASE = 5;
-export const MELTDOWN_THRESHOLD_COST_GROWTH = 1.16;
+export const MELTDOWN_THRESHOLD_MAX_LEVEL = 10;
+export const MELTDOWN_THRESHOLD_COST_BASE = 12;
+export const MELTDOWN_THRESHOLD_COST_GROWTH = 1.2;
+
+export const COST_MELTDOWN_THRESHOLD = buildShardCostCurve(
+  MELTDOWN_THRESHOLD_COST_BASE,
+  MELTDOWN_THRESHOLD_COST_GROWTH,
+  MELTDOWN_THRESHOLD_MAX_LEVEL,
+);
 
 export const OVERCLOCK_MAX_LEVEL = 1;
 export const COST_OVERCLOCK = [200] as const;
@@ -198,13 +192,27 @@ export const FLUX_DRIVE_TIME_SCALE = 2;
 /** Hardware Supercharge sur Flux Drive : ×3 au lieu du ×2 générique (évite un ×4 déséquilibré). */
 export const FLUX_DRIVE_TIME_SCALE_ANCHORED = 3;
 
+export const BREACH_DISSIPATION_MAX_LEVEL = 3;
+/** Drain Breach passif / s aux rangs 1 / 2 / 3 (tous cycles). */
+export const BREACH_DISSIPATION_PER_SEC_BY_LEVEL = [0.1, 0.2, 0.3] as const;
+export const COST_BREACH_DISSIPATION = [200, 320, 500] as const;
+
+export const LEAK_SEALING_MAX_LEVEL = 3;
+/** Réduction pénalité de fuite (%) aux rangs 1 / 2 / 3. */
+export const LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL = [10, 20, 30] as const;
+export const COST_LEAK_SEALING = [180, 300, 480] as const;
+
+export const PURGE_AMPLIFIER_MAX_LEVEL = 3;
+/** Bonus % dégâts purge aux rangs 1 / 2 / 3 (tous cycles). */
+export const PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL = [5, 10, 15] as const;
+export const COST_PURGE_AMPLIFIER = [200, 320, 500] as const;
+
 export const DEFAULT_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
   shardSalvage: 0,
-  shardYield: 0,
   shardMagnet: 0,
+  victoryShardBonus: 0,
   purgeStrike: 0,
-  eliteBreaker: 0,
   purgeCadence: 0,
   purgeReach: 0,
   purgeSplash: 0,
@@ -214,13 +222,15 @@ export const DEFAULT_UPGRADES: UpgradeLevels = {
   meltdownThreshold: 0,
   overclock: 0,
   fluxDrive: 0,
+  breachDissipation: 0,
+  leakSealing: 0,
+  purgeAmplifier: 0,
 };
 
 export interface UpgradeCatalogEntry {
   id: UpgradeId;
   maxLevel: number;
   costByLevel: readonly number[];
-  costFormula?: (level: number) => number;
   currency: UpgradeCurrency;
 }
 
@@ -233,15 +243,14 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
   },
   {
     id: 'shardSalvage',
-    maxLevel: UNLIMITED_MAX_LEVEL,
-    costByLevel: [],
-    costFormula: softCapCost(SHARD_SALVAGE_COST_BASE, SHARD_SALVAGE_COST_GROWTH),
+    maxLevel: SHARD_SALVAGE_MAX_LEVEL,
+    costByLevel: COST_SHARD_SALVAGE,
     currency: 'shards',
   },
   {
-    id: 'shardYield',
-    maxLevel: SHARD_YIELD_MAX_LEVEL,
-    costByLevel: COST_SHARD_YIELD,
+    id: 'victoryShardBonus',
+    maxLevel: VICTORY_SHARD_BONUS_MAX_LEVEL,
+    costByLevel: COST_VICTORY_SHARD_BONUS,
     currency: 'shards',
   },
   {
@@ -252,15 +261,8 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
   },
   {
     id: 'purgeStrike',
-    maxLevel: UNLIMITED_MAX_LEVEL,
-    costByLevel: [],
-    costFormula: softCapCost(PURGE_STRIKE_COST_BASE, PURGE_STRIKE_COST_GROWTH),
-    currency: 'shards',
-  },
-  {
-    id: 'eliteBreaker',
-    maxLevel: ELITE_BREAKER_MAX_LEVEL,
-    costByLevel: COST_ELITE_BREAKER,
+    maxLevel: PURGE_STRIKE_MAX_LEVEL,
+    costByLevel: COST_PURGE_STRIKE,
     currency: 'shards',
   },
   {
@@ -301,9 +303,8 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
   },
   {
     id: 'meltdownThreshold',
-    maxLevel: UNLIMITED_MAX_LEVEL,
-    costByLevel: [],
-    costFormula: softCapCost(MELTDOWN_THRESHOLD_COST_BASE, MELTDOWN_THRESHOLD_COST_GROWTH),
+    maxLevel: MELTDOWN_THRESHOLD_MAX_LEVEL,
+    costByLevel: COST_MELTDOWN_THRESHOLD,
     currency: 'shards',
   },
   {
@@ -316,6 +317,24 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     id: 'fluxDrive',
     maxLevel: FLUX_DRIVE_MAX_LEVEL,
     costByLevel: COST_FLUX_DRIVE,
+    currency: 'shards',
+  },
+  {
+    id: 'breachDissipation',
+    maxLevel: BREACH_DISSIPATION_MAX_LEVEL,
+    costByLevel: COST_BREACH_DISSIPATION,
+    currency: 'shards',
+  },
+  {
+    id: 'leakSealing',
+    maxLevel: LEAK_SEALING_MAX_LEVEL,
+    costByLevel: COST_LEAK_SEALING,
+    currency: 'shards',
+  },
+  {
+    id: 'purgeAmplifier',
+    maxLevel: PURGE_AMPLIFIER_MAX_LEVEL,
+    costByLevel: COST_PURGE_AMPLIFIER,
     currency: 'shards',
   },
 ];
@@ -357,11 +376,6 @@ export function getUpgradeDisplay(id: UpgradeId): UpgradeDefinition | null {
   return { ...entry, ...text };
 }
 
-/** Module sans plafond de rang (Soft Cap économique). */
-export function isUnlimitedUpgrade(definition: Pick<UpgradeDefinition, 'maxLevel'>): boolean {
-  return !Number.isFinite(definition.maxLevel);
-}
-
 export function getUpgradeLevel(upgrades: UpgradeLevels, id: UpgradeId): number {
   const raw = upgrades[id];
   if (typeof raw !== 'number' || !Number.isFinite(raw)) return 0;
@@ -375,7 +389,6 @@ export function clampUpgradeLevel(id: UpgradeId, level: number): number {
     console.warn(`[upgradeCatalog] clampUpgradeLevel: unknown id ${id}`);
     return floored;
   }
-  if (isUnlimitedUpgrade(entry)) return floored;
   return Math.min(entry.maxLevel, floored);
 }
 
@@ -398,7 +411,6 @@ export function isUpgradeMaxed(
   definition: Pick<UpgradeDefinition, 'id' | 'maxLevel'>,
   level: number,
 ): boolean {
-  if (isUnlimitedUpgrade(definition)) return false;
   return getUpgradeLevel({ ...DEFAULT_UPGRADES, [definition.id]: level }, definition.id) >= definition.maxLevel;
 }
 
@@ -447,12 +459,6 @@ export function requireMax(id: UpgradeId): UpgradeRequirement[] {
     console.error(`[upgradeCatalog] requireMax: unknown id ${id}`);
     return [];
   }
-  if (isUnlimitedUpgrade(entry)) {
-    console.warn(
-      `[upgradeCatalog] requireMax("${id}") on uncapped module — falling back to requireLevel(id, 1)`,
-    );
-    return [{ id, minLevel: 1 }];
-  }
   return [{ id, minLevel: entry.maxLevel }];
 }
 
@@ -461,16 +467,14 @@ export function requireLevel(id: UpgradeId, minLevel: number): UpgradeRequiremen
 }
 
 export function getUpgradeCost(
-  definition: Pick<UpgradeDefinition, 'id' | 'maxLevel' | 'costByLevel' | 'costFormula'>,
+  definition: Pick<UpgradeDefinition, 'id' | 'maxLevel' | 'costByLevel'>,
   level: number,
 ): number {
   const safeLevel = Math.max(0, Math.floor(level));
   if (isUpgradeMaxed(definition, safeLevel)) return 0;
 
   let cost: number;
-  if (definition.costFormula) {
-    cost = definition.costFormula(safeLevel);
-  } else if (definition.costByLevel.length > 0) {
+  if (definition.costByLevel.length > 0) {
     cost =
       definition.costByLevel[safeLevel] ??
       definition.costByLevel[definition.costByLevel.length - 1] ??

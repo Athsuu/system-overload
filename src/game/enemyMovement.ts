@@ -1,12 +1,12 @@
 import type { ScreenBounds, Vec2 } from './constants';
-import { getEnemyHexRadius } from './enemyClass';
-import type { EnemyClass } from './enemyClass';
+import { getEnemyHexRadius } from './encounter';
 import { getAnchorMultiplier } from './anchorSupercharge';
 import {
   getEnemyMaxHp,
   getEnemySpeed,
   getLatencySlowMultiplier,
   getRunConfig,
+  resolveEnemyLevel,
   type RunConfig,
 } from './runConfig';
 import type { DissipationNode } from './types';
@@ -97,7 +97,7 @@ function portalWrapEnemy(node: DissipationNode, bounds: ScreenBounds): void {
 
 export interface SpawnEnemyOptions {
   waveIndex: number;
-  enemyClass?: EnemyClass;
+  isBossEncounter?: boolean;
 }
 
 function createFlowEnemy(
@@ -105,12 +105,13 @@ function createFlowEnemy(
   config: RunConfig,
   options: SpawnEnemyOptions,
 ): DissipationNode {
-  const { waveIndex, enemyClass = 'normal' } = options;
-  const edgeInset = getEnemyHexRadius(enemyClass) * 0.35;
+  const { waveIndex, isBossEncounter = false } = options;
+  const edgeInset = getEnemyHexRadius(isBossEncounter) * 0.35;
   const { spawn, exit } = pickFlowEndpoints(bounds, edgeInset);
-  const speed = getEnemySpeed(config, waveIndex, enemyClass);
-  const maxHp = getEnemyMaxHp(config, waveIndex, enemyClass);
+  const speed = getEnemySpeed(config, waveIndex);
+  const maxHp = getEnemyMaxHp(config, waveIndex, isBossEncounter);
   const flow = buildFlowVelocity(spawn, exit);
+  const enemyLevel = resolveEnemyLevel(waveIndex);
 
   return {
     x: spawn.x,
@@ -122,11 +123,12 @@ function createFlowEnemy(
     hp: maxHp,
     maxHp,
     waveIndex,
+    enemyLevel,
+    isBossEncounter,
     flashTimer: 0,
     satelliteAngle: Math.random() * Math.PI * 2,
     hexAngle: Math.atan2(flow.vy, flow.vx),
     corruptSeed: Math.random() * 10000,
-    enemyClass,
     moveSpeed: speed,
   };
 }

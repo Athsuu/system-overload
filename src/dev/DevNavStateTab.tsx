@@ -8,8 +8,19 @@ import {
   devSetGameState,
 } from './devActions';
 import { DevButton } from './DevButton';
+import { DevPanel, DevSection } from './devUi';
 
 const GAME_STATES: GameState[] = ['MAIN_MENU', 'MENU', 'PLAYING', 'PAUSED', 'RUN_END', 'UPGRADING', 'GAME_OVER'];
+
+const GAME_STATE_HINT: Partial<Record<GameState, string>> = {
+  MAIN_MENU: 'Écran titre',
+  MENU: 'Hub / arbre modules',
+  PLAYING: 'Run en cours',
+  PAUSED: 'Pause run',
+  RUN_END: 'Fin de run',
+  UPGRADING: 'Module tree (achats)',
+  GAME_OVER: 'Game over',
+};
 
 export function DevNavStateTab() {
   const gameState = useGameStore((state) => state.gameState);
@@ -18,11 +29,10 @@ export function DevNavStateTab() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Manches</p>
-        <p className="mb-2 text-[13px] text-white/30">
-          Saute à une manche en run (lance une run si besoin). Vide ennemis et loot au saut.
-        </p>
+      <DevSection
+        title="Vagues"
+        description="Saute à une vague en run (lance une run si besoin). Vide ennemis et loot au saut."
+      >
         <div className="flex flex-wrap gap-1.5">
           {Array.from({ length: maxWaveIndex }, (_, index) => {
             const wave = index + 1;
@@ -30,36 +40,41 @@ export function DevNavStateTab() {
             const isCurrent = waveIndex === wave && (gameState === 'PLAYING' || gameState === 'PAUSED');
             return (
               <DevButton key={wave} onClick={() => devJumpToWave(wave)}>
-                {isBoss ? `Boss (${wave})` : `Manche ${wave}`}
+                {isBoss ? `Boss (${wave})` : `Vague ${wave}`}
                 {isCurrent ? ' ✓' : ''}
               </DevButton>
             );
           })}
         </div>
-      </div>
+      </DevSection>
 
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">Breach</p>
-        <div className="flex flex-wrap gap-1.5">
-          <DevButton onClick={() => devSetBreachProgress(50)}>50%</DevButton>
-          <DevButton onClick={() => devSetBreachProgress(90)}>90%</DevButton>
-          <DevButton onClick={() => devForceEndBreach()} variant="danger">
-            Meltdown
-          </DevButton>
-          <DevButton onClick={() => devForceVictoryBoss()}>Victory boss</DevButton>
-        </div>
-      </div>
+      <DevSection title="Breach">
+        <DevPanel>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            <DevButton onClick={() => devSetBreachProgress(50)}>50%</DevButton>
+            <DevButton onClick={() => devSetBreachProgress(90)}>90%</DevButton>
+            <DevButton onClick={() => devForceEndBreach()} variant="danger">
+              Meltdown
+            </DevButton>
+            <DevButton onClick={() => devForceVictoryBoss()}>Victoire boss</DevButton>
+          </div>
+        </DevPanel>
+      </DevSection>
 
-      <div>
-        <p className="mb-2 text-[14px] tracking-wider text-white/40 uppercase">État jeu</p>
+      <DevSection title="Écran jeu" description="Force un écran sans sauvegarder la progression.">
         <div className="flex flex-wrap gap-1.5">
           {GAME_STATES.map((state) => (
             <DevButton key={state} onClick={() => devSetGameState(state)}>
               {state}
+              {gameState === state ? ' ✓' : ''}
             </DevButton>
           ))}
         </div>
-      </div>
+        <p className="mt-2 text-[12px] text-white/35">
+          Actuel : {gameState}
+          {GAME_STATE_HINT[gameState] ? ` — ${GAME_STATE_HINT[gameState]}` : ''}
+        </p>
+      </DevSection>
     </div>
   );
 }

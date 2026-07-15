@@ -13,19 +13,19 @@ export function devSetInvincible(enabled: boolean): void {
   devInvincible = enabled;
 }
 
-let devShowEnemyHpBars = false;
+let devShowEnemyDebugOverlay = false;
 
-export function isDevShowEnemyHpBars(): boolean {
-  return devShowEnemyHpBars;
+export function isDevShowEnemyDebugOverlay(): boolean {
+  return devShowEnemyDebugOverlay;
 }
 
-export function devToggleShowEnemyHpBars(): boolean {
-  devShowEnemyHpBars = !devShowEnemyHpBars;
-  return devShowEnemyHpBars;
+export function devToggleShowEnemyDebugOverlay(): boolean {
+  devShowEnemyDebugOverlay = !devShowEnemyDebugOverlay;
+  return devShowEnemyDebugOverlay;
 }
 
-export function devSetShowEnemyHpBars(enabled: boolean): void {
-  devShowEnemyHpBars = enabled;
+export function devSetShowEnemyDebugOverlay(enabled: boolean): void {
+  devShowEnemyDebugOverlay = enabled;
 }
 
 const DEV_RUN_SPEED_NORMAL = 1;

@@ -12,7 +12,7 @@ export type BranchId = 'degats' | 'thermique';
 export type ModuleIconBranch = BranchId | 'flux';
 
 /** Per-node glyph on the module tree (branch defaults + dedicated marks). */
-export type ModuleGlyphId = ModuleIconBranch | 'shard' | 'yield' | 'magnet' | 'cadence' | 'reach' | 'elite' | 'splash';
+export type ModuleGlyphId = ModuleIconBranch | 'shard' | 'magnet' | 'cadence' | 'reach' | 'splash' | 'victory' | 'dissipate' | 'seal' | 'amplify';
 
 export type TreeNodeId = UpgradeId;
 export type TreeParentId = 'root' | TreeNodeId;
@@ -86,10 +86,9 @@ export function getModuleIconBranchMeta(): Record<ModuleIconBranch, { label: str
 const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   node0Boot: 'thermique',
   shardSalvage: 'thermique',
-  shardYield: 'thermique',
+  victoryShardBonus: 'thermique',
   shardMagnet: 'thermique',
   purgeStrike: 'degats',
-  eliteBreaker: 'degats',
   purgeCadence: 'degats',
   purgeReach: 'degats',
   purgeSplash: 'degats',
@@ -99,24 +98,9 @@ const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   meltdownThreshold: 'thermique',
   overclock: 'degats',
   fluxDrive: 'thermique',
-};
-
-const NODE_ICONS: Record<UpgradeId, string> = {
-  node0Boot: '0',
-  shardSalvage: '◆',
-  shardYield: '',
-  shardMagnet: '',
-  purgeStrike: '',
-  eliteBreaker: '',
-  purgeCadence: '',
-  purgeReach: '',
-  purgeSplash: '',
-  latencyInjection: '',
-  threadCoolant: '◌',
-  killBreachRelief: '◇',
-  meltdownThreshold: '▲',
-  overclock: '',
-  fluxDrive: '',
+  breachDissipation: 'thermique',
+  leakSealing: 'thermique',
+  purgeAmplifier: 'degats',
 };
 
 const MODULE_ICON_BRANCH: Partial<Record<UpgradeId, ModuleIconBranch>> = {
@@ -133,11 +117,13 @@ export function getModuleGlyphId(id: UpgradeId, branch: BranchId): ModuleGlyphId
   if (id === 'purgeCadence') return 'cadence';
   if (id === 'purgeReach') return 'reach';
   if (id === 'purgeSplash') return 'splash';
-  if (id === 'eliteBreaker') return 'elite';
   if (id === 'shardSalvage') return 'shard';
-  if (id === 'shardYield') return 'yield';
+  if (id === 'victoryShardBonus') return 'victory';
   if (id === 'shardMagnet') return 'magnet';
   if (id === 'fluxDrive') return 'flux';
+  if (id === 'breachDissipation') return 'dissipate';
+  if (id === 'leakSealing') return 'seal';
+  if (id === 'purgeAmplifier') return 'amplify';
   return getModuleIconBranch(id, branch);
 }
 
@@ -155,7 +141,6 @@ export interface ModuleNodeLayout {
   maxLevel: number;
   costByLevel: readonly number[];
   branch: BranchId;
-  icon: string;
   requires?: UpgradeRequirement[];
   position: { x: number; y: number };
   parentId: TreeParentId;
@@ -166,20 +151,12 @@ export interface ModuleNodeDef extends ModuleNodeLayout {
   description: string;
 }
 
-export interface PlaceholderNodeDef {
-  id: string;
-  kind: 'placeholder';
-  branch: BranchId;
-  position: { x: number; y: number };
-  parentId: TreeParentId;
-}
-
 const NODE0_BOOT_POS = NODE0_HUB_POSITION;
 const SHARD_SALVAGE_POS = positionFromAxial(-1, 0);
-const SHARD_YIELD_POS = positionFromAxial(-2, 0);
+const VICTORY_SHARD_BONUS_POS = positionFromAxial(-1, -1);
 const SHARD_MAGNET_POS = positionFromAxial(-2, 1);
 const PURGE_STRIKE_POS = positionFromParent(NODE0_BOOT_POS, 'up');
-const ELITE_BREAKER_POS = positionFromAxial(0, 2);
+const PURGE_AMPLIFIER_POS = positionFromAxial(0, -2);
 const THREAD_COOLANT_POS = positionFromParent(NODE0_BOOT_POS, 'downRight');
 const PURGE_CADENCE_POS = positionFromParent(PURGE_STRIKE_POS, 'upLeft');
 const PURGE_REACH_POS = positionFromAxial(1, 1);
@@ -189,6 +166,8 @@ const KILL_BREACH_RELIEF_POS = positionFromAxial(2, -2);
 const LATENCY_INJECTION_POS = positionFromAxial(-1, 3);
 const OVERCLOCK_POS = positionFromAxial(1, 0);
 const FLUX_DRIVE_POS = positionFromAxial(-1, 1);
+const BREACH_DISSIPATION_POS = positionFromAxial(3, -1);
+const LEAK_SEALING_POS = positionFromAxial(3, -2);
 
 /** Radial module tree — Node-0 Boot root; branches rebuilt incrementally. */
 export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
@@ -216,10 +195,10 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     requires: requireLevel('node0Boot', 1),
   },
   {
-    id: 'shardYield',
+    id: 'victoryShardBonus',
     kind: 'upgrade',
     parentId: 'shardSalvage',
-    position: SHARD_YIELD_POS,
+    position: VICTORY_SHARD_BONUS_POS,
     branch: 'thermique',
     requires: requireLevel('shardSalvage', 1),
   },
@@ -240,12 +219,12 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     requires: requireLevel('node0Boot', 1),
   },
   {
-    id: 'eliteBreaker',
+    id: 'purgeAmplifier',
     kind: 'upgrade',
     parentId: 'purgeStrike',
-    position: ELITE_BREAKER_POS,
+    position: PURGE_AMPLIFIER_POS,
     branch: 'degats',
-    requires: requireLevel('purgeStrike', 1),
+    requires: requireLevel('purgeStrike', 5),
   },
   {
     id: 'purgeCadence',
@@ -296,6 +275,22 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     requires: requireLevel('meltdownThreshold', 1),
   },
   {
+    id: 'breachDissipation',
+    kind: 'upgrade',
+    parentId: 'threadCoolant',
+    position: BREACH_DISSIPATION_POS,
+    branch: 'thermique',
+    requires: requireLevel('threadCoolant', 3),
+  },
+  {
+    id: 'leakSealing',
+    kind: 'upgrade',
+    parentId: 'killBreachRelief',
+    position: LEAK_SEALING_POS,
+    branch: 'thermique',
+    requires: requireLevel('killBreachRelief', 2),
+  },
+  {
     id: 'overclock',
     kind: 'upgrade',
     parentId: 'node0Boot',
@@ -319,14 +314,11 @@ export const MODULE_TREE_NODES: ModuleNodeLayout[] = MODULE_TREE_GRAPH.map((node
   return {
     ...definition,
     branch: UPGRADE_BRANCH[node.id],
-    icon: NODE_ICONS[node.id],
     requires: node.requires,
     parentId: node.parentId,
     position: node.position,
   };
 });
-
-export const PLACEHOLDER_NODES: PlaceholderNodeDef[] = [];
 
 function getParentLevel(
   parentId: TreeParentId,
@@ -354,10 +346,6 @@ export function getRevealedGraphNodes(
   return MODULE_TREE_GRAPH.filter((node) => isNodeRevealed(node, upgrades));
 }
 
-export function isPlaceholderId(_id: TreeNodeId): _id is never {
-  return false;
-}
-
 export function getModuleNode(id: UpgradeId): ModuleNodeDef {
   const node = MODULE_TREE_NODES.find((entry) => entry.id === id);
   if (!node) throw new Error(`Unknown module node: ${id}`);
@@ -367,12 +355,6 @@ export function getModuleNode(id: UpgradeId): ModuleNodeDef {
     name: localized.name,
     description: localized.description,
   };
-}
-
-export function getPlaceholderNode(id: string): PlaceholderNodeDef {
-  const node = PLACEHOLDER_NODES.find((entry) => entry.id === id);
-  if (!node) throw new Error(`Unknown placeholder: ${id}`);
-  return node;
 }
 
 export function getNodePosition(id: TreeNodeId | 'core'): { x: number; y: number } {

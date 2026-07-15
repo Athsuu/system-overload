@@ -28,6 +28,7 @@ import {
   type UpgradeLevels,
 } from './upgradeCatalog';
 import { ANCHOR_CYCLES_PER_FRAGMENT } from '../game/anchorSupercharge';
+import { computeVictoryShardBonus } from '../game/moduleEffects';
 import {
   clampCycleIndex,
   DEFAULT_CYCLE_PROGRESS,
@@ -36,6 +37,11 @@ import {
 import { getBreachCap } from '../game/runConfig';
 import { resetRunElapsedMs } from '../game/runElapsed';
 import { getModuleNode } from './moduleTree';
+import {
+  DEFAULT_BEST_WAVE_BY_CYCLE,
+  mergeBestWaveRecord,
+  type BestWaveByCycle,
+} from './waveProgress';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { clearRunArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 
@@ -71,6 +77,7 @@ interface GameStore {
   cyclesCleared: number[];
   cyclesSinceLastAnchor: number;
   anchoredNodes: AnchoredNodes;
+  bestWaveByCycle: BestWaveByCycle;
   activeCycle: number;
   runOutcome: RunOutcome | null;
   prestigeUnlockedThisRun: boolean;
@@ -119,6 +126,7 @@ function buildSaveSnapshot(state: {
   cyclesCleared: number[];
   cyclesSinceLastAnchor: number;
   anchoredNodes: AnchoredNodes;
+  bestWaveByCycle: BestWaveByCycle;
 }): SaveData {
   return {
     bankShards: state.bankShards,
@@ -134,6 +142,7 @@ function buildSaveSnapshot(state: {
     cyclesCleared: state.cyclesCleared,
     cyclesSinceLastAnchor: state.cyclesSinceLastAnchor,
     anchoredNodes: state.anchoredNodes,
+    bestWaveByCycle: state.bestWaveByCycle,
   };
 }
 
@@ -163,6 +172,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
   cyclesSinceLastAnchor: 0,
   anchoredNodes: {},
+  bestWaveByCycle: { ...DEFAULT_BEST_WAVE_BY_CYCLE },
   activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
   runOutcome: null,
   prestigeUnlockedThisRun: false,
@@ -224,9 +234,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endRun: (outcome) =>
     set((state) => {
-      const bossBonus = outcome === 'victory_boss' ? BOSS_VICTORY_SHARD_BONUS : 0;
-      const bankShards = state.bankShards + bossBonus;
-      const lastRunShards = state.runShards + bossBonus;
+      const victoryBonus =
+        outcome === 'victory_boss'
+          ? BOSS_VICTORY_SHARD_BONUS + computeVictoryShardBonus(state.upgrades, state.anchoredNodes)
+          : 0;
+      const bankShards = state.bankShards + victoryBonus;
+      const lastRunShards = state.runShards + victoryBonus;
 
       const firstClearThisCycle =
         outcome === 'victory_boss' && !isCycleCleared(state.cyclesCleared, state.activeCycle);
@@ -250,6 +263,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       const selectedCycle = Math.min(state.selectedCycle, highestCycleUnlocked);
+      const bestWaveByCycle = mergeBestWaveRecord(
+        state.bestWaveByCycle,
+        state.activeCycle,
+        state.waveIndex,
+      );
 
       const next = {
         ...state,
@@ -259,6 +277,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         cyclesSinceLastAnchor,
         highestCycleUnlocked,
         selectedCycle,
+        bestWaveByCycle,
       };
       persistProgress(next);
 
@@ -269,6 +288,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         cyclesSinceLastAnchor,
         highestCycleUnlocked,
         selectedCycle,
+        bestWaveByCycle,
         runShards: 0,
         lastRunShards,
         lastRunAnchorFragments: anchorGain,
@@ -448,7 +468,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     markTutorialSignal('fluxDriveToggled');
     set({ fluxDriveEnabled });
   },
-  setWaveIndex: (waveIndex) => set({ waveIndex }),
+  setWaveIndex: (waveIndex) =>
+    set((state) => {
+      const bestWaveByCycle = mergeBestWaveRecord(
+        state.bestWaveByCycle,
+        state.activeCycle,
+        waveIndex,
+      );
+      if (bestWaveByCycle === state.bestWaveByCycle) {
+        return { waveIndex };
+      }
+
+      const next = { ...state, waveIndex, bestWaveByCycle };
+      persistProgress(next);
+      return { waveIndex, bestWaveByCycle };
+    }),
   setWavePhase: (wavePhase) => set({ wavePhase }),
   setShowWaveClear: (showWaveClear) => set({ showWaveClear }),
   persistProgressSnapshot: () => {
@@ -496,6 +530,7 @@ export function resetToFreshPlayer(): void {
     cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
     cyclesSinceLastAnchor: 0,
     anchoredNodes: {},
+    bestWaveByCycle: { ...DEFAULT_BEST_WAVE_BY_CYCLE },
     activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     runOutcome: null,
     prestigeUnlockedThisRun: false,

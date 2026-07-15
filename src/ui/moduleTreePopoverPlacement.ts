@@ -4,8 +4,6 @@ export const MODULE_POPOVER_WIDTH = 300;
 export const MODULE_POPOVER_GAP = 12;
 export const MODULE_POPOVER_ARROW = 8;
 export const MODULE_POPOVER_VIEWPORT_MARGIN = 16;
-export const PLACEHOLDER_POPOVER_WIDTH = 280;
-export const PLACEHOLDER_POPOVER_HEIGHT = 110;
 
 export type PopoverSide = 'top' | 'bottom' | 'left' | 'right';
 

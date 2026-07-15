@@ -4,7 +4,6 @@ import { consumeDevKillAllRequest, consumeDevWaveJump } from '../dev/devFlags';
 import { triggerRunEventSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
-import { getEnemyClassFromBossWave } from './enemyClass';
 import { spawnEnemyOnEdge } from './enemyMovement';
 import { pushSpawnFlash, type GameEffect } from './effects';
 import type { LootPickup } from './loot';
@@ -64,9 +63,9 @@ function trySpawnFromGroup(
 
   const spawned = spawnEnemyOnEdge(bounds, config, {
     waveIndex: runtime.waveIndex,
-    enemyClass: getEnemyClassFromBossWave(waveDef.isBoss),
+    isBossEncounter: Boolean(waveDef.isBoss),
   });
-  pushSpawnFlash(effects, spawned.x, spawned.y, spawned.waveIndex, spawned.enemyClass);
+  pushSpawnFlash(effects, spawned.x, spawned.y, spawned.waveIndex, spawned.isBossEncounter);
   nodes.push(spawned);
   runtime.spawnedInGroup += 1;
 }

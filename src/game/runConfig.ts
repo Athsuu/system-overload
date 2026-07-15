@@ -6,21 +6,23 @@ import {
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
 import { applyDevRunConfigOverrides } from '../dev/devRunConfigOverrides';
-import { isNodeAnchorActive } from './anchorSupercharge';
-import type { EnemyClass } from './enemyClass';
-import { getCycleHeatGrowthMult, getCyclePressureMult, getScalingWaveIndex } from './cycleScaling';
+import { getAnchorMultiplier, isNodeAnchorActive } from './anchorSupercharge';
+import { getCycleHeatGrowthMult, getCyclePressureMult } from './cycleScaling';
 import { useGameStore } from '../store/useGameStore';
 import {
   computeBreachCap,
   computeKillBreachRelief,
   computeRunConfig,
+  getLeakSealingReductionPercent,
+  RUN_STAT_BASE,
   type RunConfig,
 } from './moduleEffects';
 import {
-  getWaveHpMultiplier,
-  getWaveShardReward,
-  getWaveSpeedMultiplier,
-} from './waveScaling';
+  getEnemyLevel,
+  getEnemyMaxHpForLevel,
+  getEnemySpeedForLevel,
+  getShardsPerKillForLevel,
+} from './enemyScaling';
 
 /** Package A — chaque fuite inflige 20 % du seuil Meltdown actuel. */
 export const LEAK_BREACH_PERCENT_OF_CAP = 20;
@@ -31,21 +33,23 @@ export {
   MODULE_ADDITION_PIPELINE,
   MODULE_EFFECT_REGISTRY,
   computePurgeAoeProfile,
-  getEliteBreakerDamageBonusPercent,
+  computeVictoryShardBonus,
+  getBreachDissipationPerSec,
+  getLeakSealingReductionPercent,
+  getPurgeAmplifierDamageBonusPercent,
   getLatencySlowMultiplier,
   getPurgeReachBonusPercent,
   getPurgeSplashDamagePercent,
   getPurgeSplashRadius,
   getPurgeSplashRadiusBonusPercent,
-  getShardYieldBonusPercent,
-  getShardYieldMultiplier,
   resolvePurgeSplashDamage,
-  resolvePurgeHitDamage,
   type PurgeAoeProfile,
   type RunConfig,
   type ModuleEffectRegistryEntry,
   type ModuleEffectTarget,
 } from './moduleEffects';
+
+export { getEnemyLevel } from './enemyScaling';
 
 export function getBreachCap(upgrades: UpgradeLevels): number {
   return computeBreachCap(upgrades, useGameStore.getState().anchoredNodes);
@@ -88,8 +92,8 @@ export function resolveActiveCycle(): number {
   return useGameStore.getState().activeCycle || 1;
 }
 
-export function resolveScalingWaveIndex(localWaveIndex: number): number {
-  return getScalingWaveIndex(resolveActiveCycle(), localWaveIndex);
+export function resolveEnemyLevel(localWaveIndex: number, cycle?: number): number {
+  return getEnemyLevel(cycle ?? resolveActiveCycle(), localWaveIndex);
 }
 
 export function getEffectivePassiveHeatPerSec(config: RunConfig): number {
@@ -99,37 +103,47 @@ export function getEffectivePassiveHeatPerSec(config: RunConfig): number {
 export function getEnemyMaxHp(
   config: RunConfig,
   localWaveIndex: number,
-  enemyClass: EnemyClass = 'normal',
+  isBossEncounter = false,
+  cycle?: number,
 ): number {
-  const cycle = resolveActiveCycle();
-  const scalingIndex = getScalingWaveIndex(cycle, localWaveIndex);
-  const hp = config.baseEnemyHp * getWaveHpMultiplier(scalingIndex, enemyClass);
-  return Math.round(hp);
+  const level = resolveEnemyLevel(localWaveIndex, cycle);
+  const scaledHp = getEnemyMaxHpForLevel(level, isBossEncounter);
+  const baseRatio = config.baseEnemyHp / RUN_STAT_BASE.baseEnemyHp;
+  return Math.max(1, Math.round(scaledHp * baseRatio));
 }
 
 export function getEnemySpeed(
   config: RunConfig,
   localWaveIndex: number,
-  enemyClass: EnemyClass = 'normal',
+  cycle?: number,
 ): number {
-  const scalingIndex = resolveScalingWaveIndex(localWaveIndex);
-  const speed = config.baseEnemySpeed * getWaveSpeedMultiplier(scalingIndex, enemyClass);
-  return Math.min(config.maxEnemySpeed, speed);
+  const level = resolveEnemyLevel(localWaveIndex, cycle);
+  const scaledSpeed = getEnemySpeedForLevel(level);
+  const baseRatio = config.baseEnemySpeed / RUN_STAT_BASE.baseEnemySpeed;
+  return Math.min(config.maxEnemySpeed, scaledSpeed * baseRatio);
 }
 
 export function getShardReward(
   config: RunConfig,
   localWaveIndex: number,
-  enemyClass: EnemyClass = 'normal',
+  cycle?: number,
 ): number {
-  const scalingIndex = resolveScalingWaveIndex(localWaveIndex);
-  const base = getWaveShardReward(scalingIndex, enemyClass);
+  const level = resolveEnemyLevel(localWaveIndex, cycle);
+  const base = getShardsPerKillForLevel(level);
   return Math.floor(base * config.shardsMultiplier) + config.killBonusShards;
 }
 
 export function getLeakProgressPenalty(_config: RunConfig, _localWaveIndex: number): number {
-  const breachCap = getBreachCap(useGameStore.getState().upgrades);
-  return Math.round(breachCap * (LEAK_BREACH_PERCENT_OF_CAP / 100));
+  const state = useGameStore.getState();
+  const upgrades = state.upgrades;
+  const cap = getBreachCap(upgrades);
+  let penalty = Math.round(cap * (LEAK_BREACH_PERCENT_OF_CAP / 100));
+  const reductionPercent = getLeakSealingReductionPercent(
+    upgrades.leakSealing,
+    getAnchorMultiplier(state.anchoredNodes, 'leakSealing'),
+  );
+  if (reductionPercent <= 0) return penalty;
+  return Math.round(penalty * (1 - reductionPercent / 100));
 }
 
 export function getKillBreachRelief(upgrades: UpgradeLevels, _waveIndex: number): number {

@@ -5,7 +5,7 @@ import type { Graphics } from 'pixi.js';
 import { FillGradient } from 'pixi.js';
 import { DARK_HEX_PIXI } from '../theme/darkHexTerminal';
 import { FLASH_DURATION_MS } from './constants';
-import { getEnemyHexRadius } from './enemyClass';
+import { getEnemyHexRadius } from './encounter';
 import {
   drawRotatedFlatTopHexFill,
   drawRotatedFlatTopHexFillGradient,
@@ -359,12 +359,12 @@ function drawHitFeedback(
 }
 
 export function drawCorruptedProcess(graphics: Graphics, node: DissipationNode): void {
-  const radius = getEnemyHexRadius(node.enemyClass);
+  const radius = getEnemyHexRadius(node.isBossEncounter);
   const hpRatio = Math.max(0, node.hp / node.maxHp);
-  const isElite = node.enemyClass === 'elite';
+  const isBoss = node.isBossEncounter;
   const flashRatio = node.flashTimer > 0 ? node.flashTimer / FLASH_DURATION_MS : 0;
 
-  drawHexBody(graphics, node.x, node.y, radius, node.hexAngle, hpRatio, isElite, node.corruptSeed);
+  drawHexBody(graphics, node.x, node.y, radius, node.hexAngle, hpRatio, isBoss, node.corruptSeed);
 
   if (flashRatio > 0) {
     drawHitFeedback(graphics, node.x, node.y, radius, flashRatio);
@@ -374,8 +374,8 @@ export function drawCorruptedProcess(graphics: Graphics, node: DissipationNode):
 export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = (1 - progress) * 0.85;
-  const radius = getEnemyHexRadius(effect.enemyClass) * (0.25 + progress * 0.75);
-  const isElite = effect.enemyClass === 'elite';
+  const radius = getEnemyHexRadius(effect.isBossEncounter) * (0.25 + progress * 0.75);
+  const isBoss = effect.isBossEncounter;
 
   drawRotatedFlatTopHexStroke(
     graphics,
@@ -383,8 +383,8 @@ export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): v
     effect.y,
     radius,
     0,
-    isElite ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptVioletLite,
-    isElite ? ELITE_STROKE_WIDTH : NORMAL_STROKE_WIDTH,
+    isBoss ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptVioletLite,
+    isBoss ? ELITE_STROKE_WIDTH : NORMAL_STROKE_WIDTH,
     alpha,
     'butt',
     'miter',
@@ -394,8 +394,8 @@ export function drawCorruptSpawnFlash(graphics: Graphics, effect: GameEffect): v
 export function drawCorruptDeathEffect(graphics: Graphics, effect: GameEffect): void {
   const progress = effect.elapsedMs / effect.durationMs;
   const alpha = 1 - progress;
-  const radius = getEnemyHexRadius(effect.enemyClass);
-  const isElite = effect.enemyClass === 'elite';
+  const radius = getEnemyHexRadius(effect.isBossEncounter);
+  const isBoss = effect.isBossEncounter;
 
   drawRotatedFlatTopHexFillGradient(
     graphics,
@@ -412,8 +412,8 @@ export function drawCorruptDeathEffect(graphics: Graphics, effect: GameEffect): 
     effect.y,
     radius * (0.9 + progress * 0.35),
     0,
-    isElite ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptViolet,
-    isElite ? ELITE_STROKE_WIDTH : NORMAL_STROKE_WIDTH,
+    isBoss ? DARK_HEX_PIXI.breachGlow : DARK_HEX_PIXI.corruptViolet,
+    isBoss ? ELITE_STROKE_WIDTH : NORMAL_STROKE_WIDTH,
     alpha * 0.75,
     'butt',
     'miter',

@@ -4,18 +4,19 @@
  */
 
 import {
+  BREACH_DISSIPATION_PER_SEC_BY_LEVEL,
+  LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL,
+  PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL,
   KILL_BREACH_RELIEF_PER_LEVEL,
   MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL,
   PURGE_CADENCE_INTERVAL_MS_PER_LEVEL,
   PURGE_REACH_AOE_PERCENT_PER_LEVEL,
   PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL,
   PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL,
-  PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
-  ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL,
   SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL,
-  SHARD_YIELD_PERCENT_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
+  VICTORY_SHARD_BONUS_FLAT_BY_LEVEL,
   type AnchoredNodes,
   type UpgradeId,
   type UpgradeLevels,
@@ -28,7 +29,6 @@ import {
 } from '../store/coreProtocolCatalog';
 import { getRecompileDepthMultiplier } from '../store/prestigeLogic';
 import { getAnchorHeatMultiplier, getAnchorMultiplier } from './anchorSupercharge';
-import type { EnemyClass } from './enemyClass';
 import { BASE_CRITICAL_CHANCE, BASE_CRITICAL_MULTIPLIER } from './juice/criticalHit';
 
 const NO_ANCHORED_NODES: AnchoredNodes = {};
@@ -77,7 +77,6 @@ export type ModuleEffectTarget =
   | 'runConfig.killBonusShards'
   | 'runConfig.shardsMultiplier'
   | 'runConfig.purgeHitDamage'
-  | 'purge.eliteDamageBonus'
   | 'runConfig.purgeIntervalMs'
   | 'runConfig.purgeRadius'
   | 'purge.splashRadius'
@@ -85,6 +84,8 @@ export type ModuleEffectTarget =
   | 'runConfig.passiveHeatPerSec'
   | 'purge.latencySlow'
   | 'breach.cap'
+  | 'breach.dissipation'
+  | 'breach.leakReduction'
   | 'breach.killRelief'
   | 'loot.hexShardRadii'
   | 'overclock.unlock'
@@ -109,12 +110,12 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'shardSalvage',
     targets: ['runConfig.shardsMultiplier'],
-    summaryFr: 'Multiplicateur composé sur le rendement d’Éclats hex par kill (×1.18^rang, illimité)',
+    summaryFr: 'Multiplicateur composé sur le rendement d’Éclats hex par kill (×1.12^rang, max 5)',
   },
   {
-    upgradeId: 'shardYield',
-    targets: ['runConfig.shardsMultiplier'],
-    summaryFr: 'Bonus % sur les éclats de base par kill (rendement d’extraction)',
+    upgradeId: 'victoryShardBonus',
+    targets: ['runConfig.killBonusShards'],
+    summaryFr: 'Éclats bonus à Breach Contained (victoire boss)',
   },
   {
     upgradeId: 'shardMagnet',
@@ -124,12 +125,7 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'purgeStrike',
     targets: ['runConfig.purgeHitDamage'],
-    summaryFr: 'Bonus de dégâts Purge Strike',
-  },
-  {
-    upgradeId: 'eliteBreaker',
-    targets: ['purge.eliteDamageBonus'],
-    summaryFr: 'Bonus de dégâts purge vs processus lourds (élite)',
+    summaryFr: 'Bonus flat de dégâts Purge Strike (+5/rang, max 10)',
   },
   {
     upgradeId: 'purgeCadence',
@@ -154,17 +150,17 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'threadCoolant',
     targets: ['runConfig.passiveHeatPerSec'],
-    summaryFr: 'Réduit la montée passive d’Overload',
+    summaryFr: 'Réduit la chaleur passive (−0,08/s par rang, plancher 1,8/s)',
   },
   {
     upgradeId: 'killBreachRelief',
     targets: ['breach.killRelief'],
-    summaryFr: 'Soulagement Breach à chaque kill',
+    summaryFr: 'Soulagement Overload à chaque kill (−1 / rang, max 5)',
   },
   {
     upgradeId: 'meltdownThreshold',
     targets: ['breach.cap'],
-    summaryFr: 'Augmente le seuil Meltdown (cap Breach %)',
+    summaryFr: 'Augmente le seuil Meltdown (cap Breach %, max 10)',
   },
   {
     upgradeId: 'overclock',
@@ -175,6 +171,21 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
     upgradeId: 'fluxDrive',
     targets: ['runConfig.timeScale'],
     summaryFr: 'Débloque le toggle Flux Drive (×2 vitesse de simulation)',
+  },
+  {
+    upgradeId: 'breachDissipation',
+    targets: ['breach.dissipation'],
+    summaryFr: 'Drain passif de la jauge Breach (−0,10 / −0,20 / −0,30 par s, tous cycles)',
+  },
+  {
+    upgradeId: 'leakSealing',
+    targets: ['breach.leakReduction'],
+    summaryFr: 'Réduit la pénalité Breach par fuite (−10 / −20 / −30 %)',
+  },
+  {
+    upgradeId: 'purgeAmplifier',
+    targets: ['runConfig.purgeHitDamage'],
+    summaryFr: 'Bonus % dégâts purge (+5 / +10 / +15 %, tous cycles)',
   },
 ];
 
@@ -241,18 +252,33 @@ export function computePurgeAoeProfile(
   return { mainRadius, splashRadius, reachBonusPercent, splashRadiusBonusPercent };
 }
 
-export function getShardYieldBonusPercent(yieldLevel: number): number {
-  return flatPerLevel(yieldLevel, SHARD_YIELD_PERCENT_PER_LEVEL);
-}
-
-export function getShardYieldMultiplier(yieldLevel: number): number {
-  return 1 + getShardYieldBonusPercent(yieldLevel) / 100;
-}
-
-export function getEliteBreakerDamageBonusPercent(level: number, anchorMultiplier = 1): number {
+export function computeVictoryShardBonus(
+  upgrades: UpgradeLevels,
+  anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
+): number {
+  const level = upgrades.victoryShardBonus;
   if (level <= 0) return 0;
-  const index = Math.min(level, ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL.length) - 1;
-  return ELITE_BREAKER_DAMAGE_PERCENT_BY_LEVEL[index] * anchorMultiplier;
+  const anchorMultiplier = getAnchorMultiplier(anchoredNodes, 'victoryShardBonus');
+  const index = Math.min(level, VICTORY_SHARD_BONUS_FLAT_BY_LEVEL.length) - 1;
+  return Math.round(VICTORY_SHARD_BONUS_FLAT_BY_LEVEL[index] * anchorMultiplier);
+}
+
+export function getBreachDissipationPerSec(level: number, anchorMultiplier = 1): number {
+  if (level <= 0) return 0;
+  const index = Math.min(level, BREACH_DISSIPATION_PER_SEC_BY_LEVEL.length) - 1;
+  return BREACH_DISSIPATION_PER_SEC_BY_LEVEL[index] * anchorMultiplier;
+}
+
+export function getLeakSealingReductionPercent(level: number, anchorMultiplier = 1): number {
+  if (level <= 0) return 0;
+  const index = Math.min(level, LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL.length) - 1;
+  return LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL[index] * anchorMultiplier;
+}
+
+export function getPurgeAmplifierDamageBonusPercent(level: number, anchorMultiplier = 1): number {
+  if (level <= 0) return 0;
+  const index = Math.min(level, PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL.length) - 1;
+  return PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL[index] * anchorMultiplier;
 }
 
 export function getLatencySlowMultiplier(level: number, anchorMultiplier = 1): number {
@@ -288,17 +314,6 @@ export function resolvePurgeSplashDamage(
   return Math.max(1, Math.round(basePurgeHitDamage * (percent / 100)));
 }
 
-export function resolvePurgeHitDamage(
-  basePurgeHitDamage: number,
-  enemyClass: EnemyClass,
-  eliteBreakerLevel: number,
-  anchorMultiplier = 1,
-): number {
-  if (enemyClass !== 'elite' || eliteBreakerLevel <= 0) return basePurgeHitDamage;
-  const bonusPercent = getEliteBreakerDamageBonusPercent(eliteBreakerLevel, anchorMultiplier);
-  return Math.round(basePurgeHitDamage * (1 + bonusPercent / 100));
-}
-
 export function computeRunConfig(
   upgrades: UpgradeLevels,
   coreProtocols: CoreProtocolLevels = {
@@ -327,20 +342,23 @@ export function computeRunConfig(
     1 + (coreProtocols.extractionProtocol * EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL) / 100;
   const bootReinforcementMultiplier =
     1 + (coreProtocols.bootReinforcement * BOOT_REINFORCEMENT_DAMAGE_PERCENT_PER_LEVEL) / 100;
-  const shardYieldBonusPercent =
-    getShardYieldBonusPercent(upgrades.shardYield) * getAnchorMultiplier(anchoredNodes, 'shardYield');
   const shardSalvageMultiplier =
     SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL **
     (upgrades.shardSalvage * getAnchorMultiplier(anchoredNodes, 'shardSalvage'));
   const recompileDepthMultiplier = getRecompileDepthMultiplier(recompileDepth);
-  const purgeStrikeGrowthMultiplier = PURGE_STRIKE_DAMAGE_GROWTH_PER_LEVEL ** upgrades.purgeStrike;
+  const purgeAmplifierMult =
+    1 +
+    getPurgeAmplifierDamageBonusPercent(
+      upgrades.purgeAmplifier,
+      getAnchorMultiplier(anchoredNodes, 'purgeAmplifier'),
+    ) /
+      100;
 
   return {
     starterNodes: RUN_STAT_BASE.starterNodes,
     baseEnemyHp: RUN_STAT_BASE.baseEnemyHp,
     shardsMultiplier:
-      (1 + shardYieldBonusPercent / 100) * shardSalvageMultiplier * extractionBonus * recompileDepthMultiplier,
-    // Récupération d'éclats ne donne plus de bonus flat — voir shardsMultiplier (rééquilibrage).
+      shardSalvageMultiplier * extractionBonus * recompileDepthMultiplier,
     killBonusShards: 0,
     spawnIntervalMult: RUN_STAT_BASE.spawnIntervalMult,
     maxAliveReduction: RUN_STAT_BASE.maxAliveReduction,
@@ -357,9 +375,9 @@ export function computeRunConfig(
           upgrades.purgeStrike,
           PURGE_STRIKE_DAMAGE_PER_LEVEL * getAnchorMultiplier(anchoredNodes, 'purgeStrike'),
         )) *
-        purgeStrikeGrowthMultiplier *
         bootReinforcementMultiplier *
-        recompileDepthMultiplier,
+        recompileDepthMultiplier *
+        purgeAmplifierMult,
     ),
     purgeIntervalMs: subtractPerLevel(
       RUN_STAT_BASE.basePurgeIntervalMs,

@@ -1,10 +1,8 @@
-import type { EnemyClass } from '../enemyClass';
-
 export interface DamageAppliedEvent {
   x: number;
   y: number;
   waveIndex: number;
-  enemyClass: EnemyClass;
+  isBossEncounter: boolean;
   damage: number;
   isCritical: boolean;
 }
