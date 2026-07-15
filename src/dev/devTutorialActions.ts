@@ -1,7 +1,7 @@
 import { clearTutorialProgress } from '../tutorial/tutorialPersistence';
 import { clearArchAmbientHeard } from '../tutorial/archAmbientPersistence';
-import { clearMeltdownArchRotation } from '../ui/meltdownArchRotation';
-import { clearVictoryArchRotation } from '../ui/victoryArchRotation';
+import { clearMeltdownArchRotation } from '../ui/arch/meltdownArchRotation';
+import { clearVictoryArchRotation } from '../ui/arch/victoryArchRotation';
 import { setTutorialRunSpotlightActive } from '../tutorial/tutorialRunSpotlight';
 import { resetTutorialSignals } from '../tutorial/tutorialSignals';
 import { useSettingsStore } from '../store/useSettingsStore';

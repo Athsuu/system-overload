@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { ARCH_RUN_DIALOGUE_MS, useArchAmbient } from '../tutorial/useArchAmbient';
-import { markArchAmbientHeard } from '../tutorial/archAmbientPersistence';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { useGameStore } from '../store/useGameStore';
-import { isTutorialCoachVisible } from '../tutorial/tutorialCoachVisibility';
-import { useTutorialCoach } from '../tutorial/useTutorialCoach';
+import { ARCH_RUN_DIALOGUE_MS, useArchAmbient } from '../../tutorial/useArchAmbient';
+import { markArchAmbientHeard } from '../../tutorial/archAmbientPersistence';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useGameStore } from '../../store/useGameStore';
+import { isTutorialCoachVisible } from '../../tutorial/tutorialCoachVisibility';
+import { useTutorialCoach } from '../../tutorial/useTutorialCoach';
 import { ArchRunDialogueCard } from './ArchRunDialogueCard';
 
 export function ArchRunDialogue() {

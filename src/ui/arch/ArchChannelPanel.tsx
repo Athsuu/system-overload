@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { DARK_HEX } from '../theme/darkHexTerminal';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
 
 export type ArchChannelIntensity = 'normal' | 'heavy';
 

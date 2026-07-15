@@ -8,7 +8,7 @@ import { CycleRunLauncher } from './CycleRunLauncher';
 import { HubCornerControls } from './HubCornerControls';
 import { ModuleTreeViewport } from './module-tree/ModuleTreeViewport';
 import { TerminalBackdrop } from './TerminalBackdrop';
-import { ArchGlitchLine } from './ArchGlitchText';
+import { ArchGlitchLine } from './arch/ArchGlitchText';
 
 interface ModuleTreeScreenProps {
   mode: Extract<GameState, 'MENU' | 'UPGRADING'>;

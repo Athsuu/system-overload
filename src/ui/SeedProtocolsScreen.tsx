@@ -6,7 +6,7 @@ import { useGameStore } from '../store/useGameStore';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { triggerSfx } from '../audio/sfxApi';
 import { HubCornerControls } from './HubCornerControls';
-import { ArchGlitchLine } from './ArchGlitchText';
+import { ArchGlitchLine } from './arch/ArchGlitchText';
 import { RecompileConfirmModal } from './RecompileConfirmModal';
 import { SEED_PROTOCOL_IDS } from './seedProtocolLayout';
 import { getCoreProtocolTierVisual, SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';

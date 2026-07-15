@@ -7,7 +7,7 @@ import {
   type ScreenTransitionId,
 } from '../../store/useTransitionStore';
 import { DARK_HEX } from '../../theme/darkHexTerminal';
-import { ArchGlitchLine } from '../ArchGlitchText';
+import { ArchGlitchLine } from '../arch/ArchGlitchText';
 import { TerminalBackdrop } from '../TerminalBackdrop';
 import {
   TRANSITION_ACK_MS,

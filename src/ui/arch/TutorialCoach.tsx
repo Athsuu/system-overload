@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { isTutorialCoachVisible } from '../tutorial/tutorialCoachVisibility';
-import { SPOTLIGHT_MOVE_DURATION_MS } from '../tutorial/tutorialSpotlightMotion';
-import { useTutorialCoach } from '../tutorial/useTutorialCoach';
+import { isTutorialCoachVisible } from '../../tutorial/tutorialCoachVisibility';
+import { SPOTLIGHT_MOVE_DURATION_MS } from '../../tutorial/tutorialSpotlightMotion';
+import { useTutorialCoach } from '../../tutorial/useTutorialCoach';
 import { ArchChannelLabel, ArchChannelPanel, type ArchChannelGroupNav } from './ArchChannelPanel';
 import { ArchGlitchLine } from './ArchGlitchText';
 import { ArchTypewriterGlitchText } from './ArchTypewriterGlitchText';
@@ -9,8 +9,8 @@ import {
   TutorialTransitionOverlay,
   type TutorialNavDirection,
 } from './TutorialTransitionOverlay';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { useGameStore } from '../store/useGameStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useGameStore } from '../../store/useGameStore';
 
 const ARCH_CYAN = '#38bdf8';
 

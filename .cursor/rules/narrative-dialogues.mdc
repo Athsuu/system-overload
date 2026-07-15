@@ -1,6 +1,6 @@
 ---
 description: Narratif Zero Archive, i18n EN/FR, prose ARCH, sync docs dialogues
-globs: src/i18n/**/*,docs/dialogues.md,docs/lexique-jeu.md,docs/narrative.md,docs/lore-screenplay.html,src/ui/gameNarrative.ts,src/ui/RunEndScreen.tsx,src/ui/PauseScreen.tsx,src/store/upgradeCatalog.ts
+globs: src/i18n/**/*,docs/dialogues.md,docs/lexique-jeu.md,docs/narrative.md,docs/lore-screenplay.html,src/ui/arch/gameNarrative.ts,src/ui/RunEndScreen.tsx,src/ui/PauseScreen.tsx,src/store/upgradeCatalog.ts
 alwaysApply: false
 ---
 

@@ -1,12 +1,12 @@
 import { useMemo, type ReactNode } from 'react';
-import type { TutorialAnchor, TutorialDisplay, TutorialStepId } from '../tutorial/tutorialCatalog';
+import type { TutorialAnchor, TutorialDisplay, TutorialStepId } from '../../tutorial/tutorialCatalog';
 import {
   buildFocusLiftGradient,
   buildFocusLiftMask,
   buildFocusMask,
   buildVignetteMask,
   SPOTLIGHT_DIM_COLOR,
-} from '../tutorial/tutorialSpotlightLayout';
+} from '../../tutorial/tutorialSpotlightLayout';
 import {
   useAnimatedTutorialLayout,
   type TutorialNavDirection,

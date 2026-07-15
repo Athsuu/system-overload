@@ -19,8 +19,8 @@ import { MainMenuScreen } from './ui/MainMenuScreen';
 import { ModuleTreeScreen } from './ui/ModuleTreeScreen';
 import { SeedProtocolsScreen } from './ui/SeedProtocolsScreen';
 import { ScreenTransitionOverlay } from './ui/transitions/ScreenTransitionOverlay';
-import { TutorialCoach } from './ui/TutorialCoach';
-import { ArchAmbient } from './ui/ArchAmbient';
+import { TutorialCoach } from './ui/arch/TutorialCoach';
+import { ArchAmbient } from './ui/arch/ArchAmbient';
 import { usePauseHotkey } from './ui/usePauseHotkey';
 import { DARK_HEX } from './theme/darkHexTerminal';
 

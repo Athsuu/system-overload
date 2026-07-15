@@ -1,5 +1,5 @@
 import { ArchTypewriterGlitchText } from './ArchTypewriterGlitchText';
-import { useGameStrings } from '../i18n/useGameStrings';
+import { useGameStrings } from '../../i18n/useGameStrings';
 
 const ARCH_CYAN = '#38bdf8';
 

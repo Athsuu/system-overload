@@ -9,7 +9,7 @@ import { isFluxDriveUnlocked, isOverclockUnlocked } from '../store/upgradeCatalo
 import { BREACH_URGENT_THRESHOLD, DARK_HEX } from '../theme/darkHexTerminal';
 import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
 import { OverclockButton } from './OverclockButton';
-import { ArchRunDialogue } from './ArchRunDialogue';
+import { ArchRunDialogue } from './arch/ArchRunDialogue';
 
 function FluxDriveToggle() {
   const gameState = useGameStore((state) => state.gameState);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { triggerSfx } from '../audio/sfxApi';
+import { triggerSfx } from '../../audio/sfxApi';
 import { ArchGlitchWords, glitchSlice } from './archGlitchCore';
 
 const DEFAULT_CHAR_MS = 28;

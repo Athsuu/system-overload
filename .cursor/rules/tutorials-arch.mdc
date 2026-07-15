@@ -1,6 +1,6 @@
 ---
 description: Tutoriels ARCH — spotlight, placement carte, Skip, glide, pause run
-globs: src/tutorial/**/*,src/ui/Tutorial*.tsx,src/ui/Arch*.tsx,src/ui/*Tutorial*.ts,src/ui/*Tutorial*.tsx,src/ui/useAnimatedTutorial*.ts,src/game/GameArena.tsx
+globs: src/tutorial/**/*,src/ui/arch/**,src/game/GameArena.tsx
 alwaysApply: false
 ---
 
@@ -58,10 +58,10 @@ alwaysApply: false
 
 - Catalogue : `src/tutorial/tutorialCatalog.ts`
 - Coach / dismiss : `src/tutorial/useTutorialCoach.ts`, `src/tutorial/tutorialPersistence.ts`
-- Carte : `src/ui/TutorialCoach.tsx`, `src/ui/ArchChannelPanel.tsx`, `src/ui/ArchGlitchText.tsx`
-- Spotlight : `src/ui/TutorialTransitionOverlay.tsx`, `src/ui/useAnimatedTutorialLayout.ts`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`
+- Carte : `src/ui/arch/TutorialCoach.tsx`, `src/ui/arch/ArchChannelPanel.tsx`, `src/ui/arch/ArchGlitchText.tsx`
+- Spotlight : `src/ui/arch/TutorialTransitionOverlay.tsx`, `src/ui/arch/useAnimatedTutorialLayout.ts`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`
 - Pause run : `src/tutorial/tutorialRunSpotlight.ts` + gel `src/game/GameArena.tsx`
-- Ambient / relay run : `src/tutorial/archAmbientCatalog.ts`, `src/ui/ArchAmbient.tsx`, `src/ui/ArchRunDialogue.tsx`
+- Ambient / relay run : `src/tutorial/archAmbientCatalog.ts`, `src/ui/arch/ArchAmbient.tsx`, `src/ui/arch/ArchRunDialogue.tsx`
 - Ancres HUD : `data-tutorial-anchor` dans `src/ui/HUD.tsx`
 
 ## Textes

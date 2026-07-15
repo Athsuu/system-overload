@@ -1,18 +1,18 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import type { TutorialAnchor, TutorialDisplay, TutorialStepId } from '../tutorial/tutorialCatalog';
+import type { TutorialAnchor, TutorialDisplay, TutorialStepId } from '../../tutorial/tutorialCatalog';
 import {
   easeOutCubic,
   lerp,
   lerpSpotlightMetrics,
   SPOTLIGHT_MOVE_DURATION_MS,
-} from '../tutorial/tutorialSpotlightMotion';
+} from '../../tutorial/tutorialSpotlightMotion';
 import {
   getSpotlightFocusMetrics,
   measureSpotlightRect,
   measureTutorialCardPlacement,
   type CardPlacement,
   type SpotlightFocusMetrics,
-} from '../tutorial/tutorialSpotlightLayout';
+} from '../../tutorial/tutorialSpotlightLayout';
 
 export type TutorialNavDirection = -1 | 0 | 1;
 

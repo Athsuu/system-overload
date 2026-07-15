@@ -10,7 +10,7 @@ import { DARK_HEX } from '../theme/darkHexTerminal';
 import { ConfirmNewGameModal } from './ConfirmNewGameModal';
 import { HexActionButton } from './HexActionButton';
 import { MainMenuBackdrop } from './MainMenuBackdrop';
-import { ArchGlitchLine } from './ArchGlitchText';
+import { ArchGlitchLine } from './arch/ArchGlitchText';
 
 export function MainMenuScreen() {
   const strings = useGameStrings();
