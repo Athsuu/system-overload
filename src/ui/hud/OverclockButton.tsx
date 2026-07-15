@@ -1,5 +1,5 @@
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { hexagonPoints } from './module-tree/moduleTreeGeometry';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { hexagonPoints } from '../module-tree/moduleTreeGeometry';
 
 const SIZE = 88;
 const CX = 44;

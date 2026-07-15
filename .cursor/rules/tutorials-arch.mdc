@@ -62,7 +62,7 @@ alwaysApply: false
 - Spotlight : `src/ui/arch/TutorialTransitionOverlay.tsx`, `src/ui/arch/useAnimatedTutorialLayout.ts`, `src/tutorial/tutorialSpotlightLayout.ts`, `src/tutorial/tutorialSpotlightDefaults.ts`, `src/tutorial/tutorialSpotlightMotion.ts`
 - Pause run : `src/tutorial/tutorialRunSpotlight.ts` + gel `src/game/GameArena.tsx`
 - Ambient / relay run : `src/tutorial/archAmbientCatalog.ts`, `src/ui/arch/ArchAmbient.tsx`, `src/ui/arch/ArchRunDialogue.tsx`
-- Ancres HUD : `data-tutorial-anchor` dans `src/ui/HUD.tsx`
+- Ancres HUD : `data-tutorial-anchor` dans `src/ui/hud/HUD.tsx`
 
 ## Textes
 

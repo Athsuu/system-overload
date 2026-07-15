@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import { getBreachPercent } from '../game/runConfig';
-import { formatRunElapsedMs, runElapsedMsRef } from '../game/runElapsed';
-import { overclockDisplayRef, requestOverclockActivation } from '../game/overclock';
-import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { useGameStore } from '../store/useGameStore';
-import { isFluxDriveUnlocked, isOverclockUnlocked } from '../store/upgradeCatalog';
-import { BREACH_URGENT_THRESHOLD, DARK_HEX } from '../theme/darkHexTerminal';
-import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
+import { getBreachPercent } from '../../game/runConfig';
+import { formatRunElapsedMs, runElapsedMsRef } from '../../game/runElapsed';
+import { overclockDisplayRef, requestOverclockActivation } from '../../game/overclock';
+import { REGULAR_WAVE_COUNT } from '../../game/waveConfig';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { useGameStore } from '../../store/useGameStore';
+import { isFluxDriveUnlocked, isOverclockUnlocked } from '../../store/upgradeCatalog';
+import { BREACH_URGENT_THRESHOLD, DARK_HEX } from '../../theme/darkHexTerminal';
+import { useRunTutorialSpotlightActive } from '../../tutorial/useRunTutorialSpotlightActive';
 import { OverclockButton } from './OverclockButton';
-import { ArchRunDialogue } from './arch/ArchRunDialogue';
+import { ArchRunDialogue } from '../arch/ArchRunDialogue';
 
 function FluxDriveToggle() {
   const gameState = useGameStore((state) => state.gameState);
