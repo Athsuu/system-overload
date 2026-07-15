@@ -5,7 +5,7 @@ import { useGameStore } from '../store/useGameStore';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
-import { HexActionButton } from './HexActionButton';
+import { HexActionButton } from './shared/HexActionButton';
 import { useScreenTransition } from './transitions/useScreenTransition';
 
 function CycleArrowButton({

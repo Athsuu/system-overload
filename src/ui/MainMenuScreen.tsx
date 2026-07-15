@@ -8,7 +8,7 @@ import { clearProgressionData } from '../store/playerReset';
 import { useGameStore, persistCurrentProgress, resetToFreshPlayer } from '../store/useGameStore';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { ConfirmNewGameModal } from './ConfirmNewGameModal';
-import { HexActionButton } from './HexActionButton';
+import { HexActionButton } from './shared/HexActionButton';
 import { MainMenuBackdrop } from './MainMenuBackdrop';
 import { ArchGlitchLine } from './arch/ArchGlitchText';
 

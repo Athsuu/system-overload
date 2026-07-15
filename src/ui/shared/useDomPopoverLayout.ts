@@ -3,7 +3,7 @@ import {
   getDomAnchorRect,
   placeModuleTreePopover,
   type ModulePopoverPlacement,
-} from './module-tree/moduleTreePopoverPlacement';
+} from '../module-tree/moduleTreePopoverPlacement';
 
 interface UseDomPopoverLayoutOptions {
   containerRef: RefObject<HTMLDivElement | null>;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { playOneShotAnimation } from './animations';
+import { playOneShotAnimation } from './shared/animations';
 import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
 
 export const CURRENCY_LORE_TOOLTIP_WIDTH = 350;

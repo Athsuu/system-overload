@@ -13,11 +13,11 @@ import { getModuleNode, getParentRequirementLabel, getModuleGlyphId, getUpgradeB
 import { useGameStrings } from '../../i18n/useGameStrings';
 import { triggerSfx } from '../../audio/sfxApi';
 import { getTooltipHeight, getUpgradeTooltipLines } from './upgradeTooltipStats';
-import { playOneShotAnimation } from '../animations';
+import { playOneShotAnimation } from '../shared/animations';
 import { ModuleBranchIcon } from './moduleTreeBranchIcons';
 import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
 import { DARK_HEX } from '../../theme/darkHexTerminal';
-import { formatCompactNumber } from '../formatNumber';
+import { formatCompactNumber } from '../shared/formatNumber';
 
 const STAT_GREEN = '#4ade80';
 export const MODULE_TREE_TOOLTIP_TITLE_ID = 'module-tree-popover-title';

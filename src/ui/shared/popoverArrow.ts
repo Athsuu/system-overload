@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
-import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
-import { MODULE_POPOVER_ARROW } from './module-tree/moduleTreePopoverPlacement';
+import { MODULE_TREE_VISUAL } from '../module-tree/moduleTreeTheme';
+import { MODULE_POPOVER_ARROW } from '../module-tree/moduleTreePopoverPlacement';
 
 export function modulePopoverArrowStyle(
   side: 'top' | 'bottom' | 'left' | 'right',

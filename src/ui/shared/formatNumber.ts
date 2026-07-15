@@ -1,4 +1,4 @@
-import { getGameLocale } from '../i18n';
+import { getGameLocale } from '../../i18n';
 
 const INTL_LOCALE_BY_GAME_LOCALE = {
   fr: 'fr-FR',

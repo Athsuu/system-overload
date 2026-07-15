@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import type { TreeNodeId } from '../../store/moduleTree';
-import { modulePopoverArrowStyle } from '../popoverArrow';
+import { modulePopoverArrowStyle } from '../shared/popoverArrow';
 import {
   type ModuleTreePanTransform,
 } from './moduleTreePopoverPlacement';

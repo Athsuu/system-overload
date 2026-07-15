@@ -1,7 +1,7 @@
 import { useGameStrings } from '../i18n/useGameStrings';
 import { useGameStore } from '../store/useGameStore';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
-import { HexActionButton } from './HexActionButton';
+import { HexActionButton } from './shared/HexActionButton';
 import { useScreenTransition } from './transitions/useScreenTransition';
 
 export function PlayRunButton() {

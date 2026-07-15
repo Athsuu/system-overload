@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { useGameStore } from '../store/useGameStore';
-import { isTutorialRunSpotlightActive } from '../tutorial/tutorialRunSpotlight';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useGameStore } from '../../store/useGameStore';
+import { isTutorialRunSpotlightActive } from '../../tutorial/tutorialRunSpotlight';
 
 export function usePauseHotkey(): void {
   const togglePause = useGameStore((state) => state.togglePause);

@@ -13,7 +13,7 @@ import { HexShardsBadgeLayer } from './ui/CurrencyBadge';
 import { HUD } from './ui/HUD';
 import { PauseScreen } from './ui/PauseScreen';
 import { RunEndScreen } from './ui/RunEndScreen';
-import { ScreenTransition } from './ui/ScreenTransition';
+import { ScreenTransition } from './ui/shared/ScreenTransition';
 import { SettingsOverlay } from './ui/SettingsOverlay';
 import { MainMenuScreen } from './ui/MainMenuScreen';
 import { ModuleTreeScreen } from './ui/ModuleTreeScreen';
@@ -21,7 +21,7 @@ import { SeedProtocolsScreen } from './ui/SeedProtocolsScreen';
 import { ScreenTransitionOverlay } from './ui/transitions/ScreenTransitionOverlay';
 import { TutorialCoach } from './ui/arch/TutorialCoach';
 import { ArchAmbient } from './ui/arch/ArchAmbient';
-import { usePauseHotkey } from './ui/usePauseHotkey';
+import { usePauseHotkey } from './ui/shared/usePauseHotkey';
 import { DARK_HEX } from './theme/darkHexTerminal';
 
 function App() {

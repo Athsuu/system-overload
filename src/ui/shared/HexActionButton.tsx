@@ -1,8 +1,8 @@
 import { useId } from 'react';
-import type { HubSfxId } from '../audio/types';
-import { triggerSfx } from '../audio/sfxApi';
-import { hexagonPoints } from './module-tree/moduleTreeGeometry';
-import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
+import type { HubSfxId } from '../../audio/types';
+import { triggerSfx } from '../../audio/sfxApi';
+import { hexagonPoints } from '../module-tree/moduleTreeGeometry';
+import { MODULE_TREE_VISUAL } from '../module-tree/moduleTreeTheme';
 import { HexButtonLabel } from './HexButtonLabel';
 
 interface HexActionButtonProps {

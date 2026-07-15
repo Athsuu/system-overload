@@ -5,7 +5,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { useGameStrings } from '../i18n/useGameStrings';
-import { HexActionButton } from './HexActionButton';
+import { HexActionButton } from './shared/HexActionButton';
 import { SettingsPanel } from './SettingsPanel';
 import { useScreenTransition } from './transitions/useScreenTransition';
 
