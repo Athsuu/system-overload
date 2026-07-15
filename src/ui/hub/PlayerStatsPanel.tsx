@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { useGameStore } from '../store/useGameStore';
-import { DARK_HEX } from '../theme/darkHexTerminal';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { useGameStore } from '../../store/useGameStore';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
 import { getPlayerStatSheet } from './playerStats';
 
 interface PlayerStatsPanelProps {

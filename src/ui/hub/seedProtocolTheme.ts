@@ -1,4 +1,4 @@
-import type { CoreProtocolState } from '../store/coreProtocolCatalog';
+import type { CoreProtocolState } from '../../store/coreProtocolCatalog';
 
 /** Palette Monolithe — verre dépoli cyan, détaché de la grille hexagonale du hub. */
 export const SEED_PROTOCOL_VISUAL = {

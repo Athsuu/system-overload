@@ -1,12 +1,12 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { useGameStore } from '../store/useGameStore';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { isCycleCleared } from '../store/cycleTypes';
-import { RECOMPILE_TRIGGER_CYCLE } from '../store/prestigeLogic';
-import { ANCHOR_CYCLES_PER_FRAGMENT } from '../game/anchorSupercharge';
-import { setBadgeTarget } from '../game/juice/badgeTarget';
+import { useGameStore } from '../../store/useGameStore';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { isCycleCleared } from '../../store/cycleTypes';
+import { RECOMPILE_TRIGGER_CYCLE } from '../../store/prestigeLogic';
+import { ANCHOR_CYCLES_PER_FRAGMENT } from '../../game/anchorSupercharge';
+import { setBadgeTarget } from '../../game/juice/badgeTarget';
 import { AnchorFragmentIcon, HexShardIcon, SeedFragmentIcon } from './currencyIcons';
 import { isAnchorFragmentsUnlocked, isVaultShardsUnlocked } from './currencyVisibility';
 import {
@@ -15,7 +15,7 @@ import {
   CurrencyLoreTooltip,
 } from './CurrencyLoreTooltip';
 import { HubPopover } from './HubPopover';
-import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
+import { MODULE_TREE_VISUAL } from '../module-tree/moduleTreeTheme';
 import { SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
 
 type HoveredCurrency = 'shards' | 'anchor' | 'seed';

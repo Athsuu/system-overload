@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
-import { canRecompile, computeSeedFragmentsGain } from '../store/prestigeLogic';
-import { useGameStrings } from '../i18n/useGameStrings';
+import { useGameStore } from '../../store/useGameStore';
+import { canRecompile, computeSeedFragmentsGain } from '../../store/prestigeLogic';
+import { useGameStrings } from '../../i18n/useGameStrings';
 import { SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
-import { HexActionButton } from './shared/HexActionButton';
+import { HexActionButton } from '../shared/HexActionButton';
 import { SeedFragmentIcon } from './currencyIcons';
 
 interface RecompileConfirmModalProps {

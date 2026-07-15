@@ -1,5 +1,5 @@
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { hexPatternPath } from './module-tree/moduleTreeGeometry';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { hexPatternPath } from '../module-tree/moduleTreeGeometry';
 
 const HEX_CELL = 90;
 

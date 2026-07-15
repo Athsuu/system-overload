@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSettingsStore } from '../store/useSettingsStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { PlayerStatsButton } from './PlayerStatsButton';
 import { PlayerStatsPanel } from './PlayerStatsPanel';
-import { SettingsGearButton } from './settings/SettingsGearButton';
+import { SettingsGearButton } from '../settings/SettingsGearButton';
 
 export function HubCornerControls() {
   const [statsOpen, setStatsOpen] = useState(false);

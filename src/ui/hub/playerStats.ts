@@ -5,16 +5,16 @@ import {
   getRunConfig,
   getShardReward,
   resolvePurgeSplashDamage,
-} from '../game/runConfig';
+} from '../../game/runConfig';
 import {
   computeVictoryShardBonus,
   getBreachDissipationPerSec,
   getLeakSealingReductionPercent,
   getPurgeAmplifierDamageBonusPercent,
-} from '../game/moduleEffects';
-import { BOSS_VICTORY_SHARD_BONUS, SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL } from '../store/upgradeCatalog';
-import { getGameStrings } from '../i18n';
-import type { UpgradeLevels } from '../store/upgradeCatalog';
+} from '../../game/moduleEffects';
+import { BOSS_VICTORY_SHARD_BONUS, SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL } from '../../store/upgradeCatalog';
+import { getGameStrings } from '../../i18n';
+import type { UpgradeLevels } from '../../store/upgradeCatalog';
 
 export interface PlayerStatLine {
   id: string;

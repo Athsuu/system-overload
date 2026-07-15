@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
-import { modulePopoverArrowStyle } from './shared/popoverArrow';
-import { useDomPopoverLayout } from './shared/useDomPopoverLayout';
+import { modulePopoverArrowStyle } from '../shared/popoverArrow';
+import { useDomPopoverLayout } from '../shared/useDomPopoverLayout';
 
 interface HubPopoverProps {
   containerRef: RefObject<HTMLDivElement | null>;

@@ -5,11 +5,11 @@ import type { CoreProtocolId } from '../store/prestigeTypes';
 import { useGameStore } from '../store/useGameStore';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { triggerSfx } from '../audio/sfxApi';
-import { HubCornerControls } from './HubCornerControls';
+import { HubCornerControls } from './hub/HubCornerControls';
 import { ArchGlitchLine } from './arch/ArchGlitchText';
-import { RecompileConfirmModal } from './RecompileConfirmModal';
-import { SEED_PROTOCOL_IDS } from './seedProtocolLayout';
-import { getCoreProtocolTierVisual, SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
+import { RecompileConfirmModal } from './hub/RecompileConfirmModal';
+import { SEED_PROTOCOL_IDS } from './hub/seedProtocolLayout';
+import { getCoreProtocolTierVisual, SEED_PROTOCOL_VISUAL } from './hub/seedProtocolTheme';
 
 function MonolithTierCard({
   id,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DARK_HEX } from '../theme/darkHexTerminal';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
 import { HexGridBackdrop } from './HexGridBackdrop';
 
 export type TerminalBackdropVariant = 'menu' | 'hub' | 'arena';

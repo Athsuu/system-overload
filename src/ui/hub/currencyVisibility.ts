@@ -1,4 +1,4 @@
-import type { UpgradeLevels } from '../store/upgradeCatalog';
+import type { UpgradeLevels } from '../../store/upgradeCatalog';
 
 export function isVaultShardsUnlocked(bankShards: number, upgrades: UpgradeLevels): boolean {
   if (bankShards > 0) return true;

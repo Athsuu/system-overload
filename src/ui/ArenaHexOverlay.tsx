@@ -1,4 +1,4 @@
-import { TerminalBackdrop } from './TerminalBackdrop';
+import { TerminalBackdrop } from './hub/TerminalBackdrop';
 
 export function ArenaHexOverlay() {
   return (

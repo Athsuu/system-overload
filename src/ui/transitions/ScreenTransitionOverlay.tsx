@@ -8,7 +8,7 @@ import {
 } from '../../store/useTransitionStore';
 import { DARK_HEX } from '../../theme/darkHexTerminal';
 import { ArchGlitchLine } from '../arch/ArchGlitchText';
-import { TerminalBackdrop } from '../TerminalBackdrop';
+import { TerminalBackdrop } from '../hub/TerminalBackdrop';
 import {
   TRANSITION_ACK_MS,
   TRANSITION_DEFINITIONS,

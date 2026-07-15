@@ -11,8 +11,8 @@ import { pickMeltdownArchVariantIndex } from './arch/meltdownArchRotation';
 import { pickVictoryArchVariantIndex } from './arch/victoryArchRotation';
 import { useCountUp } from './shared/useCountUp';
 import { useScreenTransition } from './transitions/useScreenTransition';
-import { RecompileConfirmModal } from './RecompileConfirmModal';
-import { SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
+import { RecompileConfirmModal } from './hub/RecompileConfirmModal';
+import { SEED_PROTOCOL_VISUAL } from './hub/seedProtocolTheme';
 
 export function RunEndScreen() {
   const lastRunShards = useGameStore((state) => state.lastRunShards);

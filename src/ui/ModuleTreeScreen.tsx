@@ -4,10 +4,10 @@ import type { TreeNodeId } from '../store/moduleTree';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { CycleRunLauncher } from './CycleRunLauncher';
-import { HubCornerControls } from './HubCornerControls';
+import { CycleRunLauncher } from './hub/CycleRunLauncher';
+import { HubCornerControls } from './hub/HubCornerControls';
 import { ModuleTreeViewport } from './module-tree/ModuleTreeViewport';
-import { TerminalBackdrop } from './TerminalBackdrop';
+import { TerminalBackdrop } from './hub/TerminalBackdrop';
 import { ArchGlitchLine } from './arch/ArchGlitchText';
 
 interface ModuleTreeScreenProps {

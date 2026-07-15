@@ -9,7 +9,7 @@ import { useProgressAutosave } from './store/useProgressAutosave';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useGameStore } from './store/useGameStore';
 import { ArenaHexOverlay } from './ui/ArenaHexOverlay';
-import { HexShardsBadgeLayer } from './ui/CurrencyBadge';
+import { HexShardsBadgeLayer } from './ui/hub/CurrencyBadge';
 import { HUD } from './ui/HUD';
 import { PauseScreen } from './ui/PauseScreen';
 import { RunEndScreen } from './ui/RunEndScreen';
