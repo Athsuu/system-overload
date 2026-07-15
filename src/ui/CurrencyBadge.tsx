@@ -15,7 +15,7 @@ import {
   CurrencyLoreTooltip,
 } from './CurrencyLoreTooltip';
 import { HubPopover } from './HubPopover';
-import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
+import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
 import { SEED_PROTOCOL_VISUAL } from './seedProtocolTheme';
 
 type HoveredCurrency = 'shards' | 'anchor' | 'seed';

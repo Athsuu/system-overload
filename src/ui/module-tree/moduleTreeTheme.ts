@@ -1,5 +1,5 @@
-import type { ModuleState } from '../store/upgradeCatalog';
-import { DARK_HEX } from '../theme/darkHexTerminal';
+import type { ModuleState } from '../../store/upgradeCatalog';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
 
 export const MODULE_TREE_VISUAL = {
   canvasBg: DARK_HEX.canvasBg,

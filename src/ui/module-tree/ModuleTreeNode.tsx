@@ -1,13 +1,13 @@
-import type { UpgradeId, ModuleState } from '../store/upgradeCatalog';
-import type { ModuleGlyphId } from '../store/moduleTree';
-import { NODE_RADIUS } from '../store/moduleTree';
-import { useGameStore } from '../store/useGameStore';
+import type { UpgradeId, ModuleState } from '../../store/upgradeCatalog';
+import type { ModuleGlyphId } from '../../store/moduleTree';
+import { NODE_RADIUS } from '../../store/moduleTree';
+import { useGameStore } from '../../store/useGameStore';
 import { getNodeHexRadius, socketPoints } from './moduleTreeGeometry';
-import { triggerSfx } from '../audio/sfxApi';
+import { triggerSfx } from '../../audio/sfxApi';
 import { hexagonPoints } from './moduleTreeGeometry';
 import { ModuleTreeBranchGlyph } from './moduleTreeBranchIcons';
 import { getNodeVisualState, getRootNodeVisualState, MODULE_TREE_VISUAL } from './moduleTreeTheme';
-import { DARK_HEX } from '../theme/darkHexTerminal';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
 
 interface ModuleTreeNodeProps {
   id: UpgradeId;

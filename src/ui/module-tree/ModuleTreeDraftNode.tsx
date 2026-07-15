@@ -1,4 +1,4 @@
-import { NODE_RADIUS } from '../store/moduleTree';
+import { NODE_RADIUS } from '../../store/moduleTree';
 import { hexagonPoints } from './moduleTreeGeometry';
 import { getNodeVisualState } from './moduleTreeTheme';
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { NODE0_HUB_POSITION } from '../store/moduleTree';
+import { NODE0_HUB_POSITION } from '../../store/moduleTree';
 
 const VIEWPORT_STORAGE_KEY = 'system-overload-tree-viewport';
 

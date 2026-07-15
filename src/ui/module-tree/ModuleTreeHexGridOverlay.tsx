@@ -7,12 +7,12 @@ import {
   HEX_GRID_EDITOR_RING_RADIUS,
   HEX_GRID_RING_RADIUS,
   type HexGridHoverInfo,
-} from '../store/moduleTreeHexGrid';
+} from '../../store/moduleTreeHexGrid';
 import {
   getParentAxial,
   type DevModuleTreeDraftEntry,
   type DraftParentId,
-} from '../dev/moduleTreeEditor/devModuleTreeDraft';
+} from '../../dev/moduleTreeEditor/devModuleTreeDraft';
 import { hexagonPoints } from './moduleTreeGeometry';
 
 const CELL_RADIUS = getHexGridCellRadius();

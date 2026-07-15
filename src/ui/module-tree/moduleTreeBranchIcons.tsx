@@ -1,4 +1,4 @@
-import type { ModuleGlyphId } from '../store/moduleTree';
+import type { ModuleGlyphId } from '../../store/moduleTree';
 
 const ICON_SIZE = 24;
 

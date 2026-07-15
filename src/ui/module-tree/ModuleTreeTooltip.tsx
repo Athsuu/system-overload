@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore } from '../../store/useGameStore';
 import {
   ANCHOR_SUPERCHARGE_COST,
   getModuleState,
@@ -8,16 +8,16 @@ import {
   getUpgradeDefinition,
   isAnchorSuperchargeEligible,
   type UpgradeId,
-} from '../store/upgradeCatalog';
-import { getModuleNode, getParentRequirementLabel, getModuleGlyphId, getUpgradeBranch } from '../store/moduleTree';
-import { useGameStrings } from '../i18n/useGameStrings';
-import { triggerSfx } from '../audio/sfxApi';
+} from '../../store/upgradeCatalog';
+import { getModuleNode, getParentRequirementLabel, getModuleGlyphId, getUpgradeBranch } from '../../store/moduleTree';
+import { useGameStrings } from '../../i18n/useGameStrings';
+import { triggerSfx } from '../../audio/sfxApi';
 import { getTooltipHeight, getUpgradeTooltipLines } from './upgradeTooltipStats';
-import { playOneShotAnimation } from './animations';
+import { playOneShotAnimation } from '../animations';
 import { ModuleBranchIcon } from './moduleTreeBranchIcons';
 import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
-import { DARK_HEX } from '../theme/darkHexTerminal';
-import { formatCompactNumber } from './formatNumber';
+import { DARK_HEX } from '../../theme/darkHexTerminal';
+import { formatCompactNumber } from '../formatNumber';
 
 const STAT_GREEN = '#4ade80';
 export const MODULE_TREE_TOOLTIP_TITLE_ID = 'module-tree-popover-title';

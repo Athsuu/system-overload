@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
-import { getModuleNode, type TreeNodeId } from '../store/moduleTree';
-import { type HexGridHoverInfo } from '../store/moduleTreeHexGrid';
-import { type UpgradeId } from '../store/upgradeCatalog';
+import { useGameStore } from '../../store/useGameStore';
+import { getModuleNode, type TreeNodeId } from '../../store/moduleTree';
+import { type HexGridHoverInfo } from '../../store/moduleTreeHexGrid';
+import { type UpgradeId } from '../../store/upgradeCatalog';
 import { getUpgradeTooltipLines } from './upgradeTooltipStats';
 import { ModuleTree } from './ModuleTree';
 import { ModuleTreeGlitchOverlay } from './ModuleTreeGlitchOverlay';
@@ -14,12 +14,12 @@ import {
 import { ModuleTreePopover } from './ModuleTreePopover';
 import { MODULE_POPOVER_WIDTH } from './moduleTreePopoverPlacement';
 import { useModuleTreePan } from './useModuleTreePan';
-import { useDevModuleTreeHexGrid } from '../dev/useDevModuleTreeHexGrid';
+import { useDevModuleTreeHexGrid } from '../../dev/useDevModuleTreeHexGrid';
 import { ModuleTreeHexGridTooltip } from './ModuleTreeHexGridTooltip';
-import { useDevModuleTreeDraft } from '../dev/moduleTreeEditor/useDevModuleTreeDraft';
-import { formatDevModuleTreeEditorHint } from '../dev/moduleTreeEditor/devModuleTreeEditor';
-import { useDevModuleTreeEditor } from '../dev/moduleTreeEditor/useDevModuleTreeEditor';
-import { useModuleTreeEditorInteractions } from '../dev/moduleTreeEditor/useModuleTreeEditorInteractions';
+import { useDevModuleTreeDraft } from '../../dev/moduleTreeEditor/useDevModuleTreeDraft';
+import { formatDevModuleTreeEditorHint } from '../../dev/moduleTreeEditor/devModuleTreeEditor';
+import { useDevModuleTreeEditor } from '../../dev/moduleTreeEditor/useDevModuleTreeEditor';
+import { useModuleTreeEditorInteractions } from '../../dev/moduleTreeEditor/useModuleTreeEditorInteractions';
 
 interface ModuleTreeViewportProps {
   selectedId: TreeNodeId | null;

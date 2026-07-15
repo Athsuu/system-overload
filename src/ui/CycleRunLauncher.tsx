@@ -4,7 +4,7 @@ import { isCycleCleared } from '../store/cycleTypes';
 import { useGameStore } from '../store/useGameStore';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
+import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
 import { HexActionButton } from './HexActionButton';
 import { useScreenTransition } from './transitions/useScreenTransition';
 

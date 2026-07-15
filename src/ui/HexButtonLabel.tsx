@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 import { fitHexButtonLabel, type HexButtonLayout } from './hexButtonLabelFit';
-import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
+import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
 
 interface HexButtonLabelProps {
   label: string;

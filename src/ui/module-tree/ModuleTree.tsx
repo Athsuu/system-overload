@@ -1,5 +1,5 @@
-import { useGameStore } from '../store/useGameStore';
-import { getModuleState, getUpgradeDefinition, type UpgradeId } from '../store/upgradeCatalog';
+import { useGameStore } from '../../store/useGameStore';
+import { getModuleState, getUpgradeDefinition, type UpgradeId } from '../../store/upgradeCatalog';
 import {
   NODE0_HUB_POSITION,
   NODE_RADIUS,
@@ -9,10 +9,10 @@ import {
   getUpgradeBranch,
   type TreeNodeId,
   TREE_CANVAS,
-} from '../store/moduleTree';
-import { axialToPixel } from '../store/moduleTreeHexGrid';
-import type { DevModuleTreeDraftEntry, DraftParentId } from '../dev/moduleTreeEditor/devModuleTreeDraft';
-import { getDraftPosition, resolveEdgeParentKey } from '../dev/moduleTreeEditor/devModuleTreeDraft';
+} from '../../store/moduleTree';
+import { axialToPixel } from '../../store/moduleTreeHexGrid';
+import type { DevModuleTreeDraftEntry, DraftParentId } from '../../dev/moduleTreeEditor/devModuleTreeDraft';
+import { getDraftPosition, resolveEdgeParentKey } from '../../dev/moduleTreeEditor/devModuleTreeDraft';
 import {
   getHexagonEdgePoint,
   getNodeHexRadius,
@@ -22,7 +22,7 @@ import { ModuleTreeNode } from './ModuleTreeNode';
 import { ModuleTreeDraftNode } from './ModuleTreeDraftNode';
 import { ModuleTreeHexGridOverlay } from './ModuleTreeHexGridOverlay';
 import { getEdgeVisual } from './moduleTreeTheme';
-import type { HexGridHoverInfo } from '../store/moduleTreeHexGrid';
+import type { HexGridHoverInfo } from '../../store/moduleTreeHexGrid';
 
 interface ModuleTreeProps {
   selectedId: TreeNodeId | null;

@@ -3,7 +3,7 @@ import {
   getBreachCap,
   getKillBreachRelief,
   getRunConfig,
-} from '../game/runConfig';
+} from '../../game/runConfig';
 import {
   BOSS_VICTORY_SHARD_BONUS,
   FLUX_DRIVE_TIME_SCALE,
@@ -16,8 +16,8 @@ import {
   VICTORY_SHARD_BONUS_FLAT_BY_LEVEL,
   type UpgradeId,
   type UpgradeLevels,
-} from '../store/upgradeCatalog';
-import { getOverclockCooldownMs, getOverclockDurationMs } from '../game/overclock';
+} from '../../store/upgradeCatalog';
+import { getOverclockCooldownMs, getOverclockDurationMs } from '../../game/overclock';
 import {
   computeVictoryShardBonus,
   getBreachDissipationPerSec,
@@ -27,11 +27,11 @@ import {
   getPurgeSplashDamagePercent,
   getPurgeSplashRadiusBonusPercent,
   resolvePurgeSplashDamage,
-} from '../game/moduleEffects';
-import { getEnemyLevel, getLeakPenaltyForLevel } from '../game/enemyScaling';
-import { useGameStore } from '../store/useGameStore';
-import { getLootPickupRadii, getShardMagnetMagnetRadius } from '../game/loot';
-import { getGameStrings } from '../i18n';
+} from '../../game/moduleEffects';
+import { getEnemyLevel, getLeakPenaltyForLevel } from '../../game/enemyScaling';
+import { useGameStore } from '../../store/useGameStore';
+import { getLootPickupRadii, getShardMagnetMagnetRadius } from '../../game/loot';
+import { getGameStrings } from '../../i18n';
 
 export interface TooltipStatLine {
   label: string;

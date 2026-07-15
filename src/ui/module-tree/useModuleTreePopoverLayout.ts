@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 
-import type { TreeNodeId } from '../store/moduleTree';
+import type { TreeNodeId } from '../../store/moduleTree';
 
 import { getNodeHexRadius } from './moduleTreeGeometry';
 

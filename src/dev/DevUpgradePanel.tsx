@@ -13,7 +13,7 @@ import {
   type ModuleGlyphId,
 } from '../store/moduleTree';
 import { useGameStore } from '../store/useGameStore';
-import { ModuleBranchIcon } from '../ui/moduleTreeBranchIcons';
+import { ModuleBranchIcon } from '../ui/module-tree/moduleTreeBranchIcons';
 import { devSetUpgradeLevel, DEV_UNCAPPED_PREVIEW_LEVEL } from './devActions';
 import { DevButton } from './DevButton';
 import { DevFloatingTooltip } from './DevFloatingTooltip';

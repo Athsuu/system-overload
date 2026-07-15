@@ -6,7 +6,7 @@ import { useGameStrings } from '../i18n/useGameStrings';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { CycleRunLauncher } from './CycleRunLauncher';
 import { HubCornerControls } from './HubCornerControls';
-import { ModuleTreeViewport } from './ModuleTreeViewport';
+import { ModuleTreeViewport } from './module-tree/ModuleTreeViewport';
 import { TerminalBackdrop } from './TerminalBackdrop';
 import { ArchGlitchLine } from './ArchGlitchText';
 

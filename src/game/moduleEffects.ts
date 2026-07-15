@@ -195,7 +195,7 @@ export const MODULE_ADDITION_PIPELINE = [
   'src/store/moduleTree.ts — nœud, position hex, branche, prérequis',
   'src/game/moduleEffects.ts — MODULE_EFFECT_REGISTRY + compute*',
   'src/i18n/locales/en.ts + fr.ts + types.ts — nom et description',
-  'src/ui/upgradeTooltipStats.ts — lignes de stats au survol',
+  'src/ui/module-tree/upgradeTooltipStats.ts — lignes de stats au survol',
   'docs/lexique-jeu.md — §4 et §14',
   'Optionnel : src/game/loot/ si le module touche le loot',
   'Optionnel : moteur Pixi dédié si mécanique active (Overclock, etc.)',

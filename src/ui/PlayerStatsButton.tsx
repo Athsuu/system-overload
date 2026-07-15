@@ -1,7 +1,7 @@
 import { triggerSfx } from '../audio/sfxApi';
 import { useGameStrings } from '../i18n/useGameStrings';
 import { DARK_HEX } from '../theme/darkHexTerminal';
-import { hexagonPoints } from './moduleTreeGeometry';
+import { hexagonPoints } from './module-tree/moduleTreeGeometry';
 
 interface PlayerStatsButtonProps {
   isOpen: boolean;

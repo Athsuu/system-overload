@@ -2,7 +2,7 @@ import { getTutorialSteps } from '../tutorial/tutorialCatalog';
 import { clearTutorialProgress, dismissSteps } from '../tutorial/tutorialPersistence';
 import { clearArchAmbientHeard } from '../tutorial/archAmbientPersistence';
 import { resetTutorialSignals } from '../tutorial/tutorialSignals';
-import { clearModuleTreeViewport } from '../ui/useModuleTreePan';
+import { clearModuleTreeViewport } from '../ui/module-tree/useModuleTreePan';
 import { clearSave } from './persistence';
 import { clearSettings } from './settingsPersistence';
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { DARK_HEX } from '../theme/darkHexTerminal';
 import { playOneShotAnimation } from './animations';
-import { MODULE_TREE_VISUAL } from './moduleTreeTheme';
+import { MODULE_TREE_VISUAL } from './module-tree/moduleTreeTheme';
 
 export const CURRENCY_LORE_TOOLTIP_WIDTH = 350;
 export const CURRENCY_LORE_TOOLTIP_HEIGHT = 130;

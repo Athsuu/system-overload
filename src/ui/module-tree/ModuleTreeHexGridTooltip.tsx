@@ -1,4 +1,4 @@
-import type { HexGridHoverInfo } from '../store/moduleTreeHexGrid';
+import type { HexGridHoverInfo } from '../../store/moduleTreeHexGrid';
 
 interface ModuleTreeHexGridTooltipProps {
   info: HexGridHoverInfo;
