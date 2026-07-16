@@ -4,11 +4,8 @@ import type { CoreProtocolLevels } from './prestigeTypes';
 
 export const RECOMPILE_BASE_SEED_FRAGMENTS = 1;
 
-/** Cycle clear required to unlock Recompile — fixed regardless of how far cycle progression extends. */
-export const RECOMPILE_TRIGGER_CYCLE = 3;
-
-/** Multiplicateur permanent (dégâts + éclats) par Profondeur de Recompilation — ressenti dès la run suivante, sans rien devoir acheter (rééquilibrage). */
-export const RECOMPILE_DEPTH_POWER_GROWTH_PER_LEVEL = 1.08;
+/** Cycle clear required to unlock Recompile — Cycle 2 first clear. */
+export const RECOMPILE_TRIGGER_CYCLE = 2;
 
 /** Exposant superlinéaire appliqué au nombre de cycles clear pour le gain de Fragments de Graine (rééquilibrage). */
 export const SEED_FRAGMENTS_CYCLE_EXPONENT = 1.6;
@@ -16,10 +13,6 @@ export const SEED_FRAGMENTS_CYCLE_DIVISOR = 4;
 
 export function canRecompile(cyclesCleared: readonly number[]): boolean {
   return isCycleCleared(cyclesCleared, RECOMPILE_TRIGGER_CYCLE);
-}
-
-export function getRecompileDepthMultiplier(recompileDepth: number): number {
-  return RECOMPILE_DEPTH_POWER_GROWTH_PER_LEVEL ** Math.max(0, recompileDepth);
 }
 
 export function computeSeedFragmentsGain(

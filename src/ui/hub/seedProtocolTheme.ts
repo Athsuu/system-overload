@@ -26,7 +26,7 @@ export function getCoreProtocolTierVisual(
   isSelected: boolean,
   level: number,
 ): CoreProtocolTierVisual {
-  if (state === 'available') {
+  if (state === 'available' || state === 'maxed') {
     return {
       border: isSelected
         ? `${SEED_PROTOCOL_VISUAL.accent}77`
@@ -53,6 +53,6 @@ export function getCoreProtocolTierVisual(
     textColor: 'rgba(148, 163, 184, 0.4)',
     titleColor: 'rgba(148, 163, 184, 0.55)',
     pipColor: 'rgba(148, 163, 184, 0.35)',
-    opacity: 0.62,
+    opacity: state === 'locked' ? 0.5 : 0.62,
   };
 }

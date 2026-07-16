@@ -3,8 +3,8 @@ import { REGULAR_WAVES_PER_CYCLE } from '../store/cycleTypes';
 
 export const BOSS_WAVE_INDEX = 11;
 
-/** Rencontre boss — remplace l'ancien mult elite ×6.5. */
-export const BOSS_ENCOUNTER_HP_MULT = 1.35;
+/** Rencontre boss — PV ×6 vs ennemi basique du même niveau. */
+export const BOSS_ENCOUNTER_HP_MULT = 6;
 
 const BASE_ENEMY_HP = 20;
 const BASE_ENEMY_SPEED = 52.16;
@@ -22,8 +22,6 @@ const SPEED_SEGMENT_B_GROWTH = 1.025;
 
 const LEAK_FRACTION_BASE = 0.11;
 const LEAK_FRACTION_PER_LEVEL = 0.001;
-
-const SHARD_LEVEL_STEP = 4;
 
 function clampLevel(level: number): number {
   return Math.max(1, Math.floor(level));
@@ -90,11 +88,6 @@ export function getLeakFractionForLevel(level: number): number {
 
 export function getLeakPenaltyForLevel(level: number, breachCap: number): number {
   return Math.round(breachCap * getLeakFractionForLevel(level));
-}
-
-export function getShardsPerKillForLevel(level: number): number {
-  const safeLevel = clampLevel(level);
-  return Math.max(1, 1 + Math.floor((safeLevel - 1) / SHARD_LEVEL_STEP));
 }
 
 /** @deprecated Use getEnemyLevel — kept for gradual migration. */

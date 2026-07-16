@@ -1,5 +1,4 @@
-import { memo, useMemo, useState, type PointerEvent } from 'react';
-import {
+import { memo, useMemo, useState, type PointerEvent } from 'react';import {
   buildHexGridCells,
   buildHexGridOccupancy,
   getHexGridCellRadius,
@@ -8,22 +7,22 @@ import {
   HEX_GRID_RING_RADIUS,
   type HexGridHoverInfo,
 } from '../../store/moduleTreeHexGrid';
-import {
-  getParentAxial,
-  type DevModuleTreeDraftEntry,
-  type DraftParentId,
-} from '../../dev/moduleTreeEditor/devModuleTreeDraft';
+import type { ModuleTreeEditorDragHover, ModuleTreePlanEntry, ResolveParentAxial } from '../../dev/moduleTreeEditor/types';
 import { hexagonPoints } from './moduleTreeGeometry';
 
 const CELL_RADIUS = getHexGridCellRadius();
 
 interface ModuleTreeHexGridOverlayProps {
   editorMode?: boolean;
-  selectedParentId?: DraftParentId | null;
+  selectedParentId?: string | null;
   editorLinkMode?: boolean;
-  drafts?: readonly DevModuleTreeDraftEntry[];
-  onHoverChange: (info: HexGridHoverInfo | null, clientX: number, clientY: number) => void;
-  onCellClick?: (q: number, r: number) => void;
+  drafts?: readonly ModuleTreePlanEntry[];
+  includeProductionModules?: boolean;
+  resolveParentAxial: ResolveParentAxial;
+  dragDropTarget?: ModuleTreeEditorDragHover | null;
+  /** Cases dont la grille laisse passer le survol (modules plan global au-dessus). */
+  passThroughCellKeys?: ReadonlySet<string>;
+  onHoverChange: (info: HexGridHoverInfo | null, clientX: number, clientY: number) => void;  onCellClick?: (q: number, r: number) => void;
 }
 
 export const ModuleTreeHexGridOverlay = memo(function ModuleTreeHexGridOverlay({
@@ -31,18 +30,21 @@ export const ModuleTreeHexGridOverlay = memo(function ModuleTreeHexGridOverlay({
   selectedParentId = null,
   editorLinkMode = false,
   drafts = [],
-  onHoverChange,
-  onCellClick,
+  includeProductionModules = true,
+  resolveParentAxial,
+  dragDropTarget = null,
+  passThroughCellKeys,
+  onHoverChange,  onCellClick,
 }: ModuleTreeHexGridOverlayProps) {
   const ringRadius = editorMode ? HEX_GRID_EDITOR_RING_RADIUS : HEX_GRID_RING_RADIUS;
   const cells = useMemo(() => buildHexGridCells(ringRadius), [ringRadius]);
   const { occupied: occupiedKeys, draftCells: draftOccupiedKeys } = useMemo(
-    () => buildHexGridOccupancy(drafts),
-    [drafts],
+    () => buildHexGridOccupancy(drafts, includeProductionModules),
+    [drafts, includeProductionModules],
   );
   const parentAxial = useMemo(
-    () => (selectedParentId ? getParentAxial(selectedParentId) : null),
-    [selectedParentId],
+    () => (selectedParentId ? resolveParentAxial(selectedParentId) : null),
+    [resolveParentAxial, selectedParentId],
   );
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
@@ -51,8 +53,9 @@ export const ModuleTreeHexGridOverlay = memo(function ModuleTreeHexGridOverlay({
       drafts,
       selectedParentId,
       parentAxial,
+      includeProductionModules,
     }),
-    [drafts, parentAxial, selectedParentId],
+    [drafts, includeProductionModules, parentAxial, selectedParentId],
   );
 
   const handleHover = (q: number, r: number, active: boolean, event: PointerEvent<SVGPolygonElement>) => {
@@ -87,11 +90,18 @@ export const ModuleTreeHexGridOverlay = memo(function ModuleTreeHexGridOverlay({
           parentAxial !== null && parentAxial.q === cell.q && parentAxial.r === cell.r;
         const isLinkTarget = editorLinkMode && draftOccupiedKeys.has(key);
         const isBlocked = isOccupied && !isLinkTarget;
+        const isDropTarget =
+          dragDropTarget !== null &&
+          dragDropTarget.q === cell.q &&
+          dragDropTarget.r === cell.r;
 
         let fill = 'transparent';
         let stroke = 'rgba(56, 189, 248, 0.22)';
 
-        if (isParentCell) {
+        if (isDropTarget) {
+          fill = dragDropTarget.valid ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.18)';
+          stroke = dragDropTarget.valid ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.85)';
+        } else if (isParentCell) {
           fill = 'rgba(197, 160, 89, 0.18)';
           stroke = 'rgba(197, 160, 89, 0.75)';
         } else if (isLinkTarget) {
@@ -104,10 +114,12 @@ export const ModuleTreeHexGridOverlay = memo(function ModuleTreeHexGridOverlay({
           fill = 'rgba(197, 160, 89, 0.08)';
         }
 
-        if (isActive) {
+        if (isActive && !isDropTarget) {
           fill = isBlocked && !editorMode ? fill : 'rgba(56, 189, 248, 0.14)';
           stroke = 'rgba(56, 189, 248, 0.85)';
         }
+
+        const passThrough = passThroughCellKeys?.has(key) ?? false;
 
         return (
           <polygon
@@ -115,12 +127,11 @@ export const ModuleTreeHexGridOverlay = memo(function ModuleTreeHexGridOverlay({
             points={hexagonPoints(cell.x, cell.y, CELL_RADIUS)}
             fill={fill}
             stroke={stroke}
-            strokeWidth={isActive ? 1.5 : 1}
+            strokeWidth={isDropTarget || isActive ? 1.5 : 1}
             style={{
-              pointerEvents: 'all',
+              pointerEvents: dragDropTarget || passThrough ? 'none' : 'all',
               cursor: editorMode ? (isBlocked ? 'not-allowed' : 'crosshair') : 'crosshair',
-            }}
-            onPointerEnter={(event) => handleHover(cell.q, cell.r, true, event)}
+            }}            onPointerEnter={(event) => handleHover(cell.q, cell.r, true, event)}
             onPointerLeave={(event) => handleHover(cell.q, cell.r, false, event)}
             onPointerDown={(event) => handleClick(cell.q, cell.r, event)}
           />

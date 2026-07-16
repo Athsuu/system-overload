@@ -1,5 +1,5 @@
 /**
- * @deprecated Import from enemyScaling.ts — thin re-export for legacy imports.
+ * @deprecated Import from enemyScaling.ts / cycleScaling.ts — thin re-export for legacy imports.
  */
 export {
   BOSS_WAVE_INDEX,
@@ -10,15 +10,16 @@ export {
   getEnemySpeedForLevel,
   getLeakFractionForLevel,
   getLeakPenaltyForLevel,
-  getShardsPerKillForLevel,
 } from './enemyScaling';
+
+export { getShardsPerKillForCycle } from './cycleScaling';
 
 import {
   getEnemyHpMultiplier,
   getEnemySpeedForLevel,
   getLeakPenaltyForLevel,
-  getShardsPerKillForLevel,
 } from './enemyScaling';
+import { getShardsPerKillForCycle } from './cycleScaling';
 
 /** @deprecated Use getEnemyHpMultiplier(level) / baseEnemyHp */
 export function getWaveHpMultiplier(enemyLevel: number): number {
@@ -30,9 +31,9 @@ export function getWaveSpeedMultiplier(enemyLevel: number): number {
   return getEnemySpeedForLevel(enemyLevel) / 52.16;
 }
 
-/** @deprecated Use getShardsPerKillForLevel */
-export function getWaveShardReward(enemyLevel: number): number {
-  return getShardsPerKillForLevel(enemyLevel);
+/** @deprecated Use getShardsPerKillForCycle(cycle) — l’ancien arg était un niveau ennemi. */
+export function getWaveShardReward(cycleOrLegacyLevel: number): number {
+  return getShardsPerKillForCycle(cycleOrLegacyLevel);
 }
 
 /** @deprecated Package A — fuites runtime = % du cap Meltdown (`LEAK_BREACH_PERCENT_OF_CAP`). */

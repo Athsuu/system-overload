@@ -4,6 +4,8 @@ import {
   type BranchId,
   type TreeParentId,
 } from '../../store/moduleTree';
+import { getModuleTreePlaceholder } from '../../store/moduleTreePlaceholders';
+import { canPlaceEditorAt } from './moduleTreeEditorOccupancy';
 import { axialToPixel, formatPathFromParentAxial, pixelToAxial } from '../../store/moduleTreeHexGrid';
 import type { UpgradeId } from '../../store/upgradeCatalog';
 
@@ -18,24 +20,7 @@ export interface DevModuleTreeDraftEntry {
   branch: BranchId;
 }
 
-/** Plan validé PO — placeholders Purge bas (2026-07-15). */
-export const CANONICAL_DEV_MODULE_TREE_DRAFT: readonly DevModuleTreeDraftEntry[] = [
-  {
-    id: 'placeholder_01',
-    parentIds: ['purgeStrike'],
-    q: 0,
-    r: 2,
-    branch: 'degats',
-  },
-  {
-    id: 'placeholder_02',
-    parentIds: ['latencyInjection', 'purgeSplash'],
-    q: 0,
-    r: 3,
-    branch: 'degats',
-  },
-] as const;
-
+/** Brouillon dev local — futurs placeholders non encore promus (voir `moduleTreePlaceholders.ts`). */
 const STORAGE_KEY = 'dev-module-tree-draft';
 
 let draftEntries: DevModuleTreeDraftEntry[] = loadDraftFromStorage();
@@ -87,15 +72,14 @@ function normalizeStoredEntry(value: unknown): DevModuleTreeDraftEntry | null {
 function loadDraftFromStorage(): DevModuleTreeDraftEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [...CANONICAL_DEV_MODULE_TREE_DRAFT];
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [...CANONICAL_DEV_MODULE_TREE_DRAFT];
-    const entries = parsed
+    if (!Array.isArray(parsed)) return [];
+    return parsed
       .map(normalizeStoredEntry)
       .filter((entry): entry is DevModuleTreeDraftEntry => entry !== null);
-    return entries.length > 0 ? entries : [...CANONICAL_DEV_MODULE_TREE_DRAFT];
   } catch {
-    return [...CANONICAL_DEV_MODULE_TREE_DRAFT];
+    return [];
   }
 }
 
@@ -115,6 +99,9 @@ export function getDraftPosition(id: DraftParentId): { x: number; y: number } {
   const draft = draftEntries.find((entry) => entry.id === id);
   if (draft) return axialToPixel(draft.q, draft.r);
 
+  const productionPlaceholder = getModuleTreePlaceholder(id);
+  if (productionPlaceholder) return axialToPixel(productionPlaceholder.q, productionPlaceholder.r);
+
   const graphNode = MODULE_TREE_GRAPH.find((node) => node.id === id);
   if (graphNode) return graphNode.position;
 
@@ -124,6 +111,9 @@ export function getDraftPosition(id: DraftParentId): { x: number; y: number } {
 export function getParentAxial(parentId: DraftParentId): { q: number; r: number } {
   const draft = draftEntries.find((entry) => entry.id === parentId);
   if (draft) return { q: draft.q, r: draft.r };
+
+  const productionPlaceholder = getModuleTreePlaceholder(parentId);
+  if (productionPlaceholder) return { q: productionPlaceholder.q, r: productionPlaceholder.r };
 
   const graphNode = MODULE_TREE_GRAPH.find((node) => node.id === parentId);
   if (graphNode) return pixelToAxial(graphNode.position.x, graphNode.position.y);
@@ -147,18 +137,19 @@ function nextPlaceholderId(): string {
   return `placeholder_${String(index).padStart(2, '0')}`;
 }
 
-function isCellOccupied(q: number, r: number): boolean {
-  if (q === 0 && r === 0) return true;
-  for (const node of MODULE_TREE_GRAPH) {
-    const axial = pixelToAxial(node.position.x, node.position.y);
-    if (axial.q === q && axial.r === r) return true;
-  }
-  return draftEntries.some((entry) => entry.q === q && entry.r === r);
+export function moveDevModuleTreeDraftEntry(id: string, q: number, r: number): boolean {
+  const entry = draftEntries.find((item) => item.id === id);
+  if (!entry) return false;
+  if (!canPlaceEditorAt('local', q, r, id)) return false;
+
+  draftEntries = draftEntries.map((item) => (item.id === id ? { ...item, q, r } : item));
+  persistDraft();
+  notifyDraftChange();
+  return true;
 }
 
-export function canPlaceDraftAt(q: number, r: number): boolean {
-  if (q === 0 && r === 0) return false;
-  return !isCellOccupied(q, r);
+function canPlaceDraftAt(q: number, r: number, excludeId?: string): boolean {
+  return canPlaceEditorAt('local', q, r, excludeId);
 }
 
 export function getDraftAtCell(q: number, r: number): DevModuleTreeDraftEntry | undefined {
@@ -183,6 +174,30 @@ function collectDraftCascadeIds(rootId: string): Set<string> {
 
 export function countDraftCascadeDelete(id: string): number {
   return collectDraftCascadeIds(id).size;
+}
+
+export function addDevModuleTreeDraftEntryWithId(
+  id: string,
+  parentId: DraftParentId,
+  q: number,
+  r: number,
+): DevModuleTreeDraftEntry | null {
+  if (draftEntries.some((entry) => entry.id === id)) return null;
+  if (!canPlaceDraftAt(q, r)) return null;
+
+  const productionPlaceholder = getModuleTreePlaceholder(id);
+  const entry: DevModuleTreeDraftEntry = {
+    id,
+    parentIds: [parentId],
+    q,
+    r,
+    branch: productionPlaceholder?.branch ?? resolveParentBranch(parentId),
+  };
+
+  draftEntries = [...draftEntries, entry];
+  persistDraft();
+  notifyDraftChange();
+  return entry;
 }
 
 export function addDevModuleTreeDraftEntry(
@@ -235,12 +250,6 @@ export function removeDevModuleTreeDraftEntry(id: string): void {
 
 export function clearDevModuleTreeDraft(): void {
   draftEntries = [];
-  persistDraft();
-  notifyDraftChange();
-}
-
-export function applyCanonicalDevModuleTreeDraft(): void {
-  draftEntries = CANONICAL_DEV_MODULE_TREE_DRAFT.map((entry) => ({ ...entry, parentIds: [...entry.parentIds] }));
   persistDraft();
   notifyDraftChange();
 }

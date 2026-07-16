@@ -75,6 +75,24 @@ function getEnemiesInSplashRing(
   return hits;
 }
 
+function getEnemiesInRadius(
+  nodes: DissipationNode[],
+  centerX: number,
+  centerY: number,
+  radius: number,
+): DissipationNode[] {
+  const radiusSq = radius * radius;
+  const hits: DissipationNode[] = [];
+  for (const node of nodes) {
+    const dx = node.x - centerX;
+    const dy = node.y - centerY;
+    if (dx * dx + dy * dy <= radiusSq) {
+      hits.push(node);
+    }
+  }
+  return hits;
+}
+
 export function PurgeZoneEngine({
   isPlaying,
   nodesRef,
@@ -121,11 +139,16 @@ export function PurgeZoneEngine({
       criticalChance: number,
       criticalMultiplier: number,
       splashAnchorMultiplier: number,
+      explosivePurgeEnabled: boolean,
+      explosivePurgeRadiusPx: number,
+      explosivePurgeDamageRatio: number,
+      explosivePurgeChainDepth: number,
     ) => {
       let kills = 0;
       let hitCount = 0;
+      const explodedOrigins = new Set<DissipationNode>();
 
-      const applyDamage = (node: DissipationNode, damage: number) => {
+      const applyDamage = (node: DissipationNode, damage: number, chainRemaining: number | null) => {
         const index = nodes.indexOf(node);
         if (index < 0 || damage <= 0) return;
 
@@ -156,13 +179,41 @@ export function PurgeZoneEngine({
         if (node.isBossEncounter) {
           triggerScreenShake(screenShakeRef.current, 'bossDeath');
         }
+        const deathX = node.x;
+        const deathY = node.y;
         handleEnemyKill(node, pickups);
-        pushDeathEffect(effects, node.x, node.y, node.waveIndex, node.isBossEncounter);
+        pushDeathEffect(effects, deathX, deathY, node.waveIndex, node.isBossEncounter);
         nodes.splice(index, 1);
+
+        if (!explosivePurgeEnabled) return;
+        if (explodedOrigins.has(node)) return;
+
+        // Purge kill → always explode. Explosion kill → only if chain remaining > 0.
+        if (chainRemaining !== null && chainRemaining <= 0) return;
+
+        explodedOrigins.add(node);
+        const explosionDamage = Math.max(1, Math.round(baseDamage * explosivePurgeDamageRatio));
+        const childChain =
+          chainRemaining === null ? explosivePurgeChainDepth : chainRemaining - 1;
+
+        pushSplashShockwave(
+          effects,
+          deathX,
+          deathY,
+          0,
+          explosivePurgeRadiusPx,
+          resolvePurgeHitVisualDurationMs(intervalMs) + 120,
+        );
+
+        const blastTargets = getEnemiesInRadius(nodes, deathX, deathY, explosivePurgeRadiusPx);
+        for (const blastTarget of blastTargets) {
+          if (nodes.indexOf(blastTarget) < 0) continue;
+          applyDamage(blastTarget, explosionDamage, childChain);
+        }
       };
 
       for (const node of targets) {
-        applyDamage(node, baseDamage);
+        applyDamage(node, baseDamage, null);
       }
 
       const hadMainPurgeHit = hitCount > 0;
@@ -179,7 +230,7 @@ export function PurgeZoneEngine({
         );
         for (const node of splashTargets) {
           if (nodes.indexOf(node) < 0) continue;
-          applyDamage(node, splashDamage);
+          applyDamage(node, splashDamage, null);
         }
         if (hadMainPurgeHit) {
           pushSplashShockwave(
@@ -261,6 +312,10 @@ export function PurgeZoneEngine({
           config.criticalChance,
           config.criticalMultiplier,
           splashAnchorMultiplier,
+          config.explosivePurgeEnabled,
+          config.explosivePurgeRadiusPx,
+          config.explosivePurgeDamageRatio,
+          config.explosivePurgeChainDepth,
         );
         return;
       }
@@ -293,6 +348,10 @@ export function PurgeZoneEngine({
         config.criticalChance,
         config.criticalMultiplier,
         splashAnchorMultiplier,
+        config.explosivePurgeEnabled,
+        config.explosivePurgeRadiusPx,
+        config.explosivePurgeDamageRatio,
+        config.explosivePurgeChainDepth,
       );
     },
     [applyPurgeHits, effectsRef, nodesRef, overclockRef, pickupsRef],

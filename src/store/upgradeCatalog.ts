@@ -15,6 +15,7 @@ export type UpgradeId =
   | 'purgeCadence'
   | 'purgeReach'
   | 'purgeSplash'
+  | 'purgeCrit'
   | 'latencyInjection'
   | 'threadCoolant'
   | 'killBreachRelief'
@@ -39,6 +40,7 @@ export interface UpgradeLevels {
   purgeCadence: number;
   purgeReach: number;
   purgeSplash: number;
+  purgeCrit: number;
   latencyInjection: number;
   threadCoolant: number;
   killBreachRelief: number;
@@ -68,23 +70,23 @@ export interface UpgradeDefinition {
 export const ANCHOR_FRAGMENTS_PER_BOSS = 1;
 
 /** Flat shard bonus on boss victory (in addition to run kills). */
-export const BOSS_VICTORY_SHARD_BONUS = 15;
+export const BOSS_VICTORY_SHARD_BONUS = 25;
 
 /** Node-0 Boot : baseline gratuit — niveau 1 dès le départ, jamais achetable (pas de coût). */
 export const NODE0_BOOT_BASELINE_LEVEL = 1;
 
-/** Multiplicateur de rendement d'éclats composé par rang. */
-export const SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL = 1.12;
+/** Multiplicateur de rendement d'éclats : +25 % additif par rang (max +125 % au rang 5). */
+export const SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL = 25;
 export const SHARD_SALVAGE_MAX_LEVEL = 5;
-export const SHARD_SALVAGE_COST_BASE = 20;
-export const SHARD_SALVAGE_COST_GROWTH = 1.28;
+export const SHARD_SALVAGE_COST_BASE = 5;
+export const SHARD_SALVAGE_COST_GROWTH = 1.12;
 
 export const SHARD_MAGNET_MAX_LEVEL = 3;
 /** Rayon de collecte (px) aux rangs 0–3 de l'Aimant d'éclats. */
 export const SHARD_MAGNET_COLLECT_RADIUS_BY_LEVEL = [20, 44, 68, 92] as const;
 /** Rayon d'attraction magnétique (px) aux rangs 0–3 — 0 = pas d'aspiration au départ. */
 export const SHARD_MAGNET_MAGNET_RADIUS_BY_LEVEL = [0, 72, 128, 200] as const;
-export const COST_SHARD_MAGNET = [55, 100, 175] as const;
+export const COST_SHARD_MAGNET = [130, 220, 350] as const;
 
 export const VICTORY_SHARD_BONUS_MAX_LEVEL = 3;
 /** Éclats bonus à Breach Contained aux rangs 1 / 2 / 3 (s'ajoute au flat boss). */
@@ -94,8 +96,8 @@ export const COST_VICTORY_SHARD_BONUS = [100, 180, 280] as const;
 /** Frappe de purge — flat uniquement ; les % viennent du prestige (Boot Reinforcement, Recompile). */
 export const PURGE_STRIKE_DAMAGE_PER_LEVEL = 5;
 export const PURGE_STRIKE_MAX_LEVEL = 10;
-export const PURGE_STRIKE_COST_GROWTH = 1.22;
-export const PURGE_STRIKE_COST_BASE = 12;
+export const PURGE_STRIKE_COST_GROWTH = 1.18;
+export const PURGE_STRIKE_COST_BASE = 5;
 
 function buildShardCostCurve(base: number, growth: number, levels: number): readonly number[] {
   return Array.from({ length: levels }, (_, index) => Math.ceil(base * growth ** index));
@@ -114,13 +116,13 @@ export const COST_PURGE_STRIKE = buildShardCostCurve(
 );
 
 export const PURGE_SPLASH_MAX_LEVEL = 3;
-/** Extension du rayon d'éclaboussure au-delà de la zone principale (%) aux rangs 1 / 2 / 3. */
-export const PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL = [50, 75, 100] as const;
-/** Dégâts d'éclaboussure (% des dégâts purge) aux rangs 1 / 2 / 3 — hors zone directe. */
-export const PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL = [15, 30, 45] as const;
-export const COST_PURGE_SPLASH = [180, 300, 480] as const;
+/** Extension du rayon d'éclaboussure au-delà de la zone principale (%) — +40 % vs courbe précédente. */
+export const PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL = [70, 105, 140] as const;
+/** Dégâts d'éclaboussure (% des dégâts purge) — rang 3 = 100 % (mêmes dégâts que la purge). */
+export const PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL = [40, 70, 100] as const;
+export const COST_PURGE_SPLASH = [150, 250, 400] as const;
 
-export const COST_LATENCY_INJECTION = [168, 288, 456] as const;
+export const COST_LATENCY_INJECTION = [140, 240, 380] as const;
 export const LATENCY_INJECTION_MAX_LEVEL = 3;
 
 export const PURGE_CADENCE_MAX_LEVEL = 10;
@@ -130,9 +132,9 @@ export const PURGE_CADENCE_INTERVAL_MS_PER_LEVEL = 25;
 export const PURGE_REACH_MAX_LEVEL = 10;
 export const PURGE_REACH_AOE_PERCENT_PER_LEVEL = 2.5;
 
-/** Shared cost curve for Purge Cadence & Purge Reach (base 15, ×1.26). */
-export const PURGE_SUPPORT_COST_BASE = 15;
-export const PURGE_SUPPORT_COST_GROWTH = 1.26;
+/** Shared cost curve for Purge Cadence & Purge Reach (base 10, ×1.22). */
+export const PURGE_SUPPORT_COST_BASE = 10;
+export const PURGE_SUPPORT_COST_GROWTH = 1.22;
 
 export const COST_PURGE_CADENCE = buildShardCostCurve(
   PURGE_SUPPORT_COST_BASE,
@@ -144,6 +146,17 @@ export const COST_PURGE_REACH = buildShardCostCurve(
   PURGE_SUPPORT_COST_BASE,
   PURGE_SUPPORT_COST_GROWTH,
   PURGE_REACH_MAX_LEVEL,
+);
+
+/** Critique de purge — +2 % chance / rang (s’ajoute à la base 8 %), multi ×2 inchangé. */
+export const PURGE_CRIT_MAX_LEVEL = 5;
+export const PURGE_CRIT_CHANCE_PERCENT_PER_LEVEL = 2;
+export const PURGE_CRIT_COST_BASE = 25;
+export const PURGE_CRIT_COST_GROWTH = 1.22;
+export const COST_PURGE_CRIT = buildShardCostCurve(
+  PURGE_CRIT_COST_BASE,
+  PURGE_CRIT_COST_GROWTH,
+  PURGE_CRIT_MAX_LEVEL,
 );
 
 export const THREAD_COOLANT_MAX_LEVEL = 10;
@@ -158,9 +171,9 @@ export const COST_THREAD_COOLANT = buildShardCostCurve(
   THREAD_COOLANT_MAX_LEVEL,
 );
 
-/** Package A — moins de rangs, relief lisible par kill (ex-0,1 / rang sur 10 rangs). */
+/** Package A — moins de rangs ; −0,25 % Breach / kill / rang → −1,25 % au max. */
 export const KILL_BREACH_RELIEF_MAX_LEVEL = 5;
-export const KILL_BREACH_RELIEF_PER_LEVEL = 1;
+export const KILL_BREACH_RELIEF_PER_LEVEL = 0.5;
 export const KILL_BREACH_RELIEF_COST_BASE = 10;
 export const KILL_BREACH_RELIEF_COST_GROWTH = 1.18;
 
@@ -170,11 +183,11 @@ export const COST_KILL_BREACH_RELIEF = buildShardCostCurve(
   KILL_BREACH_RELIEF_MAX_LEVEL,
 );
 
-/** Multiplicateur de cap Breach composé par rang. */
-export const MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL = 1.05;
+/** Cap Breach : +8 % additif par rang → 180 % au rang 10. */
+export const MELTDOWN_THRESHOLD_CAP_PERCENT_PER_LEVEL = 8;
 export const MELTDOWN_THRESHOLD_MAX_LEVEL = 10;
-export const MELTDOWN_THRESHOLD_COST_BASE = 12;
-export const MELTDOWN_THRESHOLD_COST_GROWTH = 1.2;
+export const MELTDOWN_THRESHOLD_COST_BASE = 5;
+export const MELTDOWN_THRESHOLD_COST_GROWTH = 1.16;
 
 export const COST_MELTDOWN_THRESHOLD = buildShardCostCurve(
   MELTDOWN_THRESHOLD_COST_BASE,
@@ -203,8 +216,8 @@ export const LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL = [10, 20, 30] as c
 export const COST_LEAK_SEALING = [180, 300, 480] as const;
 
 export const PURGE_AMPLIFIER_MAX_LEVEL = 3;
-/** Bonus % dégâts purge aux rangs 1 / 2 / 3 (tous cycles). */
-export const PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL = [5, 10, 15] as const;
+/** Bonus flat dégâts purge aux rangs 1 / 2 / 3 (tous cycles). */
+export const PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL = [10, 20, 30] as const;
 export const COST_PURGE_AMPLIFIER = [200, 320, 500] as const;
 
 export const DEFAULT_UPGRADES: UpgradeLevels = {
@@ -216,6 +229,7 @@ export const DEFAULT_UPGRADES: UpgradeLevels = {
   purgeCadence: 0,
   purgeReach: 0,
   purgeSplash: 0,
+  purgeCrit: 0,
   latencyInjection: 0,
   threadCoolant: 0,
   killBreachRelief: 0,
@@ -269,6 +283,12 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     id: 'purgeCadence',
     maxLevel: PURGE_CADENCE_MAX_LEVEL,
     costByLevel: COST_PURGE_CADENCE,
+    currency: 'shards',
+  },
+  {
+    id: 'purgeCrit',
+    maxLevel: PURGE_CRIT_MAX_LEVEL,
+    costByLevel: COST_PURGE_CRIT,
     currency: 'shards',
   },
   {

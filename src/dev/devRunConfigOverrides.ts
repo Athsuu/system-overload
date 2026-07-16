@@ -1,16 +1,21 @@
 import type { RunConfig } from '../game/moduleEffects';
 
+/** Champs numériques overridables — exclut les booléens (ex. explosivePurgeEnabled). */
+export type DevRunConfigNumericKey = {
+  [K in keyof RunConfig]: RunConfig[K] extends number ? K : never;
+}[keyof RunConfig];
+
 /**
  * Overrides dev pour le Labo Stats — écrasent la valeur calculée d'un champ RunConfig,
  * peu importe les modules/upgrades du joueur, jusqu'à effacement explicite.
  */
-let overrides: Partial<Record<keyof RunConfig, number>> = {};
+let overrides: Partial<Record<DevRunConfigNumericKey, number>> = {};
 
-export function devSetRunConfigOverride(key: keyof RunConfig, value: number): void {
+export function devSetRunConfigOverride(key: DevRunConfigNumericKey, value: number): void {
   overrides = { ...overrides, [key]: value };
 }
 
-export function devClearRunConfigOverride(key: keyof RunConfig): void {
+export function devClearRunConfigOverride(key: DevRunConfigNumericKey): void {
   if (!(key in overrides)) return;
   const next = { ...overrides };
   delete next[key];
@@ -21,11 +26,11 @@ export function devClearAllRunConfigOverrides(): void {
   overrides = {};
 }
 
-export function getDevRunConfigOverrides(): Partial<Record<keyof RunConfig, number>> {
+export function getDevRunConfigOverrides(): Partial<Record<DevRunConfigNumericKey, number>> {
   return overrides;
 }
 
-export function isDevRunConfigOverridden(key: keyof RunConfig): boolean {
+export function isDevRunConfigOverridden(key: DevRunConfigNumericKey): boolean {
   return key in overrides;
 }
 
@@ -36,11 +41,11 @@ export function applyDevRunConfigOverrides(config: RunConfig): RunConfig {
 }
 
 export interface DevStatFieldMeta {
-  key: keyof RunConfig;
+  key: DevRunConfigNumericKey;
   label: string;
 }
 
-/** Labo Stats — TOUTES les stats de RunConfig, labellisées pour l'affichage. */
+/** Labo Stats — stats numériques de RunConfig, labellisées pour l'affichage. */
 export const DEV_STAT_FIELDS: DevStatFieldMeta[] = [
   { key: 'purgeHitDamage', label: 'Dégâts de base (purge)' },
   { key: 'purgeIntervalMs', label: 'Cadence de purge (ms)' },
@@ -57,4 +62,7 @@ export const DEV_STAT_FIELDS: DevStatFieldMeta[] = [
   { key: 'spawnIntervalMult', label: 'Multiplicateur intervalle de spawn' },
   { key: 'maxAliveReduction', label: 'Réduction ennemis max vivants' },
   { key: 'starterNodes', label: 'Nœuds de départ' },
+  { key: 'explosivePurgeRadiusPx', label: 'Purge explosive — rayon (px)' },
+  { key: 'explosivePurgeDamageRatio', label: 'Purge explosive — ratio dégâts' },
+  { key: 'explosivePurgeChainDepth', label: 'Purge explosive — profondeur chaîne' },
 ];

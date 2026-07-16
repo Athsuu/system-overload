@@ -3,7 +3,13 @@ export type CoreProtocolId =
   | 'bootReinforcement'
   | 'thermalBaseline'
   | 'extractionProtocol'
-  | 'seedResonance';
+  | 'seedResonance'
+  | 'explosivePurge'
+  | 'explosivePurgeRadius'
+  | 'explosivePurgeDamage'
+  | 'explosivePurgeChain';
+
+export type CoreProtocolKind = 'fundamental' | 'skillUnlock' | 'skillBranchNode';
 
 export interface CoreProtocolLevels {
   residualMemory: number;
@@ -11,6 +17,10 @@ export interface CoreProtocolLevels {
   thermalBaseline: number;
   extractionProtocol: number;
   seedResonance: number;
+  explosivePurge: number;
+  explosivePurgeRadius: number;
+  explosivePurgeDamage: number;
+  explosivePurgeChain: number;
 }
 
 export interface PrestigeState {
@@ -29,6 +39,10 @@ export const DEFAULT_CORE_PROTOCOLS: CoreProtocolLevels = {
   thermalBaseline: 0,
   extractionProtocol: 0,
   seedResonance: 0,
+  explosivePurge: 0,
+  explosivePurgeRadius: 0,
+  explosivePurgeDamage: 0,
+  explosivePurgeChain: 0,
 };
 
 export const DEFAULT_PRESTIGE: PrestigeState = {

@@ -223,7 +223,7 @@ export const EN_STRINGS: GameStrings = {
     },
     shardSalvage: {
       name: 'Shard Salvage',
-      description: 'Extract more Hex Shards from every corrupted process you purge',
+      description: 'Pulls more Hex Shards from each kill: any % past a whole multiple is a chance to drop one extra',
     },
     victoryShardBonus: {
       name: 'Victory Bonus',
@@ -231,7 +231,7 @@ export const EN_STRINGS: GameStrings = {
     },
     shardMagnet: {
       name: 'Shard Magnet',
-      description: 'Draw dropped shards toward your purge zone from farther away',
+      description: 'Draw dropped shards toward your purge zone from farther away. Collection radii in hex',
     },
     purgeStrike: {
       name: 'Purge Strike',
@@ -241,13 +241,17 @@ export const EN_STRINGS: GameStrings = {
       name: 'Purge Cadence',
       description: 'Increase purge tick rate for faster clears',
     },
+    purgeCrit: {
+      name: 'Purge Crit',
+      description: 'Raises the chance that each purge tick lands a critical hit',
+    },
     purgeReach: {
       name: 'Purge Reach',
-      description: 'Expand purge zone coverage on the arena',
+      description: 'Expand the purge zone on the arena. Range shown in hex (1 hex = Node-0 base size)',
     },
     purgeSplash: {
       name: 'Purge Splash',
-      description: 'Splash purge damage to corrupted processes just outside your zone',
+      description: 'Splash purge damage outside the main zone. Splash radius in hex',
     },
     latencyInjection: {
       name: 'Latency Injection',
@@ -301,9 +305,11 @@ export const EN_STRINGS: GameStrings = {
     shardPickupRadius: 'Shard pickup radius',
     shardPickupReachBonus: 'Shard attraction radius',
     purgeCadence: 'Purge cadence',
+    criticalChance: 'Critical chance',
+    criticalChanceBonus: 'Crit bonus',
     purgeReach: 'Main purge zone',
     purgeReachBonus: 'Purge zone bonus',
-    purgeSplashRadius: 'Splash reach (vs main zone)',
+    purgeSplashRadius: 'Splash reach',
     purgeSplashDamage: 'Splash damage',
     latencySlowBonus: 'Process slowdown',
     passiveBreachPerSec: 'Passive Breach / sec',
@@ -324,12 +330,23 @@ export const EN_STRINGS: GameStrings = {
     openLabel: 'Node-0 stats',
     cadenceUnit: '/s',
     purgeSplashZone: 'Splash zone',
+    hexUnit: 'hex',
+    emptyTab: 'Nothing here yet.',
+    tabs: {
+      damage: 'Damage',
+      overload: 'Overload',
+      economy: 'Economy',
+      misc: 'Misc',
+    },
   },
   seedProtocols: {
     screenTitle: 'Seed Protocols',
     screenSubtitle: 'Core optimizations written into Node-0 source code',
     openButton: 'Seed\nProtocols',
     backToHub: 'Back to\nHub',
+    tabFundamentals: 'Fundamentals',
+    tabSkills: 'Skills',
+    branchHeading: 'Upgrades',
     recompileAction: 'Recompile',
     recompileAvailable: 'Recompile available',
     recompileConfirmTitle: 'Seed Recompilation',
@@ -347,7 +364,7 @@ export const EN_STRINGS: GameStrings = {
     protocols: {
       residualMemory: {
         name: 'Residual Memory',
-        description: 'Start each new cycle with bonus Hex Shards after a Recompile (+150 per rank, uncapped)',
+        description: 'Start each new cycle with bonus Hex Shards after a Recompile (+200 per rank, uncapped)',
       },
       bootReinforcement: {
         name: 'Boot Reinforcement',
@@ -364,6 +381,22 @@ export const EN_STRINGS: GameStrings = {
       seedResonance: {
         name: 'Seed Resonance',
         description: 'Gain extra Seed Fragments on every future Recompile (+25% per rank, additive stacking, uncapped)',
+      },
+      explosivePurge: {
+        name: 'Explosive Purge',
+        description: 'Every purge kill triggers a small explosion (fixed radius, 40% of purge hit damage). Max 1.',
+      },
+      explosivePurgeRadius: {
+        name: 'Explosion Radius',
+        description: 'Widen Explosive Purge blast radius (+30 px per rank, max 3)',
+      },
+      explosivePurgeDamage: {
+        name: 'Explosion Damage',
+        description: 'Raise explosion damage (+15% of purge hit damage per rank, max 3)',
+      },
+      explosivePurgeChain: {
+        name: 'Explosive Chain',
+        description: 'Kills caused by an explosion can explode too (+1 chain depth per rank, max 3)',
       },
     },
   },
@@ -391,6 +424,7 @@ export const EN_STRINGS: GameStrings = {
     requirementsNotMet: 'Requirements not met',
     maxUpgradeToUnlock: 'Max {name} to unlock',
     node0Label: 'NODE-0',
+    reservedModuleLabel: 'RESERVED',
     purgeZone: 'Purge Zone',
     mouse: 'Mouse',
     bossIncoming: 'Boss Incoming',

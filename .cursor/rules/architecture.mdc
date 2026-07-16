@@ -75,14 +75,24 @@ src/game/
 
 ---
 
-# Module tree (4 zones — ne pas fusionner)
+# Module tree (5 zones — ne pas fusionner)
 
-- **Données** : `src/store/moduleTree.ts`, `moduleTreeHexGrid.ts`
+- **Données graphe** : `src/store/moduleTree.ts`, `moduleTreeHexGrid.ts`
+- **Placeholders joueur** : `src/store/moduleTreePlaceholders.ts`
 - **Rendu joueur** : `src/ui/module-tree/`
-- **Placeholders dev** : `src/dev/moduleTreeEditor/`
+- **Éditeur dev** : `src/dev/moduleTreeEditor/` (outils **Déplacer** / **Placer**, occupancy centralisée, export TS → promotion manuelle)
 - **Effets gameplay** : `src/game/moduleEffects.ts` (`MODULE_EFFECT_REGISTRY` + `compute*`)
 
 Nouveau module jouable → **`docs/lexique-jeu.md` §14** dans la même tâche. Inventaire : `MODULE_ADDITION_PIPELINE` dans `moduleEffects.ts`. Ne pas toucher `useGameStore` par module.
+
+### Tooltips module (obligatoire)
+
+Fichier : `src/ui/module-tree/upgradeTooltipStats.ts`.
+
+- Afficher **uniquement le bonus apporté par ce module** (ex. `+0 % → +2 %`, `−0,08/s`).
+- **Interdit** : total / global qui inclut la base ou d’autres modules (ex. chance crit `8 % → 10 %` alors que la base est 8 %).
+- Raison : le **menu stats hub** montre déjà les valeurs finales à jour — le tooltip ne doit pas faire doublon.
+- Exception : modules **unlock purs** (Overclock, Flux Drive) sans bonus numérique progressif — afficher l’effet débloqué (durée, ×vitesse), pas une feuille de stats globale.
 
 ## Imports
 

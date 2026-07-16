@@ -15,6 +15,9 @@ export interface SeedProtocolsStrings {
   screenSubtitle: string;
   openButton: string;
   backToHub: string;
+  tabFundamentals: string;
+  tabSkills: string;
+  branchHeading: string;
   recompileAction: string;
   recompileAvailable: string;
   recompileConfirmTitle: string;
@@ -40,6 +43,14 @@ export interface PlayerStatsStrings {
   openLabel: string;
   cadenceUnit: string;
   purgeSplashZone: string;
+  hexUnit: string;
+  emptyTab: string;
+  tabs: {
+    damage: string;
+    overload: string;
+    economy: string;
+    misc: string;
+  };
 }
 
 export interface TransitionStrings {
@@ -66,6 +77,8 @@ export interface TooltipStatLabels {
   shardPickupRadius: string;
   shardPickupReachBonus: string;
   purgeCadence: string;
+  criticalChance: string;
+  criticalChanceBonus: string;
   purgeReach: string;
   purgeReachBonus: string;
   purgeSplashRadius: string;
@@ -106,6 +119,7 @@ export interface UiStrings {
   requirementsNotMet: string;
   maxUpgradeToUnlock: string;
   node0Label: string;
+  reservedModuleLabel: string;
   purgeZone: string;
   mouse: string;
   bossIncoming: string;

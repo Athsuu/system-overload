@@ -52,6 +52,7 @@ Textes joueur : **i18n** minimum **anglais + français**.
 | i18n, dialogues ARCH, lexique, prose | `narrative-dialogues.mdc` |
 | Stack, perf, dossiers, module tree §14 | `architecture.mdc` |
 | Boucle de jeu, game feel | `game-design.mdc` |
+| Prestige / Protocoles de la Graine (philo cible) | `prestige-philosophy.mdc` |
 | Tutoriels spotlight ARCH | `tutorials-arch.mdc` |
 | Dark Hex Terminal | `design-system.mdc` |
 | Glitch / WebGL / Pixi effets | `visual-effects.mdc` |

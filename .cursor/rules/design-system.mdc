@@ -25,6 +25,7 @@ Fichiers : `src/theme/darkHexTerminal.ts`, `src/ui/module-tree/moduleTreeTheme.t
 - Nœuds **hexagonaux** ; connexions arête→arête ; arbre radial SVG.
 - Racine : **Node-0 Boot** (pas de sprite central PNG).
 - Police **Rajdhani** ; textes **i18n** EN + FR.
+- **Tooltip nœud** : seulement le **bonus du module**, jamais le total global (base + modules) — doublon avec la fiche stats hub. Voir `architecture.mdc` § tooltips module.
 
 ## Gameplay (PLAYING)
 

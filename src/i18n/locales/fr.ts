@@ -223,7 +223,7 @@ export const FR_STRINGS: GameStrings = {
     },
     shardSalvage: {
       name: 'Récupération d\'éclats',
-      description: 'Extrait plus d\'Éclats hex de chaque processus corrompu purgé',
+      description: 'Extrait plus d\'Éclats hex de chaque kill : chaque % au-delà d\'un multiple entier est une chance d\'en dropper un de plus',
     },
     victoryShardBonus: {
       name: 'Prime victoire',
@@ -231,7 +231,7 @@ export const FR_STRINGS: GameStrings = {
     },
     shardMagnet: {
       name: 'Aimant d\'éclats',
-      description: 'Attire les éclats au sol vers ta zone de purge, de plus loin',
+      description: 'Attire les éclats au sol vers ta zone de purge, de plus loin. Rayons de collecte en hex',
     },
     purgeStrike: {
       name: 'Frappe de purge',
@@ -241,13 +241,17 @@ export const FR_STRINGS: GameStrings = {
       name: 'Cadence de purge',
       description: 'Accélère la cadence de purge pour vider plus vite',
     },
+    purgeCrit: {
+      name: 'Critique de purge',
+      description: 'Augmente la chance que chaque tick de purge inflige un coup critique',
+    },
     purgeReach: {
       name: 'Portée de purge',
-      description: 'Étend la couverture de la zone de purge sur l\'arène',
+      description: 'Étend la zone de purge sur l\'arène. Portée affichée en hex (1 hex = taille de base Node-0)',
     },
     purgeSplash: {
       name: 'Éclat de purge',
-      description: 'Inflige des dégâts d\'éclaboussure aux processus juste à l\'extérieur de ta zone',
+      description: 'Inflige des dégâts d\'éclaboussure hors de la zone principale. Rayon d\'éclaboussure en hex',
     },
     latencyInjection: {
       name: 'Injection de latence',
@@ -301,9 +305,11 @@ export const FR_STRINGS: GameStrings = {
     shardPickupRadius: 'Rayon de collecte',
     shardPickupReachBonus: 'Rayon d\'attraction',
     purgeCadence: 'Cadence de purge',
+    criticalChance: 'Chance de critique',
+    criticalChanceBonus: 'Bonus critique',
     purgeReach: 'Zone principale',
     purgeReachBonus: 'Bonus zone de purge',
-    purgeSplashRadius: 'Portée éclaboussure (vs zone principale)',
+    purgeSplashRadius: 'Portée éclaboussure',
     purgeSplashDamage: 'Dégâts d\'éclaboussure',
     latencySlowBonus: 'Ralentissement processus',
     passiveBreachPerSec: 'Brèche passive / sec',
@@ -324,12 +330,23 @@ export const FR_STRINGS: GameStrings = {
     openLabel: 'Stats Node-0',
     cadenceUnit: '/s',
     purgeSplashZone: 'Zone éclaboussure',
+    hexUnit: 'hex',
+    emptyTab: 'Rien ici pour l’instant.',
+    tabs: {
+      damage: 'Dégâts',
+      overload: 'Surcharge',
+      economy: 'Économie',
+      misc: 'Divers',
+    },
   },
   seedProtocols: {
     screenTitle: 'Protocoles de la Graine',
     screenSubtitle: 'Optimisations fondamentales gravées dans le code source de Node-0',
     openButton: 'Protocoles\nde la Graine',
     backToHub: 'Retour\nau hub',
+    tabFundamentals: 'Fondamentaux',
+    tabSkills: 'Compétences',
+    branchHeading: 'Améliorations',
     recompileAction: 'Recompiler',
     recompileAvailable: 'Recompilation disponible',
     recompileConfirmTitle: 'Recompilation depuis la Graine',
@@ -347,7 +364,7 @@ export const FR_STRINGS: GameStrings = {
     protocols: {
       residualMemory: {
         name: 'Mémoire résiduelle',
-        description: 'Bonus d\'Éclats hex au départ après chaque Recompilation (+150 par rang, illimité)',
+        description: 'Bonus d\'Éclats hex au départ après chaque Recompilation (+200 par rang, illimité)',
       },
       bootReinforcement: {
         name: 'Renfort d\'amorçage',
@@ -364,6 +381,22 @@ export const FR_STRINGS: GameStrings = {
       seedResonance: {
         name: 'Résonance de Graine',
         description: 'Fragments de Graine bonus à chaque future Recompilation (+25 % par rang, cumul additif, illimité)',
+      },
+      explosivePurge: {
+        name: 'Purge explosive',
+        description: 'Chaque kill de purge déclenche une petite explosion (rayon fixe, 40 % des dégâts de purge). Max 1.',
+      },
+      explosivePurgeRadius: {
+        name: 'Rayon d\'explosion',
+        description: 'Étend le rayon de la Purge explosive (+30 px par rang, max 3)',
+      },
+      explosivePurgeDamage: {
+        name: 'Dégâts d\'explosion',
+        description: 'Augmente les dégâts d\'explosion (+15 % des dégâts de purge par rang, max 3)',
+      },
+      explosivePurgeChain: {
+        name: 'Chaîne explosive',
+        description: 'Les kills provoqués par une explosion peuvent eux aussi exploser (+1 profondeur par rang, max 3)',
       },
     },
   },
@@ -391,6 +424,7 @@ export const FR_STRINGS: GameStrings = {
     requirementsNotMet: 'Prérequis non remplis',
     maxUpgradeToUnlock: 'Max {name} pour débloquer',
     node0Label: 'NODE-0',
+    reservedModuleLabel: 'RÉSERVÉ',
     purgeZone: 'Zone de purge',
     mouse: 'Souris',
     bossIncoming: 'Boss imminent',

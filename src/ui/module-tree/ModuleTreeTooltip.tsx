@@ -54,8 +54,8 @@ function StatRow({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-2 text-[15px]">
-      <span className="shrink-0 text-white/45">{label}</span>
-      <span className="text-right font-mono">
+      <span className="min-w-0 flex-1 break-words text-white/45">{label}</span>
+      <span className="shrink-0 text-right font-mono whitespace-nowrap">
         <span className="text-white/85">{current}</span>
         {!isMaxed && next !== null && (
           <>
@@ -135,7 +135,7 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
     <div
       ref={panelRef}
       data-module-tooltip
-      className="pointer-events-auto rounded border px-4 py-3 shadow-[0_0_32px_rgba(255,77,0,0.15)]"
+      className="pointer-events-auto w-full min-w-0 overflow-hidden rounded border px-4 py-3 shadow-[0_0_32px_rgba(255,77,0,0.15)]"
       style={{
         backgroundColor: MODULE_TREE_VISUAL.tooltipBg,
         borderColor: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.tooltipBorder,
@@ -187,14 +187,23 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
           ))}
         </div>
 
-        <div className="mt-3 flex items-center justify-between text-[14px] text-white/45">
-          <span className="text-white/35">
+        <div className="mt-3 flex items-center justify-between gap-3 text-[14px] text-white/45">
+          <span className="min-w-0 text-white/35">
             {isMaxed ? strings.ui.fullyUpgraded : strings.ui.nextRankCost}
           </span>
-          {!isMaxed && (
-            <span className="font-mono" style={{ color: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.gold }}>
+          {!isMaxed ? (
+            <span className="shrink-0 font-mono" style={{ color: isAnchor ? DARK_HEX.breachGlow : MODULE_TREE_VISUAL.gold }}>
               {formatCompactNumber(balance)} / {formatCompactNumber(cost)}
             </span>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="shrink-0 rounded border px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase opacity-35"
+              style={getPurchaseButtonStyle(false, isAnchor)}
+            >
+              {strings.ui.max}
+            </button>
           )}
         </div>
 
@@ -216,17 +225,19 @@ export function ModuleTreeTooltip({ selectedId }: ModuleTreeTooltipProps) {
           </p>
         )}
 
-        <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            disabled={!isAvailable}
-            onClick={handlePurchase}
-            className="rounded border px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase transition disabled:cursor-not-allowed disabled:opacity-35"
-            style={getPurchaseButtonStyle(isAvailable, isAnchor)}
-          >
-            {isMaxed ? strings.ui.max : isAnchor ? strings.ui.purchaseAnchor : strings.ui.purchase}
-          </button>
-        </div>
+        {!isMaxed && (
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              disabled={!isAvailable}
+              onClick={handlePurchase}
+              className="rounded border px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase transition disabled:cursor-not-allowed disabled:opacity-35"
+              style={getPurchaseButtonStyle(isAvailable, isAnchor)}
+            >
+              {isAnchor ? strings.ui.purchaseAnchor : strings.ui.purchase}
+            </button>
+          </div>
+        )}
 
         {isSuperchargeEligible && (
           <div className="mt-3 border-t border-white/8 pt-2.5">

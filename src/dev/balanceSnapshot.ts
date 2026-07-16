@@ -7,9 +7,10 @@ import {
   getKillBreachRelief,
   getLeakProgressPenalty,
   getRunConfig,
-  getShardReward,
+  getExpectedShardReward,
 } from '../game/runConfig';
 import { formatRunElapsedMs, runElapsedMsRef } from '../game/runElapsed';
+import { formatHexRadius } from '../game/purgeHexDisplay';
 import { getCycleHeatMult, getCyclePressureMult } from '../game/cycleScaling';
 import { BOSS_WAVE_INDEX, getEnemyLevel } from '../game/enemyScaling';
 import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
@@ -118,7 +119,7 @@ function buildEnemyPressureSamples(
         hpBoss: getEnemyMaxHp(config, wave, true, cycle),
         speedNormal: Math.round(getEnemySpeed(config, wave, cycle) * 10) / 10,
         leakPenalty: getLeakProgressPenalty(config, wave),
-        shardReward: getShardReward(config, wave, cycle),
+          shardReward: getExpectedShardReward(config, wave, cycle),
       };
     });
 }
@@ -313,7 +314,7 @@ export function formatBalanceSnapshot(snapshot: BalanceSnapshot): string {
   lines.push('--- STATS CALCULÉES (build actuel) ---');
   lines.push(`Purge dégâts : ${stats.purgeHitDamage}`);
   lines.push(`Purge cadence : ${stats.purgeIntervalMs} ms`);
-  lines.push(`Purge rayon : ${stats.purgeRadius}`);
+  lines.push(`Purge rayon : ${formatHexRadius(stats.purgeRadius)}`);
   lines.push(`Critique : ${Math.round(stats.criticalChance * 1000) / 10}% ×${stats.criticalMultiplier}`);
   lines.push(`Chaleur passive : ${stats.passiveHeatPerSec}/s (eff. ${Math.round(stats.passiveHeatPerSecEffective * 100) / 100}/s)`);
   lines.push(`Cap Breach / Meltdown : ${stats.breachCap}`);

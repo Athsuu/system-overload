@@ -6,15 +6,16 @@
 import {
   BREACH_DISSIPATION_PER_SEC_BY_LEVEL,
   LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL,
-  PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL,
+  PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL,
   KILL_BREACH_RELIEF_PER_LEVEL,
-  MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL,
+  MELTDOWN_THRESHOLD_CAP_PERCENT_PER_LEVEL,
   PURGE_CADENCE_INTERVAL_MS_PER_LEVEL,
+  PURGE_CRIT_CHANCE_PERCENT_PER_LEVEL,
   PURGE_REACH_AOE_PERCENT_PER_LEVEL,
   PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL,
   PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
-  SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL,
+  SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
   VICTORY_SHARD_BONUS_FLAT_BY_LEVEL,
   type AnchoredNodes,
@@ -22,12 +23,16 @@ import {
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
 import type { CoreProtocolLevels } from '../store/prestigeTypes';
+import { DEFAULT_CORE_PROTOCOLS } from '../store/prestigeTypes';
 import {
   BOOT_REINFORCEMENT_DAMAGE_PERCENT_PER_LEVEL,
+  EXPLOSIVE_PURGE_BASE_DAMAGE_RATIO,
+  EXPLOSIVE_PURGE_BASE_RADIUS_PX,
+  EXPLOSIVE_PURGE_DAMAGE_RATIO_PER_LEVEL,
+  EXPLOSIVE_PURGE_RADIUS_PER_LEVEL_PX,
   EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL,
   THERMAL_BASELINE_DECAY_FACTOR_PER_LEVEL,
 } from '../store/coreProtocolCatalog';
-import { getRecompileDepthMultiplier } from '../store/prestigeLogic';
 import { getAnchorHeatMultiplier, getAnchorMultiplier } from './anchorSupercharge';
 import { BASE_CRITICAL_CHANCE, BASE_CRITICAL_MULTIPLIER } from './juice/criticalHit';
 
@@ -49,9 +54,16 @@ export interface RunConfig {
   purgeRadius: number;
   purgeHitDamage: number;
   purgeIntervalMs: number;
-  /** Préparation coup critique — pas encore modifiable par un module (voir game/juice/criticalHit.ts). */
+  /** Coup critique — base + modules (ex. Critique de purge). */
   criticalChance: number;
   criticalMultiplier: number;
+  /** Prestige — Purge explosive unlock. */
+  explosivePurgeEnabled: boolean;
+  explosivePurgeRadiusPx: number;
+  /** Fraction of purgeHitDamage dealt by on-kill explosions. */
+  explosivePurgeDamageRatio: number;
+  /** Max re-explosion depth from explosion kills (0 = no chain). */
+  explosivePurgeChainDepth: number;
 }
 
 /** Bases de run non modifiées par les modules (pour l'instant). */
@@ -79,6 +91,7 @@ export type ModuleEffectTarget =
   | 'runConfig.purgeHitDamage'
   | 'runConfig.purgeIntervalMs'
   | 'runConfig.purgeRadius'
+  | 'runConfig.criticalChance'
   | 'purge.splashRadius'
   | 'purge.splashDamage'
   | 'runConfig.passiveHeatPerSec'
@@ -110,7 +123,7 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'shardSalvage',
     targets: ['runConfig.shardsMultiplier'],
-    summaryFr: 'Multiplicateur composé sur le rendement d’Éclats hex par kill (×1.12^rang, max 5)',
+    summaryFr: '+25 % rendement Éclats hex / rang (max +125 % au rang 5) — fraction = chance d’un éclat en plus',
   },
   {
     upgradeId: 'victoryShardBonus',
@@ -133,6 +146,11 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
     summaryFr: 'Cadence de purge plus rapide',
   },
   {
+    upgradeId: 'purgeCrit',
+    targets: ['runConfig.criticalChance'],
+    summaryFr: '+2 % chance de critique / rang (base 8 %, max 18 % au rang 5) — multi ×2',
+  },
+  {
     upgradeId: 'purgeReach',
     targets: ['runConfig.purgeRadius'],
     summaryFr: 'Zone de purge plus large',
@@ -140,7 +158,7 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'purgeSplash',
     targets: ['purge.splashRadius', 'purge.splashDamage'],
-    summaryFr: 'Éclaboussure : extension % de la zone principale + dégâts réduits hors zone directe',
+    summaryFr: 'Éclaboussure : +70 / +105 / +140 % rayon vs zone principale ; dégâts 40 / 70 / 100 % (rang 3 = purge)',
   },
   {
     upgradeId: 'latencyInjection',
@@ -155,12 +173,12 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'killBreachRelief',
     targets: ['breach.killRelief'],
-    summaryFr: 'Soulagement Overload à chaque kill (−1 / rang, max 5)',
+    summaryFr: 'Soulagement Overload à chaque kill (−0,5 % / rang → −2,5 % au rang 5)',
   },
   {
     upgradeId: 'meltdownThreshold',
     targets: ['breach.cap'],
-    summaryFr: 'Augmente le seuil Meltdown (cap Breach %, max 10)',
+    summaryFr: 'Augmente le seuil Meltdown (+8 % / rang → 180 % au rang 10)',
   },
   {
     upgradeId: 'overclock',
@@ -185,7 +203,7 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'purgeAmplifier',
     targets: ['runConfig.purgeHitDamage'],
-    summaryFr: 'Bonus % dégâts purge (+5 / +10 / +15 %, tous cycles)',
+    summaryFr: 'Bonus flat dégâts purge (+10 / +20 / +30, tous cycles)',
   },
 ];
 
@@ -275,10 +293,15 @@ export function getLeakSealingReductionPercent(level: number, anchorMultiplier =
   return LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL[index] * anchorMultiplier;
 }
 
-export function getPurgeAmplifierDamageBonusPercent(level: number, anchorMultiplier = 1): number {
+export function getPurgeAmplifierDamageFlat(level: number, anchorMultiplier = 1): number {
   if (level <= 0) return 0;
-  const index = Math.min(level, PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL.length) - 1;
-  return PURGE_AMPLIFIER_DAMAGE_PERCENT_BY_LEVEL[index] * anchorMultiplier;
+  const index = Math.min(level, PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL.length) - 1;
+  return PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL[index] * anchorMultiplier;
+}
+
+/** @deprecated Prefer getPurgeAmplifierDamageFlat — Amplificateur est flat, plus en %. */
+export function getPurgeAmplifierDamageBonusPercent(level: number, anchorMultiplier = 1): number {
+  return getPurgeAmplifierDamageFlat(level, anchorMultiplier);
 }
 
 export function getLatencySlowMultiplier(level: number, anchorMultiplier = 1): number {
@@ -316,15 +339,8 @@ export function resolvePurgeSplashDamage(
 
 export function computeRunConfig(
   upgrades: UpgradeLevels,
-  coreProtocols: CoreProtocolLevels = {
-    residualMemory: 0,
-    bootReinforcement: 0,
-    thermalBaseline: 0,
-    extractionProtocol: 0,
-    seedResonance: 0,
-  },
+  coreProtocols: CoreProtocolLevels = { ...DEFAULT_CORE_PROTOCOLS },
   anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
-  recompileDepth = 0,
 ): RunConfig {
   const aoe = computePurgeAoeProfile(upgrades, anchoredNodes);
   const thermalBaselineDecay = THERMAL_BASELINE_DECAY_FACTOR_PER_LEVEL ** coreProtocols.thermalBaseline;
@@ -343,22 +359,26 @@ export function computeRunConfig(
   const bootReinforcementMultiplier =
     1 + (coreProtocols.bootReinforcement * BOOT_REINFORCEMENT_DAMAGE_PERCENT_PER_LEVEL) / 100;
   const shardSalvageMultiplier =
-    SHARD_SALVAGE_YIELD_GROWTH_PER_LEVEL **
-    (upgrades.shardSalvage * getAnchorMultiplier(anchoredNodes, 'shardSalvage'));
-  const recompileDepthMultiplier = getRecompileDepthMultiplier(recompileDepth);
-  const purgeAmplifierMult =
     1 +
-    getPurgeAmplifierDamageBonusPercent(
-      upgrades.purgeAmplifier,
-      getAnchorMultiplier(anchoredNodes, 'purgeAmplifier'),
-    ) /
-      100;
+    (SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL / 100) *
+      upgrades.shardSalvage *
+      getAnchorMultiplier(anchoredNodes, 'shardSalvage');
+  const purgeAmplifierFlat = getPurgeAmplifierDamageFlat(
+    upgrades.purgeAmplifier,
+    getAnchorMultiplier(anchoredNodes, 'purgeAmplifier'),
+  );
+  const explosivePurgeEnabled = coreProtocols.explosivePurge >= 1;
+  const explosivePurgeRadiusPx =
+    EXPLOSIVE_PURGE_BASE_RADIUS_PX +
+    coreProtocols.explosivePurgeRadius * EXPLOSIVE_PURGE_RADIUS_PER_LEVEL_PX;
+  const explosivePurgeDamageRatio =
+    EXPLOSIVE_PURGE_BASE_DAMAGE_RATIO +
+    coreProtocols.explosivePurgeDamage * EXPLOSIVE_PURGE_DAMAGE_RATIO_PER_LEVEL;
 
   return {
     starterNodes: RUN_STAT_BASE.starterNodes,
     baseEnemyHp: RUN_STAT_BASE.baseEnemyHp,
-    shardsMultiplier:
-      shardSalvageMultiplier * extractionBonus * recompileDepthMultiplier,
+    shardsMultiplier: shardSalvageMultiplier * extractionBonus,
     killBonusShards: 0,
     spawnIntervalMult: RUN_STAT_BASE.spawnIntervalMult,
     maxAliveReduction: RUN_STAT_BASE.maxAliveReduction,
@@ -374,10 +394,9 @@ export function computeRunConfig(
         flatPerLevel(
           upgrades.purgeStrike,
           PURGE_STRIKE_DAMAGE_PER_LEVEL * getAnchorMultiplier(anchoredNodes, 'purgeStrike'),
-        )) *
-        bootReinforcementMultiplier *
-        recompileDepthMultiplier *
-        purgeAmplifierMult,
+        ) +
+        purgeAmplifierFlat) *
+        bootReinforcementMultiplier,
     ),
     purgeIntervalMs: subtractPerLevel(
       RUN_STAT_BASE.basePurgeIntervalMs,
@@ -385,9 +404,31 @@ export function computeRunConfig(
       PURGE_CADENCE_INTERVAL_MS_PER_LEVEL * getAnchorMultiplier(anchoredNodes, 'purgeCadence'),
       MIN_PURGE_INTERVAL_MS,
     ),
-    criticalChance: BASE_CRITICAL_CHANCE,
+    criticalChance: computeCriticalChance(upgrades, anchoredNodes),
     criticalMultiplier: BASE_CRITICAL_MULTIPLIER,
+    explosivePurgeEnabled,
+    explosivePurgeRadiusPx,
+    explosivePurgeDamageRatio,
+    explosivePurgeChainDepth: coreProtocols.explosivePurgeChain,
   };
+}
+
+export function getPurgeCritChanceBonusPercent(
+  level: number,
+  anchorMultiplier = 1,
+): number {
+  return flatPerLevel(level, PURGE_CRIT_CHANCE_PERCENT_PER_LEVEL * anchorMultiplier);
+}
+
+export function computeCriticalChance(
+  upgrades: UpgradeLevels,
+  anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
+): number {
+  const bonusPercent = getPurgeCritChanceBonusPercent(
+    upgrades.purgeCrit,
+    getAnchorMultiplier(anchoredNodes, 'purgeCrit'),
+  );
+  return BASE_CRITICAL_CHANCE + bonusPercent / 100;
 }
 
 export function computeBreachCap(
@@ -395,10 +436,9 @@ export function computeBreachCap(
   anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
 ): number {
   const anchorMultiplier = getAnchorMultiplier(anchoredNodes, 'meltdownThreshold');
-  return Math.round(
-    BASE_BREACH_CAP *
-      MELTDOWN_THRESHOLD_CAP_GROWTH_PER_LEVEL ** (upgrades.meltdownThreshold * anchorMultiplier),
-  );
+  const bonusPercent =
+    MELTDOWN_THRESHOLD_CAP_PERCENT_PER_LEVEL * upgrades.meltdownThreshold * anchorMultiplier;
+  return Math.round(BASE_BREACH_CAP * (1 + bonusPercent / 100));
 }
 
 export function computeKillBreachRelief(

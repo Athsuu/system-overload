@@ -5,6 +5,7 @@ import {
   MODULE_TREE_GRAPH,
   type HexFlatDirection,
 } from './moduleTree';
+import { MODULE_TREE_PLACEHOLDERS } from './moduleTreePlaceholders';
 import type { UpgradeId } from './upgradeCatalog';
 
 /** Center-to-center step — matches HEX_FLAT_DIRECTIONS.up.dy magnitude. */
@@ -203,13 +204,20 @@ export interface HexGridOccupancy {
 
 export function buildHexGridOccupancy(
   drafts: ReadonlyArray<{ q: number; r: number }> = [],
+  includeProductionModules = true,
 ): HexGridOccupancy {
   const occupied = new Set<string>([axialKey(0, 0)]);
   const draftCells = new Set<string>();
 
-  for (const axial of MODULE_AXIAL_BY_ID.values()) {
-    occupied.add(axialKey(axial.q, axial.r));
+  if (includeProductionModules) {
+    for (const axial of MODULE_AXIAL_BY_ID.values()) {
+      occupied.add(axialKey(axial.q, axial.r));
+    }
+    for (const placeholder of MODULE_TREE_PLACEHOLDERS) {
+      occupied.add(axialKey(placeholder.q, placeholder.r));
+    }
   }
+
   for (const draft of drafts) {
     const key = axialKey(draft.q, draft.r);
     occupied.add(key);
@@ -239,11 +247,13 @@ export function getHexGridHoverInfo(
     drafts?: ReadonlyArray<{ id: string; q: number; r: number }>;
     selectedParentId?: string | null;
     parentAxial?: AxialCoord | null;
+    includeProductionModules?: boolean;
   },
 ): HexGridHoverInfo {
   const drafts = options?.drafts ?? [];
+  const includeProduction = options?.includeProductionModules ?? true;
   const draftOccupantId = getDraftAtAxial(q, r, drafts);
-  const occupantId = getModuleAtAxial(q, r);
+  const occupantId = includeProduction ? getModuleAtAxial(q, r) : null;
   const isOrigin = q === 0 && r === 0;
   const isOccupied = isOrigin || occupantId !== null || draftOccupantId !== null;
 

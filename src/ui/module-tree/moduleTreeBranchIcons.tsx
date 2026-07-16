@@ -28,6 +28,13 @@ function GlyphPaths({ glyph }: { glyph: ModuleGlyphId }) {
           strokeLinejoin="round"
         />
       );
+    case 'crit':
+      return (
+        <path
+          d="M12 3 L13.5 9.5 L20 11 L13.5 12.5 L12 19 L10.5 12.5 L4 11 L10.5 9.5 Z"
+          fill="currentColor"
+        />
+      );
     case 'reach':
       return (
         <>

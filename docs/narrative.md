@@ -167,8 +167,8 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 | **Recompile**          | Acte de prestige, reset volontaire de Node-0 depuis la Graine   |
 | **Recompile Depth**    | Compteur de recompilations effectuées                            |
 | **Seed Fragments**     | Monnaie de prestige, gagnée au Recompile, jamais perdue          |
-| **Core Protocols**     | Modules permanents achetés avec les Seed Fragments               |
-| **Seed Protocols**     | Écran d'accès aux Core Protocols                                 |
+| **Core Protocols**     | Fondamentaux permanents (SF) ; + compétences + branches — voir `prestige-philosophy.mdc` |
+| **Seed Protocols**     | Écran d'accès à la couche prestige                               |
 
 
 
@@ -307,7 +307,7 @@ L'Archive Zéro atteint une phase où les patchs incrémentaux du module tree ne
 
 ### Déclenchement
 
-- Condition : **Cycle 3 clear** (dernier cycle jouable, `MAX_CYCLES = 3`).
+- Condition : **Cycle 2 clear**.
 - Accès : bouton **Seed Protocols** dans le hub (intégré à la rangée de monnaie), et action **Recompile** directement dans l'écran Seed Protocols.
 
 ### Ce qui est perdu (hard reset)
@@ -326,17 +326,23 @@ L'Archive Zéro atteint une phase où les patchs incrémentaux du module tree ne
 
 ### Gain de Seed Fragments (rééquilibrage — formule superlinéaire)
 
-`n = nombre de cycles clear` ; `seedFragments = round((1 + n + floor(n^1.6 / 4)) × (1 + bonus Seed Resonance))`. Exemples sans Seed Resonance : n=3 (minimum pour débloquer Recompile) → **5** ; n=10 → **20** ; n=20 → **51**. Pousser profond avant de recompiler paie disproportionnellement plus qu'un rush minimal.
+`n = nombre de cycles clear` ; `seedFragments = round((1 + n + floor(n^1.6 / 4)) × (1 + bonus Seed Resonance))`. Exemples sans Seed Resonance : n=2 (minimum pour débloquer Recompile) → **3** ; n=10 → **20** ; n=20 → **51**. Pousser profond avant de recompiler paie disproportionnellement plus qu'un rush minimal.
 
-En plus des Seed Fragments, chaque Recompile augmente un multiplicateur permanent (**Profondeur de Recompilation**, ×1.08/Recompile composé) appliqué directement aux dégâts de purge et au rendement d'éclats, ressenti dès la run suivante sans rien devoir acheter.
+La **Profondeur de Recompilation** est un compteur d’affichage uniquement. Pas de multi combat automatique lié à la profondeur.
 
-### Core Protocols (5 modules permanents, déplafonnés)
+### Philosophie cible (refonte — squelette Vague 1 livré)
 
-Coût = `costBase × costGrowth^rang` (jamais de niveau max, jamais "MAX").
+Trois couches en Seed Fragments : **Fondamentaux** (socle stats illimité) + **compétences** (unlock max 1, nommées) + **branche d’amélioration** par compétence. UI onglets Fondamentaux / Compétences. Détail : **`.cursor/rules/prestige-philosophy.mdc`** et **`docs/lexique-jeu.md` §3**.
+
+**Purge explosive** (compétence) : unlock 2 SF — chaque kill de purge déclenche une explosion (rayon 80 px, 40 % des dégâts de purge). Branche : Rayon (+30 px/rang), Dégâts (+15 %/rang), Chaîne (+1 profondeur/rang), max 3 chacun. Overclock / Flux Drive restent sur l’arbre shards jusqu’à la mission suivante.
+
+### Core Protocols — Fondamentaux (déplafonnés)
+
+Coût = `costBase × costGrowth^rang` (jamais de niveau max, jamais "MAX"). Ces cinq restent le **socle** de la refonte.
 
 | Protocole | Nom UI | Effet par rang | Coût de base | Croissance du coût |
 |-----------|--------|-----------------|---------------|---------------------|
-| **Residual Memory** | Residual Memory | +150 Hex Shards au départ après chaque Recompile | 2 | ×1.25 |
+| **Residual Memory** | Residual Memory | +200 Hex Shards au départ après chaque Recompile | 2 | ×1.25 |
 | **Boot Reinforcement** | Boot Reinforcement | +15 % dégâts de purge totaux (multiplicatif) | 1 | ×1.35 |
 | **Thermal Baseline** | Thermal Baseline | ×0.9 décroissance de la montée passive d'Overload (composé) | 2 | ×1.30 |
 | **Extraction Protocol** | Extraction Protocol | +15 % de Hex Shards gagnés par kill | 3 | ×1.28 |
@@ -397,6 +403,8 @@ Coût = `costBase × costGrowth^rang` (jamais de niveau max, jamais "MAX").
 | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
 | v0.6    | 2026-07-07 | Méta v4 (pré-rebrand Node-0 / ARCH)                                                                                     |
 | v0.7    | 2026-07-07 | **ARCH**, **Node-0**, **Zero Archive**, **the Seed**, **Uplink** ; suppression visuel joueur central ; arène purge-only |
-| v0.8    | 2026-07-13 | **Prestige & Recompilation** implémenté (Seed Fragments, 5 Core Protocols, condition Cycle 3 clear) ; nœuds **Purge Cadence**, **Purge Reach**, **Meltdown Threshold** documentés ; pool ARCH Meltdown (3 variantes) et dialogues Recompile documentés ; anti-canon Node-0 cloné/template ajouté |
+| v0.8    | 2026-07-13 | **Prestige & Recompilation** implémenté (Seed Fragments, 5 Core Protocols, condition Cycle 2 clear ; profondeur = compteur sans buff auto) ; nœuds **Purge Cadence**, **Purge Reach**, **Meltdown Threshold** documentés ; pool ARCH Meltdown (3 variantes) et dialogues Recompile documentés ; anti-canon Node-0 cloné/template ajouté |
+| v0.9    | 2026-07-16 | Philosophie prestige cible documentée (Fondamentaux + compétences unlock + branches de build) — règle `.cursor/rules/prestige-philosophy.mdc` |
+| v0.9.1  | 2026-07-16 | Vague 1 squelette : Purge explosive (unlock + branche), onglets Seed Protocols, Residual Memory +200 ; Overclock/Flux Drive encore sur l’arbre |
 
 

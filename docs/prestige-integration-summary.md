@@ -1,19 +1,25 @@
-# Prestige — résumé d'intégration (Phase 1)
+# Prestige — résumé d'intégration (Phase 1) — HISTORIQUE
+
+> **Document historique.** Décrit la livraison Phase 1 (juillet 2026).  
+> **Ne plus utiliser** comme source de vérité pour les chiffres ou la structure cible.  
+> Canon actuel des Fondamentaux : `docs/narrative.md` · `docs/lexique-jeu.md` §3 · `src/store/coreProtocolCatalog.ts`.  
+> **Philosophie cible** (compétences + branches + UI) : **`.cursor/rules/prestige-philosophy.mdc`**.
 
 Itération livrée le 13 juillet 2026. Système **Recompile** + **Seed Protocols** + **Core Protocols** selon `docs/implementation_plan.md`, avec les choix PO suivants :
 
 - Bouton hub **séparé** (Seed Protocols)
 - **Pas de tutoriel** prestige (skip auto après Recompile ; lore à ajouter plus tard)
-- Condition de déclenchement : **Cycle 3 clear** (`MAX_CYCLES = 3`)
-- **Accelerated Boot** remplacé par **Boot Reinforcement** (Renfort d'amorçage) : renforce Node-0 Boot (+5 dégâts purge)
+- Condition de déclenchement : **Cycle 2 clear**
+- **Accelerated Boot** remplacé par **Boot Reinforcement** (Renfort d'amorçage) : renforce Node-0 Boot
+- **Profondeur de Recompilation** = compteur UI uniquement (plus de multi auto ×1.08 sur dégâts / éclats)
 
 ---
 
 ## Ce qui a changé dans le jeu
 
-1. Après avoir **clear le Cycle 3**, le joueur peut **Recompiler** depuis le hub ou l'écran de fin de run (victoire boss Cycle 3).
+1. Après avoir **clear le Cycle 2**, le joueur peut **Recompiler** depuis le hub ou l'écran de fin de run (victoire boss Cycle 2).
 2. Le Recompile **efface** Éclats hex, Fragments d'ancre, arbre de modules et cycles, puis **accorde des Fragments de Graine**.
-3. L'écran **Protocoles de la Graine** (bouton hub cyan) permet d'acheter **5 Protocoles Fondamentaux** permanents.
+3. L'écran **Protocoles de la Graine** (bouton hub cyan) permet d'acheter **5 Protocoles Fondamentaux** permanents — **seule** source de puissance permanente prestige.
 4. Les protocoles achetés **survivent** à tous les futurs Recompiles et modifient le gameplay (dégâts boot, overload, rendement éclats, etc.).
 5. Les **tutoriels ARCH ne se rejouent pas** après un Recompile.
 
@@ -23,10 +29,11 @@ Itération livrée le 13 juillet 2026. Système **Recompile** + **Seed Protocols
 
 | Élément | Détail |
 |---------|--------|
-| Condition Recompile | `cyclesCleared` contient le cycle 3 |
-| Gain Fragments de Graine | `1 + nombre de cycles clear + bonus Résonance de Graine` |
+| Condition Recompile | `cyclesCleared` contient le cycle **2** |
+| Gain Fragments de Graine | formule superlinéaire sur le nombre de cycles clear (+ Résonance) |
 | Reset | shards, ancres, upgrades (sauf Node-0 Boot = 1), cycles → 1 |
-| Conservé | Fragments de Graine, niveaux Core Protocols, Profondeur de Recompilation, réglages |
+| Conservé | Fragments de Graine, niveaux Core Protocols, Profondeur de Recompilation (compteur), réglages |
+| Buff auto profondeur | **Aucun** — puissance = Protocoles achetés seulement |
 
 ### Core Protocols (coûts SF)
 
@@ -73,7 +80,7 @@ Itération livrée le 13 juillet 2026. Système **Recompile** + **Seed Protocols
 | `src/ui/currencyIcons.tsx` | Icône `SeedFragmentIcon` |
 | `src/ui/seedProtocolLayout.ts` | Positions SVG des nœuds prestige |
 | `src/ui/seedProtocolTheme.ts` | Palette cyan / bleu glacé |
-| `src/ui/RunEndScreen.tsx` | Bandeau « Recompile available » (victoire Cycle 3) |
+| `src/ui/RunEndScreen.tsx` | Bandeau « Recompile available » (victoire Cycle 2) |
 | `src/App.tsx` | Écran `SEED_PROTOCOLS`, badge monnaies hub |
 
 ### i18n
@@ -102,7 +109,7 @@ Itération livrée le 13 juillet 2026. Système **Recompile** + **Seed Protocols
 ## Comment tester
 
 1. `npm run dev`
-2. Menu dev → **Mark cycle 3 cleared** (ou jouer jusqu'au boss Cycle 3)
+2. Menu dev → **Mark cycle 2 cleared** (ou jouer jusqu'au boss Cycle 2)
 3. Hub : bouton **Protocoles de la Graine** + **Recompiler**
 4. Confirmer Recompile → vérifier reset modules/shards/cycles + gain SF
 5. Acheter un protocole → lancer une run → vérifier l'effet (ex. Renfort d'amorçage = +5 dégâts)

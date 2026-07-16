@@ -7,7 +7,7 @@ import {
 } from '../store/upgradeCatalog';
 import { applyDevRunConfigOverrides } from '../dev/devRunConfigOverrides';
 import { getAnchorMultiplier, isNodeAnchorActive } from './anchorSupercharge';
-import { getCycleHeatGrowthMult, getCyclePressureMult } from './cycleScaling';
+import { getCycleHeatGrowthMult, getCyclePressureMult, getShardsPerKillForCycle } from './cycleScaling';
 import { useGameStore } from '../store/useGameStore';
 import {
   computeBreachCap,
@@ -21,7 +21,6 @@ import {
   getEnemyLevel,
   getEnemyMaxHpForLevel,
   getEnemySpeedForLevel,
-  getShardsPerKillForLevel,
 } from './enemyScaling';
 
 /** Package A — chaque fuite inflige 20 % du seuil Meltdown actuel. */
@@ -36,6 +35,7 @@ export {
   computeVictoryShardBonus,
   getBreachDissipationPerSec,
   getLeakSealingReductionPercent,
+  getPurgeAmplifierDamageFlat,
   getPurgeAmplifierDamageBonusPercent,
   getLatencySlowMultiplier,
   getPurgeReachBonusPercent,
@@ -84,7 +84,7 @@ export function getRunTimeScale(
 export function getRunConfig(upgrades: UpgradeLevels): RunConfig {
   const state = useGameStore.getState();
   return applyDevRunConfigOverrides(
-    computeRunConfig(upgrades, state.coreProtocols, state.anchoredNodes, state.recompileDepth),
+    computeRunConfig(upgrades, state.coreProtocols, state.anchoredNodes),
   );
 }
 
@@ -92,12 +92,24 @@ export function resolveActiveCycle(): number {
   return useGameStore.getState().activeCycle || 1;
 }
 
+/**
+ * Cycle pour stats hub / chaleur affichée :
+ * en run → cycle actif ; hors run → cycle sélectionné (Start Run).
+ */
+export function resolveRelevantCycle(): number {
+  const state = useGameStore.getState();
+  if (state.gameState === 'PLAYING' || state.gameState === 'PAUSED') {
+    return state.activeCycle || 1;
+  }
+  return state.selectedCycle || 1;
+}
+
 export function resolveEnemyLevel(localWaveIndex: number, cycle?: number): number {
   return getEnemyLevel(cycle ?? resolveActiveCycle(), localWaveIndex);
 }
 
-export function getEffectivePassiveHeatPerSec(config: RunConfig): number {
-  return config.passiveHeatPerSec * getCycleHeatGrowthMult(resolveActiveCycle());
+export function getEffectivePassiveHeatPerSec(config: RunConfig, cycle?: number): number {
+  return config.passiveHeatPerSec * getCycleHeatGrowthMult(cycle ?? resolveRelevantCycle());
 }
 
 export function getEnemyMaxHp(
@@ -123,14 +135,32 @@ export function getEnemySpeed(
   return Math.min(config.maxEnemySpeed, scaledSpeed * baseRatio);
 }
 
-export function getShardReward(
+/** Espérance d’éclats / kill (UI, balance) — sans tirage. */
+export function getExpectedShardReward(
   config: RunConfig,
-  localWaveIndex: number,
+  _localWaveIndex: number,
   cycle?: number,
 ): number {
-  const level = resolveEnemyLevel(localWaveIndex, cycle);
-  const base = getShardsPerKillForLevel(level);
-  return Math.floor(base * config.shardsMultiplier) + config.killBonusShards;
+  const base = getShardsPerKillForCycle(cycle ?? resolveRelevantCycle());
+  return base * config.shardsMultiplier + config.killBonusShards;
+}
+
+/**
+ * Drop réel / kill : la partie entière est garantie, la fraction = chance d’un éclat en plus.
+ * Ex. ×1,39 → 1 garanti + 39 % de chance d’un 2ᵉ (au lieu d’attendre ×2.0 via Math.floor).
+ * Base = numéro du cycle (pas le niveau ennemi).
+ */
+export function getShardReward(
+  config: RunConfig,
+  _localWaveIndex: number,
+  cycle?: number,
+): number {
+  const base = getShardsPerKillForCycle(cycle ?? resolveRelevantCycle());
+  const expected = base * config.shardsMultiplier;
+  const guaranteed = Math.floor(expected);
+  const fractionalChance = expected - guaranteed;
+  const rolled = guaranteed + (fractionalChance > 0 && Math.random() < fractionalChance ? 1 : 0);
+  return rolled + config.killBonusShards;
 }
 
 export function getLeakProgressPenalty(_config: RunConfig, _localWaveIndex: number): number {

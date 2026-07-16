@@ -12,18 +12,18 @@ export type BranchId = 'degats' | 'thermique';
 export type ModuleIconBranch = BranchId | 'flux';
 
 /** Per-node glyph on the module tree (branch defaults + dedicated marks). */
-export type ModuleGlyphId = ModuleIconBranch | 'shard' | 'magnet' | 'cadence' | 'reach' | 'splash' | 'victory' | 'dissipate' | 'seal' | 'amplify';
+export type ModuleGlyphId = ModuleIconBranch | 'shard' | 'magnet' | 'cadence' | 'crit' | 'reach' | 'splash' | 'victory' | 'dissipate' | 'seal' | 'amplify';
 
 export type TreeNodeId = UpgradeId;
 export type TreeParentId = 'root' | TreeNodeId;
 
-export const TREE_CANVAS = { width: 2000, height: 1200 };
+export const TREE_CANVAS = { width: 2400, height: 2200 };
 export const HEX_CELL = 90;
 export const NODE_RADIUS = 51;
 export const NODE0_HUB_RADIUS = 84;
 export const NODE_SIZE = NODE_RADIUS * Math.sqrt(3);
 
-export const NODE0_HUB_POSITION = { x: 1000, y: 600 };
+export const NODE0_HUB_POSITION = { x: 1200, y: 1000 };
 
 /** Flat-edge hex directions — child centers are parent + offset (scale for 2×, 3×, …). */
 export const HEX_FLAT_DIRECTIONS = {
@@ -90,6 +90,7 @@ const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   shardMagnet: 'thermique',
   purgeStrike: 'degats',
   purgeCadence: 'degats',
+  purgeCrit: 'degats',
   purgeReach: 'degats',
   purgeSplash: 'degats',
   latencyInjection: 'degats',
@@ -115,6 +116,7 @@ export function getModuleIconBranch(id: UpgradeId, branch: BranchId): ModuleIcon
 export function getModuleGlyphId(id: UpgradeId, branch: BranchId): ModuleGlyphId | null {
   if (id === 'purgeStrike') return 'degats';
   if (id === 'purgeCadence') return 'cadence';
+  if (id === 'purgeCrit') return 'crit';
   if (id === 'purgeReach') return 'reach';
   if (id === 'purgeSplash') return 'splash';
   if (id === 'shardSalvage') return 'shard';
@@ -151,38 +153,28 @@ export interface ModuleNodeDef extends ModuleNodeLayout {
   description: string;
 }
 
-const NODE0_BOOT_POS = NODE0_HUB_POSITION;
-const SHARD_SALVAGE_POS = positionFromAxial(-1, 0);
-const VICTORY_SHARD_BONUS_POS = positionFromAxial(-1, -1);
-const SHARD_MAGNET_POS = positionFromAxial(-2, 1);
-const PURGE_STRIKE_POS = positionFromParent(NODE0_BOOT_POS, 'up');
-const PURGE_AMPLIFIER_POS = positionFromAxial(0, -2);
-const THREAD_COOLANT_POS = positionFromParent(NODE0_BOOT_POS, 'downRight');
-const PURGE_CADENCE_POS = positionFromParent(PURGE_STRIKE_POS, 'upLeft');
-const PURGE_REACH_POS = positionFromAxial(1, 1);
-const PURGE_SPLASH_POS = positionFromAxial(1, 2);
-const MELTDOWN_THRESHOLD_POS = positionFromAxial(2, -1);
-const KILL_BREACH_RELIEF_POS = positionFromAxial(2, -2);
-const LATENCY_INJECTION_POS = positionFromAxial(-1, 3);
-const OVERCLOCK_POS = positionFromAxial(1, 0);
-const FLUX_DRIVE_POS = positionFromAxial(-1, 1);
-const BREACH_DISSIPATION_POS = positionFromAxial(3, -1);
-const LEAK_SEALING_POS = positionFromAxial(3, -2);
-
-/** Radial module tree — Node-0 Boot root; branches rebuilt incrementally. */
+/** Radial module tree — layout global export 2026-07-15. */
 export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
   {
     id: 'node0Boot',
     kind: 'upgrade',
     parentId: 'root',
-    position: NODE0_BOOT_POS,
+    position: positionFromAxial(0, 0),
     branch: 'thermique',
+  },
+  {
+    id: 'purgeStrike',
+    kind: 'upgrade',
+    parentId: 'node0Boot',
+    position: positionFromAxial(0, 2),
+    branch: 'degats',
+    requires: requireLevel('node0Boot', 1),
   },
   {
     id: 'meltdownThreshold',
     kind: 'upgrade',
     parentId: 'node0Boot',
-    position: THREAD_COOLANT_POS,
+    position: positionFromAxial(0, -2),
     branch: 'thermique',
     requires: requireLevel('node0Boot', 1),
   },
@@ -190,79 +182,63 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     id: 'shardSalvage',
     kind: 'upgrade',
     parentId: 'node0Boot',
-    position: SHARD_SALVAGE_POS,
+    position: positionFromAxial(2, -1),
     branch: 'thermique',
     requires: requireLevel('node0Boot', 1),
   },
   {
-    id: 'victoryShardBonus',
-    kind: 'upgrade',
-    parentId: 'shardSalvage',
-    position: VICTORY_SHARD_BONUS_POS,
-    branch: 'thermique',
-    requires: requireLevel('shardSalvage', 1),
-  },
-  {
-    id: 'shardMagnet',
-    kind: 'upgrade',
-    parentId: 'shardSalvage',
-    position: SHARD_MAGNET_POS,
-    branch: 'thermique',
-    requires: requireLevel('shardSalvage', 1),
-  },
-  {
-    id: 'purgeStrike',
+    id: 'overclock',
     kind: 'upgrade',
     parentId: 'node0Boot',
-    position: PURGE_STRIKE_POS,
+    position: positionFromAxial(-2, 1),
     branch: 'degats',
     requires: requireLevel('node0Boot', 1),
   },
   {
-    id: 'purgeAmplifier',
+    id: 'fluxDrive',
     kind: 'upgrade',
-    parentId: 'purgeStrike',
-    position: PURGE_AMPLIFIER_POS,
-    branch: 'degats',
-    requires: requireLevel('purgeStrike', 5),
-  },
-  {
-    id: 'purgeCadence',
-    kind: 'upgrade',
-    parentId: 'purgeStrike',
-    position: PURGE_CADENCE_POS,
-    branch: 'degats',
-    requires: requireLevel('purgeStrike', 1),
+    parentId: 'overclock',
+    position: positionFromAxial(-2, 2),
+    branch: 'thermique',
+    requires: requireLevel('node0Boot', 1),
   },
   {
     id: 'purgeReach',
     kind: 'upgrade',
     parentId: 'purgeStrike',
-    position: PURGE_REACH_POS,
+    position: positionFromAxial(2, 2),
     branch: 'degats',
     requires: requireLevel('purgeStrike', 1),
+  },
+  {
+    id: 'purgeCadence',
+    kind: 'upgrade',
+    parentId: 'purgeStrike',
+    position: positionFromAxial(-2, 4),
+    branch: 'degats',
+    requires: requireLevel('purgeStrike', 1),
+  },
+  {
+    id: 'purgeCrit',
+    kind: 'upgrade',
+    parentId: 'purgeCadence',
+    position: positionFromAxial(-3, 4),
+    branch: 'degats',
+    requires: requireLevel('purgeCadence', 1),
   },
   {
     id: 'purgeSplash',
     kind: 'upgrade',
     parentId: 'purgeReach',
-    position: PURGE_SPLASH_POS,
+    position: positionFromAxial(3, 1),
     branch: 'degats',
     requires: requireLevel('purgeReach', 1),
-  },
-  {
-    id: 'latencyInjection',
-    kind: 'upgrade',
-    parentId: 'purgeCadence',
-    position: LATENCY_INJECTION_POS,
-    branch: 'degats',
-    requires: requireLevel('purgeCadence', 1),
   },
   {
     id: 'threadCoolant',
     kind: 'upgrade',
     parentId: 'meltdownThreshold',
-    position: MELTDOWN_THRESHOLD_POS,
+    position: positionFromAxial(-2, -2),
     branch: 'thermique',
     requires: requireLevel('meltdownThreshold', 1),
   },
@@ -270,41 +246,57 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     id: 'killBreachRelief',
     kind: 'upgrade',
     parentId: 'meltdownThreshold',
-    position: KILL_BREACH_RELIEF_POS,
+    position: positionFromAxial(2, -4),
     branch: 'thermique',
     requires: requireLevel('meltdownThreshold', 1),
   },
   {
     id: 'breachDissipation',
     kind: 'upgrade',
-    parentId: 'threadCoolant',
-    position: BREACH_DISSIPATION_POS,
+    parentId: 'meltdownThreshold',
+    position: positionFromAxial(-1, -3),
     branch: 'thermique',
-    requires: requireLevel('threadCoolant', 3),
+    requires: requireLevel('meltdownThreshold', 1),
   },
   {
     id: 'leakSealing',
     kind: 'upgrade',
-    parentId: 'killBreachRelief',
-    position: LEAK_SEALING_POS,
+    parentId: 'meltdownThreshold',
+    position: positionFromAxial(1, -4),
     branch: 'thermique',
-    requires: requireLevel('killBreachRelief', 2),
+    requires: requireLevel('meltdownThreshold', 1),
   },
   {
-    id: 'overclock',
+    id: 'purgeAmplifier',
     kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: OVERCLOCK_POS,
+    parentId: 'purgeCadence',
+    position: positionFromAxial(0, 4),
     branch: 'degats',
-    requires: requireLevel('node0Boot', 1),
+    requires: [...requireLevel('purgeCadence', 1), ...requireLevel('purgeReach', 1)],
   },
   {
-    id: 'fluxDrive',
+    id: 'latencyInjection',
     kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: FLUX_DRIVE_POS,
+    parentId: 'purgeAmplifier',
+    position: positionFromAxial(0, 3),
+    branch: 'degats',
+    requires: requireLevel('purgeAmplifier', 1),
+  },
+  {
+    id: 'victoryShardBonus',
+    kind: 'upgrade',
+    parentId: 'shardSalvage',
+    position: positionFromAxial(4, -1),
     branch: 'thermique',
-    requires: requireLevel('node0Boot', 1),
+    requires: requireLevel('shardSalvage', 1),
+  },
+  {
+    id: 'shardMagnet',
+    kind: 'upgrade',
+    parentId: 'shardSalvage',
+    position: positionFromAxial(4, -3),
+    branch: 'thermique',
+    requires: requireLevel('shardSalvage', 1),
   },
 ];
 
@@ -366,8 +358,9 @@ export function getNodePosition(id: TreeNodeId | 'core'): { x: number; y: number
 
 export function getParentRequirementLabel(requirements: UpgradeRequirement[] | undefined): string | null {
   if (!requirements || requirements.length === 0) return null;
-  const requirement = requirements[0];
-  const parent = getUpgradeDefinition(requirement.id);
+  const hardGate = requirements.find((requirement) => requirement.minLevel > 1);
+  if (!hardGate) return null;
+  const parent = getUpgradeDefinition(hardGate.id);
   return getGameStrings().ui.maxUpgradeToUnlock.replace('{name}', parent.name);
 }
 

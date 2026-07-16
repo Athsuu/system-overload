@@ -15,6 +15,14 @@ export const CYCLE_LEAK_GROWTH_PER_LEVEL = 1.08;
 /** Package A — chaleur passive ×1,30 par Cycle (composé) : C1 1.0, C2 1.30, C3 1.69. */
 export const CYCLE_HEAT_GROWTH_PER_LEVEL = 1.3;
 
+/**
+ * Base d’éclats / kill = numéro du cycle (C1→1, C2→2, C3→3, …).
+ * Indépendant de la vague / niveau ennemi — puis × Salvage / Extraction / Recompile.
+ */
+export function getShardsPerKillForCycle(cycle: number): number {
+  return Math.max(1, Math.floor(cycle));
+}
+
 /** Maps hub cycle + local wave (1–11) to a continuous scaling index. */
 export function getScalingWaveIndex(cycle: number, localWave: number): number {
   const safeCycle = Math.max(1, Math.floor(cycle));

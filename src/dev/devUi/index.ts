@@ -1,5 +1,4 @@
 export { DevCopyButton } from './DevCopyButton';
-export { DevDraftPlacementsList } from './DevDraftPlacementsList';
 export { DevFormRow } from './DevFormRow';
 export { DevPanel } from './DevPanel';
 export { DevSection } from './DevSection';
