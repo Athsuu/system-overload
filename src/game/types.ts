@@ -7,7 +7,7 @@ export interface DissipationNode {
   distanceTraveled: number;
   hp: number;
   maxHp: number;
-  waveIndex: number;
+  /** Niveau / cycle de spawn (soft-block). */
   enemyLevel: number;
   isBossEncounter: boolean;
   flashTimer: number;

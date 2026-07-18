@@ -21,7 +21,7 @@ if (save) {
     cyclesCleared: save.cyclesCleared,
     cyclesSinceLastAnchor: save.cyclesSinceLastAnchor,
     anchoredNodes: save.anchoredNodes,
-    bestWaveByCycle: save.bestWaveByCycle,
+    bestKillsByCycle: save.bestKillsByCycle,
     activeCycle: save.selectedCycle,
   });
 }

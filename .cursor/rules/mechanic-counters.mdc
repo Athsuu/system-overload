@@ -1,0 +1,42 @@
+---
+description: Registre Pression → Contre (pierre/feuille/ciseaux) — Zero Archive
+globs: src/game/**/*,src/store/**/*,docs/lexique-jeu.md
+alwaysApply: false
+---
+
+# Pression → Contre (pierre / feuille / ciseaux)
+
+Canon PO détaillé : **`docs/lexique-jeu.md` §5c**.
+
+## Intention
+
+Chaque **pression** de run / méta a **un contre dédié et lisible** pour le joueur.  
+Pas de module fourre-tout (« un peu de tout »). Si une pression n’a pas de contre → **GAP** documenté, à traiter plus tard avec le PO.
+
+## Registre V1
+
+| Pression | Contre officiel | Statut |
+|----------|-----------------|--------|
+| **Surcharge au hit** | **Blindage de quarantaine** (id `leakSealing`) — riposte par ennemi touché : `brut = PV max × HIT_HEAT_PER_MAX_HP (0,07)` puis mitigation `× (SOFTEN / (SOFTEN + blindage))`. Calibré pour Blindage futur (autres modules). AOE = **une riposte par cible**. **Interdit** : soustraction plate `brut − blindage` | OK |
+| **PV ennemis** | **Dégâts de purge** (Strike, Amplifier, Crit, Splash, Reach…) | OK |
+| **Chaleur passive** | **Thread Coolant** (plancher 1,8 / s) | OK |
+| **Jauge Overload** | Pack composite (4 piliers) : Coolant + Kill Vent + Seuil Meltdown + Blindage | OK — sous-mécaniques |
+| **Vitesse ennemie** | Latence (sous zone seulement) | **GAP** anti-vitesse global |
+| **Densité / spawn horde** | Aucun dédié (DPS indirect ; wrap mur sans Breach) | **GAP** / by-design |
+| **Friction loot** | Aimant d’éclats | OK |
+| **Rendement éclats** | Récupération d’éclats | OK |
+
+**Retiré** : leaks / fuites mur → plus de pic Breach ; fin de trajet = wrap mur aléatoire.
+
+## Anti-patterns
+
+- Ajouter une pression cycle/horde **sans** contre dédié ni entrée GAP dans ce registre + lexique §5c.
+- Remplacer un contre dédié par un % magique peu lisible (ex. ancien Joint −90 %).
+- Appeler « Armure » un module de confinement (préférer **Blindage de quarantaine** / Quarantine Plating).
+- Faire d’un module risk/reward (Flux de menace) le « contre » d’une pression soft-block.
+
+## Nouveau module / pression
+
+1. Identifier si c’est une **pression** ou un **contre**.
+2. Mettre à jour **§5c lexique** + **cette rule**.
+3. Brancher l’effet (`moduleEffects` / checklist §14) si contre joueur.

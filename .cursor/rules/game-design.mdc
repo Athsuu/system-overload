@@ -6,27 +6,35 @@ alwaysApply: false
 
 # Game design (résumé — aligné build actuel)
 
-Référence détaillée PO : **`docs/lexique-jeu.md`** (§3 économie, §5 run, §3bis supercharge, §14 modules).
+Référence détaillée PO : **`docs/lexique-jeu.md`** (§3 économie, §5 run, §5c Pression→Contre, §3bis supercharge, §14 modules).
+Registre agent : **`mechanic-counters.mdc`**.
 
 ## Boucle run
 
 - **Start Run** → action immédiate, pas de phase de préparation.
-- **10 vagues** + **boss** (vague 11, Breach Anchor) par **Cycle** ; scaling ennemi par cycle + vague (`enemyScaling.ts`).
-- En run : zone de purge (souris) → kills → montée **Breach/Overload** → **Breach Contained** (boss) ou **Meltdown**.
+- **Horde continue** dès le Start Run ; **boss** (Breach Anchor) à **75 kills** ; spawn horde **stoppé** pendant le boss (`src/game/horde/`).
+- Soft-block inter-cycle : **PV = 20 × cycle** (boss ×6) + **riposte au hit** (**7 % des PV max** / cible, mitigée par **Blindage** ; chaque cible AOE riposte) + chaleur passive.
+- En run : zone de purge (souris) → hits chauffent la jauge → kills → montée **Breach/Overload** → **Breach Contained** (boss) ou **Meltdown**. Fin de trajet ennemi = **wrap mur** (pas de leak Breach).
 - Transitions hub ↔ arène : feed terminal (`src/ui/transitions/`).
+
+## Pression → Contre (rappel)
+
+Chaque pression a un contre dédié (pierre / feuille / ciseaux). Ex. hit heat → Blindage ; PV → dégâts purge. Détail + gaps : **`mechanic-counters.mdc`** / lexique **§5c**.
 
 ## Contrôles
 
 - **Souris** : zone de purge (joueur = **Node-0**, pas d'opérateur externe, pas de sprite joueur).
-- **Overclock** : actif si module **Overclock** acheté (≥1) — **Espace** ou bouton HUD (`isOverclockUnlocked` → `upgrades.overclock >= 1`).
-- **Flux Drive** : actif si module **Flux Drive** acheté — toggle HUD ×2 simulation (`getRunTimeScale` ; ×3 si Flux Drive ancré ON).
+- **Overclock** : actif si **compétence Overclock** achetée (Protocoles de la Graine) — **Espace** ou bouton HUD.
+- **Flux Drive** : actif si **compétence Flux Drive** achetée — toggle HUD ×2 simulation (`getRunTimeScale` ; ×3 si Flux Drive ancré ON).
 
 ## Économie & méta (hub)
+
+**Prix / coûts** : avant toute proposition de grille (shards ou SF), appliquer **`pricing-psychology.mdc`** (nombres ronds, seuils, croissance douce — pas seulement l’équil. math).
 
 | Élément | Comportement actuel |
 |---------|---------------------|
 | **Hex Shards** | Drop au sol (`src/game/loot/`), collecte zone de purge → crédit **coffre** (`bankShards`) |
-| **Module tree** | 18 modules, achat en Éclats hex, révélation au 1er rang parent |
+| **Module tree** | Modules hub + **Threat Feed** (spawn), achat en Éclats hex, révélation au 1er rang parent |
 | **Anchor Fragments** | +1 tous les **3 cycles réussis** — sert au **Hardware Supercharge** (pas d'achat de modules) |
 | **Hardware Supercharge** | 1 Fragment → ancrer module possédé ; ON = ×2 effet module (+25 % heat/passif **par** module ancré actif) ; exceptions Overclock / Flux Drive (lexique §3bis) |
 | **Cycles** | Progression hub par cycle ; cycle N+1 après clear du cycle N |
@@ -51,7 +59,7 @@ Pipeline **`docs/lexique-jeu.md` §14** — catalogue, arbre, effets (`moduleEff
 
 ## Placeholders arbre
 
-Cases **P02** (et futurs) : canon joueur dans `src/store/moduleTreePlaceholders.ts`. Planification dev : `dev/moduleTreeEditor/` (modes local + global). **Export TS** (§15 lexique) → promotion manuelle vers `moduleTree.ts` / `moduleTreePlaceholders.ts`.
+Cases placeholders (P01…) : canon joueur dans `src/store/moduleTreePlaceholders.ts` (liste vide = aucun pour l’instant). Planification dev : `dev/moduleTreeEditor/` (modes local + global). **Export TS** (§15 lexique) → promotion manuelle vers `moduleTree.ts` / `moduleTreePlaceholders.ts`.
 
 ## Lore / mécaniques interdits (sans demande PO)
 

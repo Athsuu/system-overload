@@ -9,6 +9,7 @@ import {
   isDevSpeed2x,
 } from './devActions';
 import { useDevModuleTreeEditor } from './moduleTreeEditor/useDevModuleTreeEditor';
+import { DevBalanceTrackerPanel } from './DevBalanceTrackerPanel';
 import { DevButton } from './DevButton';
 import { DevPanel, DevSection, DevToggleButton } from './devUi';
 import { useDevModuleTreeHexGrid } from './useDevModuleTreeHexGrid';
@@ -75,6 +76,8 @@ export function DevDebugTab({ onCloseMenu }: DevDebugTabProps) {
           </div>
         </DevPanel>
       </DevSection>
+
+      <DevBalanceTrackerPanel />
     </div>
   );
 }

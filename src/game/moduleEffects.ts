@@ -4,9 +4,8 @@
  */
 
 import {
-  BREACH_DISSIPATION_PER_SEC_BY_LEVEL,
-  LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL,
-  PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL,
+  LEAK_ARMOR_PER_LEVEL,
+  PURGE_AMPLIFIER_DAMAGE_PER_LEVEL,
   KILL_BREACH_RELIEF_PER_LEVEL,
   MELTDOWN_THRESHOLD_CAP_PERCENT_PER_LEVEL,
   PURGE_CADENCE_INTERVAL_MS_PER_LEVEL,
@@ -15,9 +14,9 @@ import {
   PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL,
   PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
-  SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL,
+  SHARD_SALVAGE_FLAT_SHARDS_PER_KILL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
-  VICTORY_SHARD_BONUS_FLAT_BY_LEVEL,
+  VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL,
   type AnchoredNodes,
   type UpgradeId,
   type UpgradeLevels,
@@ -34,6 +33,11 @@ import {
   THERMAL_BASELINE_DECAY_FACTOR_PER_LEVEL,
 } from '../store/coreProtocolCatalog';
 import { getAnchorHeatMultiplier, getAnchorMultiplier } from './anchorSupercharge';
+import {
+  BASE_HORDE_MAX_ALIVE,
+  BASE_HORDE_SPAWN_INTERVAL_MS,
+  MIN_HORDE_SPAWN_INTERVAL_MS,
+} from './horde/hordeConfig';
 import { BASE_CRITICAL_CHANCE, BASE_CRITICAL_MULTIPLIER } from './juice/criticalHit';
 
 const NO_ANCHORED_NODES: AnchoredNodes = {};
@@ -41,16 +45,22 @@ const NO_ANCHORED_NODES: AnchoredNodes = {};
 export const BASE_BREACH_CAP = 100;
 
 export interface RunConfig {
+  /** @deprecated Legacy waves — horde continue n’utilise plus ce champ. */
   starterNodes: number;
   baseEnemyHp: number;
   shardsMultiplier: number;
   killBonusShards: number;
+  /** @deprecated Miroir de hordeSpawnIntervalMs ; préférer hordeSpawnIntervalMs. */
   spawnIntervalMult: number;
+  /** @deprecated Legacy waves — préférer hordeMaxAlive. */
   maxAliveReduction: number;
+  /** Plafond d'ennemis vivants (horde). */
+  hordeMaxAlive: number;
+  /** Intervalle de spawn horde (ms). */
+  hordeSpawnIntervalMs: number;
   baseEnemySpeed: number;
   maxEnemySpeed: number;
   passiveHeatPerSec: number;
-  leakProgressPenalty: number;
   purgeRadius: number;
   purgeHitDamage: number;
   purgeIntervalMs: number;
@@ -70,12 +80,10 @@ export interface RunConfig {
 export const RUN_STAT_BASE = {
   starterNodes: 0,
   baseEnemyHp: 20,
-  baseEnemySpeed: 52.16,
-  maxEnemySpeed: 102.47,
+  baseEnemySpeed: 70.42,
+  maxEnemySpeed: 138.33,
   /** Package A — pression Overload : base 2,8 / s (ex-1,5). */
   basePassiveHeatPerSec: 2.8,
-  /** Réserve legacy RunConfig ; la fuite runtime utilise LEAK_BREACH_PERCENT_OF_CAP. */
-  baseLeakProgressPenalty: 20,
   basePurgeRadius: 72,
   basePurgeHitDamage: 5,
   basePurgeIntervalMs: 1000,
@@ -97,11 +105,11 @@ export type ModuleEffectTarget =
   | 'runConfig.passiveHeatPerSec'
   | 'purge.latencySlow'
   | 'breach.cap'
-  | 'breach.dissipation'
-  | 'breach.leakReduction'
+  | 'breach.hitHeatArmor'
   | 'breach.killRelief'
+  | 'horde.spawnRate'
+  | 'horde.maxAlive'
   | 'loot.hexShardRadii'
-  | 'overclock.unlock'
   | 'runConfig.timeScale';
 
 export interface ModuleEffectRegistryEntry {
@@ -122,13 +130,13 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   },
   {
     upgradeId: 'shardSalvage',
-    targets: ['runConfig.shardsMultiplier'],
-    summaryFr: '+25 % rendement Éclats hex / rang (max +125 % au rang 5) — fraction = chance d’un éclat en plus',
+    targets: ['runConfig.killBonusShards'],
+    summaryFr: '+1 Éclat hex garanti par kill (1 rang) — non multiplié par Extraction',
   },
   {
     upgradeId: 'victoryShardBonus',
-    targets: ['runConfig.killBonusShards'],
-    summaryFr: 'Éclats bonus à Breach Contained (victoire boss)',
+    targets: ['horde.spawnRate', 'horde.maxAlive'],
+    summaryFr: 'Augmente le spawn et le plafond d’ennemis vivants (+50 % / rang, max 3)',
   },
   {
     upgradeId: 'shardMagnet',
@@ -138,7 +146,7 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'purgeStrike',
     targets: ['runConfig.purgeHitDamage'],
-    summaryFr: 'Bonus flat de dégâts Purge Strike (+5/rang, max 10)',
+    summaryFr: 'Bonus flat de dégâts Purge Strike (+3/rang, max 10)',
   },
   {
     upgradeId: 'purgeCadence',
@@ -173,7 +181,7 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
   {
     upgradeId: 'killBreachRelief',
     targets: ['breach.killRelief'],
-    summaryFr: 'Soulagement Overload à chaque kill (−0,5 % / rang → −2,5 % au rang 5)',
+    summaryFr: 'Soulagement Overload à chaque kill (−0,3 % / rang → −1,5 % au rang 5)',
   },
   {
     upgradeId: 'meltdownThreshold',
@@ -181,29 +189,15 @@ export const MODULE_EFFECT_REGISTRY: ModuleEffectRegistryEntry[] = [
     summaryFr: 'Augmente le seuil Meltdown (+8 % / rang → 180 % au rang 10)',
   },
   {
-    upgradeId: 'overclock',
-    targets: ['overclock.unlock'],
-    summaryFr: 'Débloque le bouton Overclock (Espace / HUD)',
-  },
-  {
-    upgradeId: 'fluxDrive',
-    targets: ['runConfig.timeScale'],
-    summaryFr: 'Débloque le toggle Flux Drive (×2 vitesse de simulation)',
-  },
-  {
-    upgradeId: 'breachDissipation',
-    targets: ['breach.dissipation'],
-    summaryFr: 'Drain passif de la jauge Breach (−0,10 / −0,20 / −0,30 par s, tous cycles)',
-  },
-  {
     upgradeId: 'leakSealing',
-    targets: ['breach.leakReduction'],
-    summaryFr: 'Réduit la pénalité Breach par fuite (−10 / −20 / −30 %)',
+    targets: ['breach.hitHeatArmor'],
+    summaryFr:
+      'Blindage de quarantaine : +3 / rang (max 15) — amortit la riposte thermique au hit (PV max × base cycle, AOE incluse)',
   },
   {
     upgradeId: 'purgeAmplifier',
     targets: ['runConfig.purgeHitDamage'],
-    summaryFr: 'Bonus flat dégâts purge (+10 / +20 / +30, tous cycles)',
+    summaryFr: 'Bonus flat dégâts purge (+7 / rang, max +35, tous cycles)',
   },
 ];
 
@@ -270,33 +264,38 @@ export function computePurgeAoeProfile(
   return { mainRadius, splashRadius, reachBonusPercent, splashRadiusBonusPercent };
 }
 
-export function computeVictoryShardBonus(
+/** Blindage — score de mitigation contre la Surcharge au hit (+3 / rang, max 15). */
+export function getLeakArmor(level: number, anchorMultiplier = 1): number {
+  if (level <= 0) return 0;
+  return Math.round(level * LEAK_ARMOR_PER_LEVEL * anchorMultiplier);
+}
+
+/** @deprecated Prefer getLeakArmor. */
+export function getLeakSealingReductionPercent(level: number, anchorMultiplier = 1): number {
+  return getLeakArmor(level, anchorMultiplier);
+}
+
+export function getShardSalvageKillBonus(
+  level: number,
+  anchorMultiplier = 1,
+): number {
+  if (level <= 0) return 0;
+  return Math.round(SHARD_SALVAGE_FLAT_SHARDS_PER_KILL * level * anchorMultiplier);
+}
+
+export function computeShardSalvageKillBonus(
   upgrades: UpgradeLevels,
   anchoredNodes: AnchoredNodes = NO_ANCHORED_NODES,
 ): number {
-  const level = upgrades.victoryShardBonus;
-  if (level <= 0) return 0;
-  const anchorMultiplier = getAnchorMultiplier(anchoredNodes, 'victoryShardBonus');
-  const index = Math.min(level, VICTORY_SHARD_BONUS_FLAT_BY_LEVEL.length) - 1;
-  return Math.round(VICTORY_SHARD_BONUS_FLAT_BY_LEVEL[index] * anchorMultiplier);
-}
-
-export function getBreachDissipationPerSec(level: number, anchorMultiplier = 1): number {
-  if (level <= 0) return 0;
-  const index = Math.min(level, BREACH_DISSIPATION_PER_SEC_BY_LEVEL.length) - 1;
-  return BREACH_DISSIPATION_PER_SEC_BY_LEVEL[index] * anchorMultiplier;
-}
-
-export function getLeakSealingReductionPercent(level: number, anchorMultiplier = 1): number {
-  if (level <= 0) return 0;
-  const index = Math.min(level, LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL.length) - 1;
-  return LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL[index] * anchorMultiplier;
+  return getShardSalvageKillBonus(
+    upgrades.shardSalvage,
+    getAnchorMultiplier(anchoredNodes, 'shardSalvage'),
+  );
 }
 
 export function getPurgeAmplifierDamageFlat(level: number, anchorMultiplier = 1): number {
   if (level <= 0) return 0;
-  const index = Math.min(level, PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL.length) - 1;
-  return PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL[index] * anchorMultiplier;
+  return level * PURGE_AMPLIFIER_DAMAGE_PER_LEVEL * anchorMultiplier;
 }
 
 /** @deprecated Prefer getPurgeAmplifierDamageFlat — Amplificateur est flat, plus en %. */
@@ -358,11 +357,7 @@ export function computeRunConfig(
     1 + (coreProtocols.extractionProtocol * EXTRACTION_PROTOCOL_PERCENT_PER_LEVEL) / 100;
   const bootReinforcementMultiplier =
     1 + (coreProtocols.bootReinforcement * BOOT_REINFORCEMENT_DAMAGE_PERCENT_PER_LEVEL) / 100;
-  const shardSalvageMultiplier =
-    1 +
-    (SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL / 100) *
-      upgrades.shardSalvage *
-      getAnchorMultiplier(anchoredNodes, 'shardSalvage');
+  const shardSalvageKillBonus = computeShardSalvageKillBonus(upgrades, anchoredNodes);
   const purgeAmplifierFlat = getPurgeAmplifierDamageFlat(
     upgrades.purgeAmplifier,
     getAnchorMultiplier(anchoredNodes, 'purgeAmplifier'),
@@ -375,17 +370,30 @@ export function computeRunConfig(
     EXPLOSIVE_PURGE_BASE_DAMAGE_RATIO +
     coreProtocols.explosivePurgeDamage * EXPLOSIVE_PURGE_DAMAGE_RATIO_PER_LEVEL;
 
+  const spawnFeedLevel = upgrades.victoryShardBonus;
+  const spawnFeedBonus =
+    1 +
+    (VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL / 100) *
+      spawnFeedLevel *
+      getAnchorMultiplier(anchoredNodes, 'victoryShardBonus');
+  const hordeMaxAlive = Math.max(1, Math.round(BASE_HORDE_MAX_ALIVE * spawnFeedBonus));
+  const hordeSpawnIntervalMs = Math.max(
+    MIN_HORDE_SPAWN_INTERVAL_MS,
+    Math.floor(BASE_HORDE_SPAWN_INTERVAL_MS / spawnFeedBonus),
+  );
+
   return {
     starterNodes: RUN_STAT_BASE.starterNodes,
     baseEnemyHp: RUN_STAT_BASE.baseEnemyHp,
-    shardsMultiplier: shardSalvageMultiplier * extractionBonus,
-    killBonusShards: 0,
-    spawnIntervalMult: RUN_STAT_BASE.spawnIntervalMult,
+    shardsMultiplier: extractionBonus,
+    killBonusShards: shardSalvageKillBonus,
+    spawnIntervalMult: 1 / spawnFeedBonus,
     maxAliveReduction: RUN_STAT_BASE.maxAliveReduction,
+    hordeMaxAlive,
+    hordeSpawnIntervalMs,
     baseEnemySpeed: RUN_STAT_BASE.baseEnemySpeed,
     maxEnemySpeed: RUN_STAT_BASE.maxEnemySpeed,
     passiveHeatPerSec,
-    leakProgressPenalty: RUN_STAT_BASE.baseLeakProgressPenalty,
     purgeRadius: aoe.mainRadius,
     purgeHitDamage: Math.round(
       ((upgrades.node0Boot >= 1

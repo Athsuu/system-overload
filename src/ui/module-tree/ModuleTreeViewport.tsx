@@ -217,7 +217,7 @@ export function ModuleTreeViewport({
             editorMode={editor.enabled}
             editorTreeMode={editorTreeMode}
             selectedParentId={editor.selectedParentId}
-            draftEntries={import.meta.env.DEV ? localDrafts : []}
+            draftEntries={import.meta.env.DEV && editor.enabled ? localDrafts : []}
             globalPlanEntries={import.meta.env.DEV && isGlobalPlan ? globalDrafts : []}
             resolvePlanPosition={editor.enabled ? resolvePlanPosition : undefined}
             resolveParentAxial={showHexGridFlag ? resolveParentAxial : undefined}

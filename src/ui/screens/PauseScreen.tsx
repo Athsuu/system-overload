@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { BOSS_KILL_THRESHOLD } from '../../game/horde';
 import { getBreachPercent } from '../../game/runConfig';
-import { REGULAR_WAVE_COUNT } from '../../game/waveConfig';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useGameStore } from '../../store/useGameStore';
 import { DARK_HEX } from '../../theme/darkHexTerminal';
@@ -12,8 +12,8 @@ import { useScreenTransition } from '../transitions/useScreenTransition';
 export function PauseScreen() {
   const breachProgress = useGameStore((state) => state.breachProgress);
   const activeCycle = useGameStore((state) => state.activeCycle);
-  const waveIndex = useGameStore((state) => state.waveIndex);
-  const wavePhase = useGameStore((state) => state.wavePhase);
+  const runKills = useGameStore((state) => state.runKills);
+  const runPhase = useGameStore((state) => state.runPhase);
   const upgrades = useGameStore((state) => state.upgrades);
   const resumeRun = useGameStore((state) => state.resumeRun);
   const isSettingsOpen = useSettingsStore((state) => state.isOpen);
@@ -24,10 +24,10 @@ export function PauseScreen() {
   const breachPercent = Math.round(getBreachPercent(breachProgress, upgrades));
 
   const strings = useGameStrings();
-  const isBoss = wavePhase === 'boss' || waveIndex > REGULAR_WAVE_COUNT;
-  const waveDisplay = isBoss
+  const isBoss = runPhase === 'boss';
+  const killDisplay = isBoss
     ? strings.ui.boss
-    : `${Math.min(waveIndex, REGULAR_WAVE_COUNT)}/${REGULAR_WAVE_COUNT}`;
+    : `${runKills}/${BOSS_KILL_THRESHOLD}`;
 
   const handleAbortRun = () => {
     if (isTransitioning) return;
@@ -88,8 +88,8 @@ export function PauseScreen() {
               <span className="text-sm text-white/70">{activeCycle}</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[13px] text-white/30">{strings.pause.statWave}</span>
-              <span className="text-sm text-white/70">{waveDisplay}</span>
+              <span className="text-[13px] text-white/30">{strings.pause.statKills}</span>
+              <span className="text-sm text-white/70">{killDisplay}</span>
             </div>
           </div>
 

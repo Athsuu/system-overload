@@ -23,6 +23,7 @@ import {
   triggerPurgeVisualShake,
 } from './purgeZone';
 import { getRunConfig } from './runConfig';
+import { applyHitOverload } from './overload';
 import {
   getPurgeSplashRadius,
   resolvePurgeSplashDamage,
@@ -44,53 +45,16 @@ interface PurgeZoneEngineProps {
   chromaticAberrationRef: MutableRefObject<ChromaticAberrationState>;
 }
 
-function getEnemiesInZone(
+function hasEnemyInZone(
   nodes: DissipationNode[],
   purgeX: number,
   purgeY: number,
   purgeRadius: number,
-): DissipationNode[] {
-  const hits: DissipationNode[] = [];
-  for (const node of nodes) {
-    if (isEnemyInPurgeZone(node, purgeX, purgeY, purgeRadius)) {
-      hits.push(node);
-    }
+): boolean {
+  for (let i = 0; i < nodes.length; i += 1) {
+    if (isEnemyInPurgeZone(nodes[i], purgeX, purgeY, purgeRadius)) return true;
   }
-  return hits;
-}
-
-function getEnemiesInSplashRing(
-  nodes: DissipationNode[],
-  purgeX: number,
-  purgeY: number,
-  purgeRadius: number,
-  splashRadius: number,
-): DissipationNode[] {
-  const hits: DissipationNode[] = [];
-  for (const node of nodes) {
-    if (isEnemyInSplashRing(node, purgeX, purgeY, purgeRadius, splashRadius)) {
-      hits.push(node);
-    }
-  }
-  return hits;
-}
-
-function getEnemiesInRadius(
-  nodes: DissipationNode[],
-  centerX: number,
-  centerY: number,
-  radius: number,
-): DissipationNode[] {
-  const radiusSq = radius * radius;
-  const hits: DissipationNode[] = [];
-  for (const node of nodes) {
-    const dx = node.x - centerX;
-    const dy = node.y - centerY;
-    if (dx * dx + dy * dy <= radiusSq) {
-      hits.push(node);
-    }
-  }
-  return hits;
+  return false;
 }
 
 export function PurgeZoneEngine({
@@ -127,7 +91,6 @@ export function PurgeZoneEngine({
   const applyPurgeHits = useCallback(
     (
       nodes: DissipationNode[],
-      targets: DissipationNode[],
       baseDamage: number,
       splashLevel: number,
       purgeRadius: number,
@@ -147,22 +110,28 @@ export function PurgeZoneEngine({
       let kills = 0;
       let hitCount = 0;
       const explodedOrigins = new Set<DissipationNode>();
+      const blastRadiusSq = explosivePurgeRadiusPx * explosivePurgeRadiusPx;
 
-      const applyDamage = (node: DissipationNode, damage: number, chainRemaining: number | null) => {
-        const index = nodes.indexOf(node);
-        if (index < 0 || damage <= 0) return;
+      const applyDamageAtIndex = (
+        index: number,
+        damage: number,
+        chainRemaining: number | null,
+      ) => {
+        if (index < 0 || index >= nodes.length || damage <= 0) return;
 
+        const node = nodes[index];
         const crit = rollCritical(damage, criticalChance, criticalMultiplier);
 
         node.hp -= crit.damage;
         node.flashTimer = FLASH_DURATION_MS;
-        pushPurgeHit(effects, node.x, node.y, node.waveIndex, node.isBossEncounter);
+        pushPurgeHit(effects, node.x, node.y, node.enemyLevel, node.isBossEncounter);
         hitCount += 1;
+        applyHitOverload({ maxHp: node.maxHp, cycle: node.enemyLevel });
 
         emitDamageApplied({
           x: node.x,
           y: node.y,
-          waveIndex: node.waveIndex,
+          enemyLevel: node.enemyLevel,
           isBossEncounter: node.isBossEncounter,
           damage: crit.damage,
           isCritical: crit.isCritical,
@@ -182,7 +151,7 @@ export function PurgeZoneEngine({
         const deathX = node.x;
         const deathY = node.y;
         handleEnemyKill(node, pickups);
-        pushDeathEffect(effects, deathX, deathY, node.waveIndex, node.isBossEncounter);
+        pushDeathEffect(effects, deathX, deathY, node.enemyLevel, node.isBossEncounter);
         nodes.splice(index, 1);
 
         if (!explosivePurgeEnabled) return;
@@ -205,15 +174,20 @@ export function PurgeZoneEngine({
           resolvePurgeHitVisualDurationMs(intervalMs) + 120,
         );
 
-        const blastTargets = getEnemiesInRadius(nodes, deathX, deathY, explosivePurgeRadiusPx);
-        for (const blastTarget of blastTargets) {
-          if (nodes.indexOf(blastTarget) < 0) continue;
-          applyDamage(blastTarget, explosionDamage, childChain);
+        for (let i = nodes.length - 1; i >= 0; i -= 1) {
+          const blastTarget = nodes[i];
+          const dx = blastTarget.x - deathX;
+          const dy = blastTarget.y - deathY;
+          if (dx * dx + dy * dy > blastRadiusSq) continue;
+          applyDamageAtIndex(i, explosionDamage, childChain);
         }
       };
 
-      for (const node of targets) {
-        applyDamage(node, baseDamage, null);
+      // Parcours inverse : splice sûr sans indexOf.
+      for (let i = nodes.length - 1; i >= 0; i -= 1) {
+        if (isEnemyInPurgeZone(nodes[i], purgeX, purgeY, purgeRadius)) {
+          applyDamageAtIndex(i, baseDamage, null);
+        }
       }
 
       const hadMainPurgeHit = hitCount > 0;
@@ -221,16 +195,10 @@ export function PurgeZoneEngine({
       if (splashLevel > 0) {
         const splashRadius = getPurgeSplashRadius(purgeRadius, splashLevel, splashAnchorMultiplier);
         const splashDamage = resolvePurgeSplashDamage(baseDamage, splashLevel, splashAnchorMultiplier);
-        const splashTargets = getEnemiesInSplashRing(
-          nodes,
-          purgeX,
-          purgeY,
-          purgeRadius,
-          splashRadius,
-        );
-        for (const node of splashTargets) {
-          if (nodes.indexOf(node) < 0) continue;
-          applyDamage(node, splashDamage, null);
+        for (let i = nodes.length - 1; i >= 0; i -= 1) {
+          if (isEnemyInSplashRing(nodes[i], purgeX, purgeY, purgeRadius, splashRadius)) {
+            applyDamageAtIndex(i, splashDamage, null);
+          }
         }
         if (hadMainPurgeHit) {
           pushSplashShockwave(
@@ -292,15 +260,13 @@ export function PurgeZoneEngine({
 
       drawPurgeZone(graphics, pointer.x, pointer.y, config.purgeRadius, shake);
 
-      const targets = getEnemiesInZone(nodes, pointer.x, pointer.y, config.purgeRadius);
-      if (targets.length === 0) return;
+      if (!hasEnemyInZone(nodes, pointer.x, pointer.y, config.purgeRadius)) return;
 
       if (instantHitReadyRef.current) {
         instantHitReadyRef.current = false;
         attackAccumulatorMsRef.current = 0;
         applyPurgeHits(
           nodes,
-          targets,
           config.purgeHitDamage,
           splashLevel,
           config.purgeRadius,
@@ -326,17 +292,10 @@ export function PurgeZoneEngine({
       if (attackAccumulatorMsRef.current < intervalMs) return;
 
       attackAccumulatorMsRef.current -= intervalMs;
-      const refreshedTargets = getEnemiesInZone(
-        nodes,
-        pointer.x,
-        pointer.y,
-        config.purgeRadius,
-      );
-      if (refreshedTargets.length === 0) return;
+      if (!hasEnemyInZone(nodes, pointer.x, pointer.y, config.purgeRadius)) return;
 
       applyPurgeHits(
         nodes,
-        refreshedTargets,
         config.purgeHitDamage,
         splashLevel,
         config.purgeRadius,

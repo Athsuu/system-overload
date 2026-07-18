@@ -1,4 +1,4 @@
-# Zero Archive: Narrative Bible (v0.8)
+# Zero Archive: Narrative Bible (v0.10)
 
 > Document de référence pour la direction créative.  
 > Les **textes in-game** restent en **anglais** (i18n FR disponible). Ce fichier est en français pour le product owner.  
@@ -8,7 +8,7 @@
 
 ## En une phrase
 
-L'**Archive Zéro** s'effondre sous une vague de **corrupted processes** ; tu es **Node-0**, processus enfant compilé par **ARCH** pour protéger **la Graine**, le code source originel pur, dans une quarantaine nerveuse, jusqu'à contenir la **Breach** ou subir un **Meltdown**, en préparant l'**Uplink**.
+L'**Archive Zéro** s'effondre sous un **flux continu** de **corrupted processes** qui franchissent la quarantaine ; tu es **Node-0**, processus enfant compilé par **ARCH** pour protéger **la Graine**, le code source originel pur, jusqu'à contenir la **Breach** (ou subir un **Meltdown**), en préparant l'**Uplink**.
 
 ---
 
@@ -18,7 +18,7 @@ L'**Archive Zéro** s'effondre sous une vague de **corrupted processes** ; tu es
 
 **Zero Archive** est une machine en surchauffe critique, le monde du jeu lui-même, en plein effondrement.
 
-Des **corrupted processes**, des threads instables spawnés par l'effondrement, inondent les secteurs encore accessibles. Si la **Breach** (surcharge) atteint le point de rupture, tout s'effondre : **Meltdown**.
+Des **corrupted processes**, threads instables nés de l'effondrement, forment un **flux** qui **entre** dans la bulle de quarantaine depuis l'extérieur. Ce n'est pas une vague qui « pop » : la menace **franchit** la barrière, traverse le secteur, et fuit de l'autre côté si tu ne la purge pas. Si la **Breach** (surcharge) atteint le point de rupture, tout s'effondre : **Meltdown**.
 
 **Tu es Node-0**, un processus enfant qu'**ARCH** a compilé et isolé en **quarantaine** pour garder **la Graine** hors de portée de la corruption. Tu n'as pas de corps visible dans l'arène : tu **exécutes** via ta **zone de purge** (souris), tu tiens la bulle jusqu'à ce que la menace soit **contenue**, ou que le thread crashe.
 
@@ -27,7 +27,7 @@ Des **corrupted processes**, des threads instables spawnés par l'effondrement, 
 Entre les runs, le **Module Tree** radial matérialise le travail d'**ARCH** sur **le même** Node-0, deux boucles cumulées :
 
 - **Hex Shards**, monnaie gagnée à chaque kill en run (compteur live), transférée au coffre en fin de run ; dépensée sur le module tree.
-- **Anchor Fragments**, puces matérielles extraites du **Breach Anchor**, **+1 tous les 3 Cycles réussis** ; branchées sur un module déjà acheté pour le **Surcharger** (Hardware Supercharge : rendement ×2, Surcharge globale alourdie).
+- **Anchor Fragments**, puces matérielles liées au **Breach Anchor**, **+1 tous les 3 Cycles réussis** ; branchées sur un module déjà acheté pour le **Surcharger** (Hardware Supercharge : rendement ×2, Surcharge globale alourdie).
 
 ARCH ne **répare** pas seulement à l'échec : elle fait tourner un **modèle heuristique en continu** sur chaque run, victoire ou défaite. Le **Meltdown** est le signal le plus critique (renforcement ciblé immédiat) ; mais chaque run nourrit aussi des **optimisations plus lentes**, thermique, rendement d'extraction, modélisation de la menace.
 
@@ -35,7 +35,17 @@ Au départ, un seul module est visible : **Node-0 Boot**, l'initialisation du th
 
 **Objectif long terme (narratif)** : l'**Uplink**, extraire la Graine hors de l'Archive en collapse. Pas de mécanique dédiée dans cette version.
 
-**Rythme cible** : runs équipées **2 min 30 – 3 min** (Package A pression Overload) ; échecs souvent plus courts ; premier clear du Cycle 1 depuis une sauvegarde neuve = **15-20 minutes cumulées** (plusieurs tentatives + achats hub) ; méta complète ~~**4–5 h** (~~60–80 runs).
+**Rythme cible** : runs équipées **~2 min – 2 min 30** (horde continue, spawn ~1 s, pression Overload) ; échecs souvent plus courts ; premier clear du Cycle 1 depuis une sauvegarde neuve = **15-20 minutes cumulées** (plusieurs tentatives + achats hub) ; méta complète ~~**4–5 h** (~~60–80 runs).
+
+### Pressions de run (mention courte)
+
+Détail chiffres et contre-modules : `docs/lexique-jeu.md`. Ici, le sens narratif seulement :
+
+| Pression | Terme UI (FR / EN) | Fantasy |
+| -------- | ------------------ | ------- |
+| Densité du flux | **Flux de menace** / Threat Feed | ARCH ouvre plus large le canal d'entrée : plus de processus, plus vite. Risk/reward. |
+| Fuites hors bulle | **Blindage de quarantaine** / Quarantine Plating | Renforce la membrane : un leak (ennemi qui touche le bord) charge moins l'Overload. |
+| Overload | Jauge Breach | Chaleur passive + fuites + montée vers Meltdown ; le soft-block cycle (PV, vitesse) reste la difficulté de fond. |
 
 ---
 
@@ -70,12 +80,12 @@ Pas d'histoire linéaire avec cinématiques. L'univers est **implicite**, lu à 
 - **Overload** : jauge live en run (barre HUD), la pression montante vers Meltdown.
 - **Les Hex Shards** : fragments de données stables, gagnés par kill en run (compteur live), transférés au vault en fin de run, dépensés sur le module tree.
 - **Anchor Fragments** : puces matérielles du Breach Anchor, **+1 tous les 3 Cycles réussis** ; branchées sur un module possédé pour le Surcharger (Hardware Supercharge, Risk/Reward).
-- **Quarantaine** : bulle d'exécution isolée par ARCH, Node-0 combat **depuis** la dernière zone tenable.
+- **Quarantaine** : bulle d'exécution isolée par ARCH, Node-0 combat **depuis** la dernière zone tenable. Le flux **entre** par les bords ; ce qui n'est pas purgé **fuit** (leak) et charge l'Overload.
 - **Uplink** : objectif de fin de jeu (narratif), extraction / sauvetage de la Graine.
 
 Pas de fantasy biologique. Pas de personnages humains nommés.
 
-**Antagoniste** : l'**Archive qui collapse** + les corrupted processes. Pas de méchant humain.
+**Antagoniste** : l'**Archive qui collapse** + le **flux** de corrupted processes. Pas de méchant humain.
 
 ---
 
@@ -175,12 +185,20 @@ Pas de fantasy biologique. Pas de personnages humains nommés.
 
 ### Ennemis: Corrupted Processes
 
-**Nom lore** : *Corrupted Processes*, threads instables spawnés par l'effondrement.
+**Nom lore** : *Corrupted Processes*, threads instables portés par l'effondrement.
 
-**Boss, Breach Anchor** (`core_breach`, vague 6) :
+**Fantasy de l'entrée** : ils **arrivent depuis hors-cadre** et **franchissent** la membrane de quarantaine. On les voit entrer ; ils ne « popent » pas collés au mur.
 
-- Processus corrompu massif, **point de rupture final** de la vague.
-- Le détruire = victoire du run (*Breach Contained*) **et** source des **Anchor Fragments**.
+**Horde (run)** :
+
+- Spawn **continu** (~1 s d'espacement de base, micro-décalage pour casser le paquet synchronisé).
+- Trajectoire de bord à bord : purge ou **leak** (sortie / bord).
+- Pendant le boss, le spawn horde **s'arrête**.
+
+**Boss, Breach Anchor** (seuil **75 kills**) :
+
+- Processus corrompu massif, **point de rupture** de la run : la pression du flux **cristallise** en ancre.
+- Le détruire = victoire du run (*Breach Contained*) **et** source narrative des **Anchor Fragments** (gain méta : +1 fragment tous les 3 Cycles réussis au premier clear).
 
 Le code interne garde parfois `DissipationNode` / `nodes` ; l'UI et le lore parlent de *corrupted processes*.
 
@@ -246,12 +264,14 @@ Trois nœuds supplémentaires, réécritures d'ARCH sur les branches existantes 
 ## Boucle narrative d'un run
 
 1. **Menu / Module Tree**, ARCH expose les modules issus des deux boucles (urgence + optimisation).
-2. **Start Run**, Node-0 s'initialise. La Breach monte vite.
-3. **Vagues 1–5**, Corrupted processes. Purge à la souris.
-4. **Montée d'Overload**, Pression vers Meltdown.
-5. **Vague 6, Breach Anchor**, Boss final.
+2. **Start Run**, Node-0 s'initialise. La quarantaine s'ouvre ; le **flux** commence à entrer.
+3. **Horde**, corrupted processes en spawn continu (~1 s). Purge à la souris. Compteur kills / 75. Overload qui monte (chaleur + fuites).
+4. **Montée d'Overload**, pression vers Meltdown (soft-block = PV / vitesse de cycle + Surcharge).
+5. **75 kills, Breach Anchor**, le flux se cristallise en boss (spawn horde stoppé).
 6. **Fin**, *Breach Contained* ou *Meltdown*.
-7. **Retour hub**, données de run intégrées au modèle heuristique ; Hex Shards → vault ; fragment si **premier clear** du cycle ; choix du **Cycle** suivant ou replay.
+7. **Retour hub**, données de run intégrées au modèle heuristique ; Hex Shards → vault ; fragment si compteur de clears le permet ; choix du **Cycle** suivant ou replay.
+
+Durée cible d'une run équipée réussie : **~2 min – 2 min 30**.
 
 ---
 
@@ -291,7 +311,7 @@ Tutoriel contextuel (cartes ARCH), screenplay Acte I :
 ## Cycles
 
 - **3 cycles** jouables au lancement (architecture extensible).
-- Chaque cycle = **10 vagues + Breach Anchor** ; scaling continu (Cycle 2 vague 1 ≈ difficulté Cycle 1 vague 11).
+- Chaque cycle = **flux continu** (horde) + **Breach Anchor à 75 kills** ; soft-block = **PV = 20 × cycle** (boss ×6) + vitesse croissante + pression Surcharge.
 - **Hub** : sélecteur `CYCLE n` + flèches + Start Run ; cycles débloqués rejouables.
 - **1er clear boss** d'un cycle : déblocage du cycle suivant + incrémente le compteur `cyclesSinceLastAnchor` (**+1 Anchor Fragment tous les 3 Cycles réussis**).
 - **Re-clear** : Hex Shards seulement.
@@ -358,7 +378,7 @@ Coût = `costBase × costGrowth^rang` (jamais de niveau max, jamais "MAX"). Ces 
 
 - **Urgent, terminal, attaché**, pas heroic fantasy. Le joueur s'attache à ARCH et Node-0 ; pas de voix froide ou distante.
 - **Lisible sous pression**, Overload, Shards, Anchor Fragments.
-- **Cycles courts**, retour hub fréquent.
+- **Cycles courts**, retour hub fréquent (~2 – 2 min 30 par run équipée).
 - **Anglais sec** pour l'UI.
 
 ---
@@ -406,5 +426,7 @@ Coût = `costBase × costGrowth^rang` (jamais de niveau max, jamais "MAX"). Ces 
 | v0.8    | 2026-07-13 | **Prestige & Recompilation** implémenté (Seed Fragments, 5 Core Protocols, condition Cycle 2 clear ; profondeur = compteur sans buff auto) ; nœuds **Purge Cadence**, **Purge Reach**, **Meltdown Threshold** documentés ; pool ARCH Meltdown (3 variantes) et dialogues Recompile documentés ; anti-canon Node-0 cloné/template ajouté |
 | v0.9    | 2026-07-16 | Philosophie prestige cible documentée (Fondamentaux + compétences unlock + branches de build) — règle `.cursor/rules/prestige-philosophy.mdc` |
 | v0.9.1  | 2026-07-16 | Vague 1 squelette : Purge explosive (unlock + branche), onglets Seed Protocols, Residual Memory +200 ; Overclock/Flux Drive encore sur l’arbre |
+| v0.10   | 2026-07-17 | Alignement feel actuel : **flux continu** (entrée hors-cadre), spawn ~1 s, runs **~2 – 2 min 30** ; Breach Anchor = cristallisation à 75 kills ; mentions courtes Flux de menace / Blindage / leaks (détail → lexique) |
+
 
 

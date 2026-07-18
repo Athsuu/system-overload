@@ -1,30 +1,30 @@
+import type { CoreProtocolLevels } from '../store/prestigeTypes';
+import { isFluxDriveUnlocked } from '../store/prestigeUnlocks';
 import {
+  HIT_HEAT_PER_MAX_HP,
+  LEAK_ARMOR_SOFTEN,
   FLUX_DRIVE_TIME_SCALE,
   FLUX_DRIVE_TIME_SCALE_ANCHORED,
-  isFluxDriveUnlocked,
   type AnchoredNodes,
   type UpgradeLevels,
 } from '../store/upgradeCatalog';
-import { applyDevRunConfigOverrides } from '../dev/devRunConfigOverrides';
+import {
+  applyDevRunConfigOverrides,
+  getDevRunConfigOverrides,
+} from '../dev/devRunConfigOverrides';
 import { getAnchorMultiplier, isNodeAnchorActive } from './anchorSupercharge';
-import { getCycleHeatGrowthMult, getCyclePressureMult, getShardsPerKillForCycle } from './cycleScaling';
+import { getCycleHeatGrowthMult, getShardsPerKillForCycle } from './cycleScaling';
 import { useGameStore } from '../store/useGameStore';
 import {
   computeBreachCap,
   computeKillBreachRelief,
   computeRunConfig,
-  getLeakSealingReductionPercent,
+  getLeakArmor,
   RUN_STAT_BASE,
   type RunConfig,
 } from './moduleEffects';
-import {
-  getEnemyLevel,
-  getEnemyMaxHpForLevel,
-  getEnemySpeedForLevel,
-} from './enemyScaling';
-
-/** Package A — chaque fuite inflige 20 % du seuil Meltdown actuel. */
-export const LEAK_BREACH_PERCENT_OF_CAP = 20;
+import { getEnemyHpForCycle, getEnemySpeedForCycle } from './enemyScaling';
+import { clampCycleIndex } from '../store/cycleTypes';
 
 export {
   BASE_BREACH_CAP,
@@ -32,8 +32,7 @@ export {
   MODULE_ADDITION_PIPELINE,
   MODULE_EFFECT_REGISTRY,
   computePurgeAoeProfile,
-  computeVictoryShardBonus,
-  getBreachDissipationPerSec,
+  getLeakArmor,
   getLeakSealingReductionPercent,
   getPurgeAmplifierDamageFlat,
   getPurgeAmplifierDamageBonusPercent,
@@ -51,6 +50,57 @@ export {
 
 export { getEnemyLevel } from './enemyScaling';
 
+/** Brut riposte trash du cycle (UI / balance) — trash = maxHp de référence. */
+export function getRawHitHeatForCycle(cycle: number): number {
+  const safeCycle = clampCycleIndex(cycle);
+  return getRawHitHeatForEnemy(getTrashReferenceHp(safeCycle), safeCycle);
+}
+
+/** PV trash du cycle (référence — trash = facteur 1 si maxHp identique). */
+function getTrashReferenceHp(cycle: number): number {
+  const state = useGameStore.getState();
+  const config = getRunConfig(state.upgrades);
+  return getEnemyMaxHp(config, false, cycle);
+}
+
+/** Brut riposte thermique = PV max × fraction (boss inclus via ses PV). */
+export function getRawHitHeatForEnemy(maxHp: number, _cycle?: number): number {
+  return Math.max(0, maxHp) * HIT_HEAT_PER_MAX_HP;
+}
+
+export interface HitHeatTarget {
+  maxHp: number;
+  cycle: number;
+}
+
+/**
+ * Applique le Blindage au brut hit heat.
+ * Mitigation proportionnelle : net = brut × (SOFTEN / (SOFTEN + blindage)).
+ * Remplace l’ancienne soustraction plate `max(0, brut − blindage)` qui annulait la chaleur
+ * dès que blindage ≥ brut (ex. L2=6 vs C4≈2,8).
+ */
+export function applyHitHeatArmor(rawHeat: number, armor: number): number {
+  if (rawHeat <= 0) return 0;
+  if (armor <= 0) return rawHeat;
+  return rawHeat * (LEAK_ARMOR_SOFTEN / (LEAK_ARMOR_SOFTEN + armor));
+}
+
+/**
+ * Riposte Surcharge d’un hit (après Blindage).
+ * Chaque ennemi touché riposte selon ses PV max (trash cycle = référence).
+ */
+export function getHitHeatPenalty(target?: HitHeatTarget): number {
+  const state = useGameStore.getState();
+  const cycle = target?.cycle ?? resolveActiveCycle();
+  const safeCycle = clampCycleIndex(cycle);
+  const maxHp = target?.maxHp ?? getTrashReferenceHp(safeCycle);
+  const raw = getRawHitHeatForEnemy(maxHp, safeCycle);
+  const armor = getLeakArmor(
+    state.upgrades.leakSealing,
+    getAnchorMultiplier(state.anchoredNodes, 'leakSealing'),
+  );
+  return applyHitHeatArmor(raw, armor);
+}
 export function getBreachCap(upgrades: UpgradeLevels): number {
   return computeBreachCap(upgrades, useGameStore.getState().anchoredNodes);
 }
@@ -71,21 +121,49 @@ export function isMeltdownReached(breachProgress: number, upgrades: UpgradeLevel
 }
 
 export function getRunTimeScale(
-  upgrades: UpgradeLevels,
+  coreProtocols: CoreProtocolLevels,
   fluxDriveEnabled: boolean,
   anchoredNodes: AnchoredNodes = {},
 ): number {
-  if (!isFluxDriveUnlocked(upgrades) || !fluxDriveEnabled) return 1;
+  if (!isFluxDriveUnlocked(coreProtocols) || !fluxDriveEnabled) return 1;
   return isNodeAnchorActive(anchoredNodes, 'fluxDrive')
     ? FLUX_DRIVE_TIME_SCALE_ANCHORED
     : FLUX_DRIVE_TIME_SCALE;
 }
 
+/** Cache partagé — invalidé dès qu’upgrades / protocoles / ancrages / overrides labo changent. */
+let runConfigCache: {
+  upgrades: UpgradeLevels;
+  coreProtocols: ReturnType<typeof useGameStore.getState>['coreProtocols'];
+  anchoredNodes: AnchoredNodes;
+  overrides: ReturnType<typeof getDevRunConfigOverrides>;
+  config: RunConfig;
+} | null = null;
+
 export function getRunConfig(upgrades: UpgradeLevels): RunConfig {
   const state = useGameStore.getState();
-  return applyDevRunConfigOverrides(
+  const overrides = getDevRunConfigOverrides();
+  if (
+    runConfigCache &&
+    runConfigCache.upgrades === upgrades &&
+    runConfigCache.coreProtocols === state.coreProtocols &&
+    runConfigCache.anchoredNodes === state.anchoredNodes &&
+    runConfigCache.overrides === overrides
+  ) {
+    return runConfigCache.config;
+  }
+
+  const config = applyDevRunConfigOverrides(
     computeRunConfig(upgrades, state.coreProtocols, state.anchoredNodes),
   );
+  runConfigCache = {
+    upgrades,
+    coreProtocols: state.coreProtocols,
+    anchoredNodes: state.anchoredNodes,
+    overrides,
+    config,
+  };
+  return config;
 }
 
 export function resolveActiveCycle(): number {
@@ -104,57 +182,36 @@ export function resolveRelevantCycle(): number {
   return state.selectedCycle || 1;
 }
 
-export function resolveEnemyLevel(localWaveIndex: number, cycle?: number): number {
-  return getEnemyLevel(cycle ?? resolveActiveCycle(), localWaveIndex);
-}
-
 export function getEffectivePassiveHeatPerSec(config: RunConfig, cycle?: number): number {
   return config.passiveHeatPerSec * getCycleHeatGrowthMult(cycle ?? resolveRelevantCycle());
 }
 
 export function getEnemyMaxHp(
   config: RunConfig,
-  localWaveIndex: number,
   isBossEncounter = false,
   cycle?: number,
 ): number {
-  const level = resolveEnemyLevel(localWaveIndex, cycle);
-  const scaledHp = getEnemyMaxHpForLevel(level, isBossEncounter);
+  const scaledHp = getEnemyHpForCycle(cycle ?? resolveActiveCycle(), isBossEncounter);
   const baseRatio = config.baseEnemyHp / RUN_STAT_BASE.baseEnemyHp;
   return Math.max(1, Math.round(scaledHp * baseRatio));
 }
 
-export function getEnemySpeed(
-  config: RunConfig,
-  localWaveIndex: number,
-  cycle?: number,
-): number {
-  const level = resolveEnemyLevel(localWaveIndex, cycle);
-  const scaledSpeed = getEnemySpeedForLevel(level);
+export function getEnemySpeed(config: RunConfig, cycle?: number): number {
+  const scaledSpeed = getEnemySpeedForCycle(cycle ?? resolveActiveCycle());
   const baseRatio = config.baseEnemySpeed / RUN_STAT_BASE.baseEnemySpeed;
   return Math.min(config.maxEnemySpeed, scaledSpeed * baseRatio);
 }
 
 /** Espérance d’éclats / kill (UI, balance) — sans tirage. */
-export function getExpectedShardReward(
-  config: RunConfig,
-  _localWaveIndex: number,
-  cycle?: number,
-): number {
+export function getExpectedShardReward(config: RunConfig, cycle?: number): number {
   const base = getShardsPerKillForCycle(cycle ?? resolveRelevantCycle());
   return base * config.shardsMultiplier + config.killBonusShards;
 }
 
 /**
  * Drop réel / kill : la partie entière est garantie, la fraction = chance d’un éclat en plus.
- * Ex. ×1,39 → 1 garanti + 39 % de chance d’un 2ᵉ (au lieu d’attendre ×2.0 via Math.floor).
- * Base = numéro du cycle (pas le niveau ennemi).
  */
-export function getShardReward(
-  config: RunConfig,
-  _localWaveIndex: number,
-  cycle?: number,
-): number {
+export function getShardReward(config: RunConfig, cycle?: number): number {
   const base = getShardsPerKillForCycle(cycle ?? resolveRelevantCycle());
   const expected = base * config.shardsMultiplier;
   const guaranteed = Math.floor(expected);
@@ -163,46 +220,6 @@ export function getShardReward(
   return rolled + config.killBonusShards;
 }
 
-export function getLeakProgressPenalty(_config: RunConfig, _localWaveIndex: number): number {
-  const state = useGameStore.getState();
-  const upgrades = state.upgrades;
-  const cap = getBreachCap(upgrades);
-  let penalty = Math.round(cap * (LEAK_BREACH_PERCENT_OF_CAP / 100));
-  const reductionPercent = getLeakSealingReductionPercent(
-    upgrades.leakSealing,
-    getAnchorMultiplier(state.anchoredNodes, 'leakSealing'),
-  );
-  if (reductionPercent <= 0) return penalty;
-  return Math.round(penalty * (1 - reductionPercent / 100));
-}
-
-export function getKillBreachRelief(upgrades: UpgradeLevels, _waveIndex: number): number {
+export function getKillBreachRelief(upgrades: UpgradeLevels): number {
   return computeKillBreachRelief(upgrades, useGameStore.getState().anchoredNodes);
-}
-
-export function getSpawnIntervalMs(baseIntervalMs: number, config: RunConfig): number {
-  if (baseIntervalMs <= 0) return baseIntervalMs;
-  return Math.floor(baseIntervalMs * config.spawnIntervalMult);
-}
-
-export function getWaveMaxAlive(baseMaxAlive: number, config: RunConfig): number {
-  return Math.max(1, baseMaxAlive - config.maxAliveReduction);
-}
-
-const MIN_SPAWN_INTERVAL_MS = 200;
-
-export function getCycleSpawnQuota(baseCount: number): number {
-  return Math.max(1, Math.ceil(baseCount * getCyclePressureMult(resolveActiveCycle())));
-}
-
-export function getCycleSpawnIntervalMs(baseIntervalMs: number, config: RunConfig): number {
-  const intervalMs = getSpawnIntervalMs(baseIntervalMs, config);
-  if (intervalMs <= 0) return intervalMs;
-  const cycleInterval = Math.floor(intervalMs / getCyclePressureMult(resolveActiveCycle()));
-  return Math.max(MIN_SPAWN_INTERVAL_MS, cycleInterval);
-}
-
-export function getCycleWaveMaxAlive(baseMaxAlive: number, config: RunConfig): number {
-  const maxAlive = getWaveMaxAlive(baseMaxAlive, config);
-  return Math.max(1, Math.ceil(maxAlive * getCyclePressureMult(resolveActiveCycle())));
 }

@@ -70,16 +70,28 @@ export function devSetModuleTreeHexGridVisible(enabled: boolean): void {
   window.dispatchEvent(new CustomEvent(DEV_MODULE_TREE_HEX_GRID_EVENT));
 }
 
-let devPendingWaveJump: number | null = null;
+let devPendingKillJump: number | null = null;
 
-export function devRequestWaveJump(waveIndex: number): void {
-  devPendingWaveJump = waveIndex;
+export function devRequestKillJump(kills: number): void {
+  devPendingKillJump = Math.max(0, Math.floor(kills));
 }
 
-export function consumeDevWaveJump(): number | null {
-  const waveIndex = devPendingWaveJump;
-  devPendingWaveJump = null;
-  return waveIndex;
+export function consumeDevKillJump(): number | null {
+  const kills = devPendingKillJump;
+  devPendingKillJump = null;
+  return kills;
+}
+
+let devPendingForceBoss = false;
+
+export function devRequestForceBoss(): void {
+  devPendingForceBoss = true;
+}
+
+export function consumeDevForceBossRequest(): boolean {
+  const requested = devPendingForceBoss;
+  devPendingForceBoss = false;
+  return requested;
 }
 
 let devPendingKillAll = false;

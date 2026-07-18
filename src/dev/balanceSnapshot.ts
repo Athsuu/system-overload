@@ -4,22 +4,21 @@ import {
   getEffectivePassiveHeatPerSec,
   getEnemyMaxHp,
   getEnemySpeed,
+  getHitHeatPenalty,
   getKillBreachRelief,
-  getLeakProgressPenalty,
   getRunConfig,
   getExpectedShardReward,
 } from '../game/runConfig';
 import { formatRunElapsedMs, runElapsedMsRef } from '../game/runElapsed';
 import { formatHexRadius } from '../game/purgeHexDisplay';
 import { getCycleHeatMult, getCyclePressureMult } from '../game/cycleScaling';
-import { BOSS_WAVE_INDEX, getEnemyLevel } from '../game/enemyScaling';
-import { REGULAR_WAVE_COUNT } from '../game/waveConfig';
+import { BOSS_KILL_THRESHOLD } from '../game/horde';
+import { getEnemyLevel } from '../game/enemyScaling';
 import { CORE_PROTOCOL_CATALOG } from '../store/coreProtocolCatalog';
 import { MODULE_TREE_NODES } from '../store/moduleTree';
 import { getDevRunConfigOverrides } from './devRunConfigOverrides';
 import {
   UPGRADE_CATALOG,
-  getUpgradeDefinition,
   getUpgradeLevel,
   isAnchorSuperchargeEligible,
   isModuleUnlocked,
@@ -27,10 +26,12 @@ import {
 } from '../store/upgradeCatalog';
 import { useGameStore } from '../store/useGameStore';
 import {
-  formatWaveRecordLabel,
-  getBestWaveEver,
-  listBestWaveRecords,
-} from '../store/waveProgress';
+  formatKillsRecordLabel,
+  getBestKillsEver,
+  listBestKillsRecords,
+} from '../store/killProgress';
+import { formatDevAutoplayTelemetry, getDevAutoplaySnapshot } from './devAutoplay';
+import { getUpgradeDisplayName } from './formatOwnedModules';
 
 export interface BalanceSnapshot {
   generatedAt: string;
@@ -46,8 +47,8 @@ export interface BalanceSnapshot {
     cyclesCleared: number[];
     cyclesSinceLastAnchor: number;
     fluxDriveEnabled: boolean;
-    bestWaveByCycle: Record<number, number>;
-    bestWaveEver: { cycle: number; wave: number } | null;
+    bestKillsByCycle: Record<number, number>;
+    bestKillsEver: { cycle: number; kills: number } | null;
   };
   modules: Array<{
     id: UpgradeId;
@@ -62,10 +63,10 @@ export interface BalanceSnapshot {
   run: {
     inRun: boolean;
     activeCycle: number;
-    waveIndex: number;
-    wavePhase: string;
-    regularWaveCap: number;
-    isBossWave: boolean;
+    runKills: number;
+    runPhase: string;
+    bossKillThreshold: number;
+    isBossPhase: boolean;
     breachPercent: number;
     runShards: number;
     elapsed: string;
@@ -79,13 +80,14 @@ export interface BalanceSnapshot {
     passiveHeatPerSecEffective: number;
   };
   enemyPressure: Array<{
-    wave: number;
+    cycle: number;
     label: string;
     enemyLevel: number;
     hpNormal: number;
     hpBoss: number;
     speedNormal: number;
-    leakPenalty: number;
+    hitHeatPenalty: number;
+    hitHeatBoss: number;
     shardReward: number;
   }>;
   devOverrides: Record<string, number>;
@@ -94,32 +96,32 @@ export interface BalanceSnapshot {
 function buildEnemyPressureSamples(
   cycle: number,
   config: ReturnType<typeof getRunConfig>,
-  highlightWave: number | null,
 ): BalanceSnapshot['enemyPressure'] {
-  const sampleWaves = new Set<number>([1, 5, REGULAR_WAVE_COUNT, BOSS_WAVE_INDEX]);
-  if (highlightWave !== null && highlightWave > 0) {
-    sampleWaves.add(highlightWave);
-  }
-
-  return [...sampleWaves]
+  const sampleCycles = new Set<number>([cycle, cycle + 1, Math.max(1, cycle - 1)]);
+  return [...sampleCycles]
+    .filter((c) => c >= 1)
     .sort((a, b) => a - b)
-    .map((wave) => {
-      const isBoss = wave >= BOSS_WAVE_INDEX;
-      const isCurrent = highlightWave === wave;
-      const enemyLevel = getEnemyLevel(cycle, wave);
+    .map((sampleCycle) => {
+      const enemyLevel = getEnemyLevel(sampleCycle);
       return {
-        wave,
-        label: isBoss
-          ? `Boss (${wave})`
-          : isCurrent
-            ? `Vague ${wave} (actuelle)`
-            : `Vague ${wave}`,
+        cycle: sampleCycle,
+        label:
+          sampleCycle === cycle
+            ? `Cycle ${sampleCycle} (actif)`
+            : `Cycle ${sampleCycle}`,
         enemyLevel,
-        hpNormal: getEnemyMaxHp(config, wave, false, cycle),
-        hpBoss: getEnemyMaxHp(config, wave, true, cycle),
-        speedNormal: Math.round(getEnemySpeed(config, wave, cycle) * 10) / 10,
-        leakPenalty: getLeakProgressPenalty(config, wave),
-          shardReward: getExpectedShardReward(config, wave, cycle),
+        hpNormal: getEnemyMaxHp(config, false, sampleCycle),
+        hpBoss: getEnemyMaxHp(config, true, sampleCycle),
+        speedNormal: Math.round(getEnemySpeed(config, sampleCycle) * 10) / 10,
+        hitHeatPenalty: getHitHeatPenalty({
+          maxHp: getEnemyMaxHp(config, false, sampleCycle),
+          cycle: sampleCycle,
+        }),
+        hitHeatBoss: getHitHeatPenalty({
+          maxHp: getEnemyMaxHp(config, true, sampleCycle),
+          cycle: sampleCycle,
+        }),
+        shardReward: getExpectedShardReward(config, sampleCycle),
       };
     });
 }
@@ -130,17 +132,12 @@ export function buildBalanceSnapshot(): BalanceSnapshot {
   const breachCap = getBreachCap(state.upgrades);
   const inRun = state.gameState === 'PLAYING' || state.gameState === 'PAUSED';
   const activeCycle = inRun ? state.activeCycle : state.selectedCycle;
-  const highlightWave = inRun || state.gameState === 'RUN_END' ? state.waveIndex : null;
 
   const modules = UPGRADE_CATALOG.map((entry) => {
     const level = getUpgradeLevel(state.upgrades, entry.id);
     const moduleRequires = MODULE_TREE_NODES.find((node) => node.id === entry.id)?.requires;
     let name: string = entry.id;
-    try {
-      name = getUpgradeDefinition(entry.id).name;
-    } catch {
-      // fallback id
-    }
+    name = getUpgradeDisplayName(entry.id);
     return {
       id: entry.id,
       name,
@@ -158,11 +155,7 @@ export function buildBalanceSnapshot(): BalanceSnapshot {
       const anchored = entry.id in state.anchoredNodes;
       const active = state.anchoredNodes[entry.id] === true;
       let name: string = entry.id;
-      try {
-        name = getUpgradeDefinition(entry.id).name;
-      } catch {
-        // fallback id
-      }
+      name = getUpgradeDisplayName(entry.id);
       return { id: entry.id, name, anchored, active };
     },
   ).filter((row) => row.anchored);
@@ -174,8 +167,8 @@ export function buildBalanceSnapshot(): BalanceSnapshot {
   })).filter((protocol) => protocol.level > 0);
 
   const devOverrides = getDevRunConfigOverrides();
-  const bestWaveByCycle = { ...state.bestWaveByCycle };
-  const bestWaveEver = getBestWaveEver(bestWaveByCycle);
+  const bestKillsByCycle = { ...state.bestKillsByCycle };
+  const bestKillsEver = getBestKillsEver(bestKillsByCycle);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -191,8 +184,8 @@ export function buildBalanceSnapshot(): BalanceSnapshot {
       cyclesCleared: [...state.cyclesCleared],
       cyclesSinceLastAnchor: state.cyclesSinceLastAnchor,
       fluxDriveEnabled: state.fluxDriveEnabled,
-      bestWaveByCycle,
-      bestWaveEver,
+      bestKillsByCycle,
+      bestKillsEver,
     },
     modules: ownedModules,
     hardwareSupercharge,
@@ -200,10 +193,10 @@ export function buildBalanceSnapshot(): BalanceSnapshot {
     run: {
       inRun,
       activeCycle: state.activeCycle,
-      waveIndex: state.waveIndex,
-      wavePhase: state.wavePhase,
-      regularWaveCap: REGULAR_WAVE_COUNT,
-      isBossWave: state.waveIndex > REGULAR_WAVE_COUNT || state.wavePhase === 'boss',
+      runKills: state.runKills,
+      runPhase: state.runPhase,
+      bossKillThreshold: BOSS_KILL_THRESHOLD,
+      isBossPhase: state.runPhase === 'boss',
       breachPercent: Math.round(getBreachPercent(state.breachProgress, state.upgrades)),
       runShards: state.runShards,
       elapsed: formatRunElapsedMs(runElapsedMsRef.value),
@@ -214,10 +207,10 @@ export function buildBalanceSnapshot(): BalanceSnapshot {
     computedStats: {
       ...config,
       breachCap,
-      killBreachRelief: getKillBreachRelief(state.upgrades, state.waveIndex || 1),
+      killBreachRelief: getKillBreachRelief(state.upgrades),
       passiveHeatPerSecEffective: getEffectivePassiveHeatPerSec(config),
     },
-    enemyPressure: buildEnemyPressureSamples(activeCycle, config, highlightWave),
+    enemyPressure: buildEnemyPressureSamples(activeCycle, config),
     devOverrides: { ...devOverrides },
   };
 }
@@ -246,21 +239,21 @@ export function formatBalanceSnapshot(snapshot: BalanceSnapshot): string {
   lines.push(`Flux Drive toggle : ${p.fluxDriveEnabled ? 'ON' : 'OFF'}`);
   lines.push('');
 
-  lines.push('--- RECORD VAGUES MAX (sauvegardé) ---');
-  if (p.bestWaveEver) {
+  lines.push('--- RECORD KILLS MAX (sauvegardé) ---');
+  if (p.bestKillsEver) {
     lines.push(
-      `Meilleure vague globale : ${formatWaveRecordLabel(p.bestWaveEver.wave)} (cycle ${p.bestWaveEver.cycle})`,
+      `Meilleur score global : ${formatKillsRecordLabel(p.bestKillsEver.kills)} (cycle ${p.bestKillsEver.cycle})`,
     );
   } else {
-    lines.push('Meilleure vague globale : aucune run enregistrée');
+    lines.push('Meilleur score global : aucune run enregistrée');
   }
-  const waveRecords = listBestWaveRecords(p.bestWaveByCycle);
-  if (waveRecords.length === 0) {
+  const killRecords = listBestKillsRecords(p.bestKillsByCycle);
+  if (killRecords.length === 0) {
     lines.push('Par cycle : aucune');
   } else {
     lines.push('Par cycle :');
-    for (const row of waveRecords) {
-      lines.push(`  Cycle ${row.cycle} : ${formatWaveRecordLabel(row.wave)}`);
+    for (const row of killRecords) {
+      lines.push(`  Cycle ${row.cycle} : ${formatKillsRecordLabel(row.kills)}`);
     }
   }
   lines.push('');
@@ -295,18 +288,22 @@ export function formatBalanceSnapshot(snapshot: BalanceSnapshot): string {
 
   lines.push('--- RUN ---');
   if (r.inRun) {
-    lines.push(`En run : oui | Cycle ${r.activeCycle} | Vague ${Math.min(r.waveIndex, r.regularWaveCap)}/${r.regularWaveCap}`);
-    lines.push(`Phase : ${r.wavePhase}${r.isBossWave ? ' (boss)' : ''}`);
+    lines.push(
+      `En run : oui | Cycle ${r.activeCycle} | Kills ${r.runKills}/${r.bossKillThreshold}`,
+    );
+    lines.push(`Phase : ${r.runPhase}${r.isBossPhase ? ' (boss)' : ''}`);
     lines.push(`Breach / Surcharge : ${r.breachPercent}%`);
     lines.push(`Run Shards : ${r.runShards}`);
     lines.push(`Timer run : ${r.elapsed}`);
   } else if (snapshot.gameState === 'RUN_END') {
-    lines.push(`Dernière run terminée — vague atteinte : ${r.waveIndex}${r.isBossWave ? ' (boss)' : ''}`);
+    lines.push(
+      `Dernière run terminée — kills : ${r.runKills}${r.isBossPhase ? ' (boss)' : ''}`,
+    );
     lines.push(`Résultat : ${r.runOutcome ?? 'inconnu'}`);
     lines.push(`Shards gagnés : ${r.lastRunShards} | Anchor gagnés : ${r.lastRunAnchorFragments}`);
   } else {
     lines.push('En run : non (hub / menu)');
-    lines.push(`Dernière vague connue (session) : ${r.waveIndex > 0 ? r.waveIndex : 'n/a'}`);
+    lines.push(`Derniers kills (session) : ${r.runKills > 0 ? r.runKills : 'n/a'}`);
   }
   lines.push('');
 
@@ -327,7 +324,7 @@ export function formatBalanceSnapshot(snapshot: BalanceSnapshot): string {
   lines.push(`Mult cycle chaleur : ×${Math.round(getCycleHeatMult(cycle) * 100) / 100}`);
   for (const row of snapshot.enemyPressure) {
     lines.push(
-      `${row.label} [lvl ${row.enemyLevel}] — HP ${row.hpNormal} (boss ${row.hpBoss}), vit. ${row.speedNormal}, leak +${row.leakPenalty}, shards ${row.shardReward}`,
+      `${row.label} [lvl ${row.enemyLevel}] — HP ${row.hpNormal} (boss ${row.hpBoss}), vit. ${row.speedNormal}, riposte hit +${row.hitHeatPenalty} (boss +${row.hitHeatBoss}), shards ${row.shardReward}`,
     );
   }
   lines.push('');
@@ -337,6 +334,17 @@ export function formatBalanceSnapshot(snapshot: BalanceSnapshot): string {
     for (const [key, value] of Object.entries(snapshot.devOverrides)) {
       lines.push(`${key} = ${value}`);
     }
+    lines.push('');
+  }
+
+  const robot = getDevAutoplaySnapshot();
+  if (
+    robot.retargetCount > 0 ||
+    robot.estimatedCoverage > 0 ||
+    robot.lastOutcome != null ||
+    robot.awaitingSnapshot
+  ) {
+    lines.push(formatDevAutoplayTelemetry());
     lines.push('');
   }
 

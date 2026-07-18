@@ -24,10 +24,11 @@ export {
 } from './devGameActions';
 
 export {
+  devForceBossSpawn,
   devForceEndBreach,
   devForceVictoryBoss,
-  devGetMaxWaveIndex,
-  devJumpToWave,
+  devGetBossKillThreshold,
+  devJumpToKills,
   devKillAllEnemies,
   devSetBreachProgress,
   devSetGameState,

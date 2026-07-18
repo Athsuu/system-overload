@@ -1,6 +1,7 @@
 import { DevMenu } from './dev/DevMenu';
 import { isDevMenuEnabled } from './dev/isDevMenuEnabled';
 import { useDevAutoplayGuard } from './dev/useDevAutoplayGuard';
+import { useBalanceTrackerGuard } from './dev/useBalanceTrackerGuard';
 import { useHubAudio } from './audio/useHubAudio';
 import { GameCanvas } from './game/GameCanvas';
 import { useBreachEndWatcher } from './game/useBreachEndWatcher';
@@ -45,6 +46,7 @@ function App() {
   useHubAudio();
   useProgressAutosave();
   useDevAutoplayGuard();
+  useBalanceTrackerGuard();
 
   return (
     <div

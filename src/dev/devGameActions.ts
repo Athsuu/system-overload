@@ -30,7 +30,7 @@ function persist(state: ReturnType<typeof useGameStore.getState>): void {
     cyclesCleared: state.cyclesCleared,
     cyclesSinceLastAnchor: state.cyclesSinceLastAnchor,
     anchoredNodes: state.anchoredNodes,
-    bestWaveByCycle: state.bestWaveByCycle,
+    bestKillsByCycle: state.bestKillsByCycle,
   });
 }
 
@@ -130,13 +130,12 @@ export function devWipeProgress(): void {
     highestCycleUnlocked: DEFAULT_CYCLE_PROGRESS.highestCycleUnlocked,
     selectedCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
-    bestWaveByCycle: {},
+    bestKillsByCycle: {},
     activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     runOutcome: null,
     prestigeUnlockedThisRun: false,
-    waveIndex: 0,
-    wavePhase: 'idle',
-    showWaveClear: false,
+    runKills: 0,
+    runPhase: 'idle',
   });
 }
 

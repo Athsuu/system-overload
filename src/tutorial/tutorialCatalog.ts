@@ -1,4 +1,5 @@
-import type { GameState, WavePhase } from '../store/useGameStore';
+import type { GameState, RunPhase } from '../store/useGameStore';
+import type { CoreProtocolLevels } from '../store/prestigeTypes';
 import type { UpgradeLevels } from '../store/upgradeCatalog';
 import { getGameStrings } from '../i18n';
 import type { TutorialSignals } from './tutorialSignals';
@@ -54,9 +55,10 @@ export interface TutorialSnapshot {
   runShards: number;
   bankShards: number;
   upgrades: UpgradeLevels;
+  coreProtocols: CoreProtocolLevels;
   prestigeUnlocked: boolean;
-  waveIndex: number;
-  wavePhase: WavePhase;
+  runKills: number;
+  runPhase: RunPhase;
   runOutcome: 'victory_boss' | 'defeat_breach' | null;
   selectedCycle: number;
   activeCycle: number;
@@ -232,7 +234,7 @@ export function buildTutorialSteps(): TutorialStep[] {
       label: ARCH_LABEL,
       title: steps.overclockTitle,
       body: T.overclockRisk,
-      unlockWhen: (s) => s.upgrades.overclock >= 1,
+      unlockWhen: (s) => s.coreProtocols.overclock >= 1,
       completeWhen: SKIP_ONLY,
     },
     {
@@ -274,7 +276,7 @@ export function buildTutorialSteps(): TutorialStep[] {
       label: ARCH_LABEL,
       title: strings.hud.fluxDriveLabel,
       body: T.fluxDriveLore,
-      unlockWhen: (s) => s.upgrades.fluxDrive >= 1 && getSnapshotCycle(s) === 1,
+      unlockWhen: (s) => s.coreProtocols.fluxDrive >= 1 && getSnapshotCycle(s) === 1,
       completeWhen: (s) => s.signals.fluxDriveToggled,
     },
   ];

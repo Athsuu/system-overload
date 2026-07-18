@@ -22,6 +22,7 @@ export interface DevModuleTreeDraftEntry {
 
 /** Brouillon dev local — futurs placeholders non encore promus (voir `moduleTreePlaceholders.ts`). */
 const STORAGE_KEY = 'dev-module-tree-draft';
+const RETIRED_PLACEHOLDER_IDS = new Set(['placeholder_02', 'placeholder_03']);
 
 let draftEntries: DevModuleTreeDraftEntry[] = loadDraftFromStorage();
 
@@ -75,9 +76,14 @@ function loadDraftFromStorage(): DevModuleTreeDraftEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed
+    const loaded = parsed
       .map(normalizeStoredEntry)
       .filter((entry): entry is DevModuleTreeDraftEntry => entry !== null);
+    const cleaned = loaded.filter((entry) => !RETIRED_PLACEHOLDER_IDS.has(entry.id));
+    if (cleaned.length !== loaded.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
     return [];
   }

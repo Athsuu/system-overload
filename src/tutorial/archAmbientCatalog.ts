@@ -1,6 +1,6 @@
 import { getGameStrings } from '../i18n';
+import { HORDE_KILL_MIDPOINT } from '../game/horde';
 import { getBreachPercent } from '../game/runConfig';
-import { BOSS_WAVE_INDEX } from '../game/waveScaling';
 import { BREACH_URGENT_THRESHOLD } from '../theme/darkHexTerminal';
 import type { ArchAmbientPersistScope } from './archAmbientPersistence';
 import { isArchAmbientHeard } from './archAmbientPersistence';
@@ -27,15 +27,15 @@ export function getArchAmbientLines(): ArchAmbientLine[] {
       screens: ['PLAYING'],
       requiresArchMet: true,
       persistScope: 'run',
-      unlockWhen: (s) => s.signals.runsStarted >= 1 && s.waveIndex === 1 && s.wavePhase !== 'intermission',
+      unlockWhen: (s) => s.signals.runsStarted >= 1 && s.runPhase === 'horde' && s.runKills < 5,
     },
     {
-      id: 'wave_midpoint',
+      id: 'kill_midpoint',
       text: A.waveMidpoint,
       screens: ['PLAYING'],
       requiresArchMet: true,
       persistScope: 'run',
-      unlockWhen: (s) => s.waveIndex === 5 && s.wavePhase !== 'intermission',
+      unlockWhen: (s) => s.runPhase === 'horde' && s.runKills >= HORDE_KILL_MIDPOINT,
     },
     {
       id: 'overload_critical',
@@ -51,7 +51,7 @@ export function getArchAmbientLines(): ArchAmbientLine[] {
       screens: ['PLAYING'],
       requiresArchMet: true,
       persistScope: 'run',
-      unlockWhen: (s) => s.waveIndex >= BOSS_WAVE_INDEX || s.wavePhase === 'boss',
+      unlockWhen: (s) => s.runPhase === 'boss',
     },
     {
       id: 'flux_drive_ready',
@@ -59,7 +59,7 @@ export function getArchAmbientLines(): ArchAmbientLine[] {
       screens: ['MENU'],
       requiresArchMet: true,
       persistScope: 'profile',
-      unlockWhen: (s) => s.upgrades.fluxDrive >= 1 && getSnapshotCycle(s) === 1,
+      unlockWhen: (s) => s.coreProtocols.fluxDrive >= 1 && getSnapshotCycle(s) === 1,
     },
   ];
 }

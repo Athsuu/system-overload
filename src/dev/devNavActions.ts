@@ -1,8 +1,10 @@
-import { devRequestKillAll, devRequestWaveJump } from './devFlags';
-import { getWaveDefinition, WAVE_DEFINITIONS } from '../game/waveConfig';
+import { BOSS_KILL_THRESHOLD } from '../game/horde';
 import { useGameStore, type GameState } from '../store/useGameStore';
-
-const DEV_MAX_WAVE_INDEX = WAVE_DEFINITIONS[WAVE_DEFINITIONS.length - 1]?.wave ?? 11;
+import {
+  devRequestForceBoss,
+  devRequestKillAll,
+  devRequestKillJump,
+} from './devFlags';
 
 export function devKillAllEnemies(): void {
   devRequestKillAll();
@@ -25,10 +27,8 @@ export function devForceVictoryBoss(): void {
   state.endRun('victory_boss');
 }
 
-export function devJumpToWave(waveIndex: number): void {
-  const targetWave = Math.max(1, Math.min(DEV_MAX_WAVE_INDEX, Math.floor(waveIndex)));
-  if (!getWaveDefinition(targetWave)) return;
-
+export function devJumpToKills(kills: number): void {
+  const target = Math.max(0, Math.min(BOSS_KILL_THRESHOLD, Math.floor(kills)));
   const state = useGameStore.getState();
   if (state.gameState !== 'PLAYING' && state.gameState !== 'PAUSED') {
     state.startRun();
@@ -36,12 +36,22 @@ export function devJumpToWave(waveIndex: number): void {
   if (useGameStore.getState().gameState === 'PAUSED') {
     useGameStore.setState({ gameState: 'PLAYING' });
   }
-
-  devRequestWaveJump(targetWave);
+  devRequestKillJump(target);
 }
 
-export function devGetMaxWaveIndex(): number {
-  return DEV_MAX_WAVE_INDEX;
+export function devForceBossSpawn(): void {
+  const state = useGameStore.getState();
+  if (state.gameState !== 'PLAYING' && state.gameState !== 'PAUSED') {
+    state.startRun();
+  }
+  if (useGameStore.getState().gameState === 'PAUSED') {
+    useGameStore.setState({ gameState: 'PLAYING' });
+  }
+  devRequestForceBoss();
+}
+
+export function devGetBossKillThreshold(): number {
+  return BOSS_KILL_THRESHOLD;
 }
 
 export function devSetGameState(gameState: GameState): void {

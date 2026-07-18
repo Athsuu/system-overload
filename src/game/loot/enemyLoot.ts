@@ -6,10 +6,10 @@ import { expandHexShardDrops } from './pickups';
 import type { LootDrop } from './types';
 
 /** Loot table for a single enemy kill. Add drops here as new currencies appear. */
-export function getEnemyLootDrops(node: DissipationNode): LootDrop[] {
+export function getEnemyLootDrops(_node: DissipationNode): LootDrop[] {
   const store = useGameStore.getState();
   const config = getRunConfig(store.upgrades);
-  const shardAmount = getShardReward(config, node.waveIndex);
+  const shardAmount = getShardReward(config);
 
   return expandHexShardDrops(shardAmount);
 }

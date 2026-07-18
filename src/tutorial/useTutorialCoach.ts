@@ -46,9 +46,10 @@ export function useTutorialCoach(enabled: boolean): TutorialCoachState {
   const runShards = useGameStore((state) => state.runShards);
   const bankShards = useGameStore((state) => state.bankShards);
   const upgrades = useGameStore((state) => state.upgrades);
+  const coreProtocols = useGameStore((state) => state.coreProtocols);
   const prestigeUnlocked = useGameStore((state) => state.prestigeUnlocked);
-  const waveIndex = useGameStore((state) => state.waveIndex);
-  const wavePhase = useGameStore((state) => state.wavePhase);
+  const runKills = useGameStore((state) => state.runKills);
+  const runPhase = useGameStore((state) => state.runPhase);
   const runOutcome = useGameStore((state) => state.runOutcome);
   const selectedCycle = useGameStore((state) => state.selectedCycle);
   const activeCycle = useGameStore((state) => state.activeCycle);
@@ -86,9 +87,10 @@ export function useTutorialCoach(enabled: boolean): TutorialCoachState {
       runShards,
       bankShards,
       upgrades,
+      coreProtocols,
       prestigeUnlocked,
-      waveIndex,
-      wavePhase,
+      runKills,
+      runPhase,
       runOutcome,
       selectedCycle,
       activeCycle,
@@ -101,9 +103,10 @@ export function useTutorialCoach(enabled: boolean): TutorialCoachState {
     runShards,
     bankShards,
     upgrades,
+    coreProtocols,
     prestigeUnlocked,
-    waveIndex,
-    wavePhase,
+    runKills,
+    runPhase,
     runOutcome,
     selectedCycle,
     activeCycle,

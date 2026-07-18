@@ -17,22 +17,7 @@ export interface ModuleTreePlaceholderDef {
 }
 
 /** Placeholders visibles joueur (RESERVED) — source partagée production + éditeur dev. */
-export const MODULE_TREE_PLACEHOLDERS: readonly ModuleTreePlaceholderDef[] = [
-  {
-    id: 'placeholder_03',
-    parentIds: ['overclock'],
-    q: -2,
-    r: 0,
-    branch: 'degats',
-  },
-  {
-    id: 'placeholder_02',
-    parentIds: ['meltdownThreshold'],
-    q: 0,
-    r: -5,
-    branch: 'degats',
-  },
-] as const;
+export const MODULE_TREE_PLACEHOLDERS: readonly ModuleTreePlaceholderDef[] = [] as const;
 
 const PRODUCTION_PLACEHOLDER_IDS = new Set<string>(
   MODULE_TREE_PLACEHOLDERS.map((entry) => entry.id),

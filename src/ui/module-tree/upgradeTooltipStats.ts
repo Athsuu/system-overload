@@ -6,22 +6,21 @@ import {
   PURGE_CRIT_CHANCE_PERCENT_PER_LEVEL,
   PURGE_STRIKE_DAMAGE_PER_LEVEL,
   THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL,
-  SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL,
-  VICTORY_SHARD_BONUS_FLAT_BY_LEVEL,
+  SHARD_SALVAGE_FLAT_SHARDS_PER_KILL,
+  VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL,
   type UpgradeId,
   type UpgradeLevels,
 } from '../../store/upgradeCatalog';
 import { getOverclockCooldownMs, getOverclockDurationMs } from '../../game/overclock';
 import {
   RUN_STAT_BASE,
-  getBreachDissipationPerSec,
-  getLeakSealingReductionPercent,
+  getLeakArmor,
   getPurgeAmplifierDamageFlat,
   getPurgeReachBonusPercent,
   getPurgeSplashDamagePercent,
   getPurgeSplashRadiusBonusPercent,
 } from '../../game/moduleEffects';
-import { getKillBreachRelief } from '../../game/runConfig';
+import { getKillBreachRelief, getRunConfig } from '../../game/runConfig';
 import { formatHexRadius } from '../../game/purgeHexDisplay';
 import {
   getShardMagnetCollectRadius,
@@ -74,35 +73,33 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   }
 
   if (id === 'shardSalvage') {
+    const current = level * SHARD_SALVAGE_FLAT_SHARDS_PER_KILL;
+    const next = nextLevel !== null ? nextLevel * SHARD_SALVAGE_FLAT_SHARDS_PER_KILL : null;
     return [
       line(
-        labels.shardYieldBonus,
-        formatPercentBonus(SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL * level),
-        nextLevel !== null
-          ? formatPercentBonus(SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL * nextLevel)
-          : null,
+        labels.shardBonusPerKill,
+        `+${current}`,
+        next !== null ? `+${next}` : null,
       ),
     ];
   }
 
   if (id === 'victoryShardBonus') {
-    const flatAtLevel =
-      level > 0
-        ? VICTORY_SHARD_BONUS_FLAT_BY_LEVEL[
-            Math.min(level, VICTORY_SHARD_BONUS_FLAT_BY_LEVEL.length) - 1
-          ]
-        : 0;
-    const nextFlat =
-      nextLevel !== null
-        ? VICTORY_SHARD_BONUS_FLAT_BY_LEVEL[
-            Math.min(nextLevel, VICTORY_SHARD_BONUS_FLAT_BY_LEVEL.length) - 1
-          ]
-        : null;
+    const currentBonus = level * VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL;
+    const nextBonus =
+      nextLevel !== null ? nextLevel * VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL : null;
+    const currentAlive = getRunConfig(cur).hordeMaxAlive;
+    const nextAlive = nxt ? getRunConfig(nxt).hordeMaxAlive : null;
     return [
       line(
-        labels.victoryShardBonus,
-        `+${flatAtLevel}`,
-        nextFlat !== null ? `+${nextFlat}` : null,
+        labels.spawnRateBonus,
+        `+${currentBonus}%`,
+        nextBonus !== null ? `+${nextBonus}%` : null,
+      ),
+      line(
+        labels.spawnMaxAlive,
+        String(currentAlive),
+        nextAlive !== null ? String(nextAlive) : null,
       ),
     ];
   }
@@ -200,8 +197,8 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
   }
 
   if (id === 'killBreachRelief') {
-    const current = formatBreachReliefPercent(getKillBreachRelief(cur, 1));
-    const next = nxt ? formatBreachReliefPercent(getKillBreachRelief(nxt, 1)) : null;
+    const current = formatBreachReliefPercent(getKillBreachRelief(cur));
+    const next = nxt ? formatBreachReliefPercent(getKillBreachRelief(nxt)) : null;
     return [
       line(labels.breachReliefPerKill, `−${current}%`, next !== null ? `−${next}%` : null),
     ];
@@ -228,24 +225,14 @@ export function getUpgradeTooltipLines(id: UpgradeId, upgrades: UpgradeLevels): 
     return [line(labels.fluxDriveSpeed, `×${FLUX_DRIVE_TIME_SCALE}`)];
   }
 
-  if (id === 'breachDissipation') {
-    const current = getBreachDissipationPerSec(level);
-    const next = nextLevel !== null ? getBreachDissipationPerSec(nextLevel) : null;
-    return [
-      line(
-        labels.breachDissipationPerSec,
-        `−${current.toFixed(2)}`,
-        next !== null ? `−${next.toFixed(2)}` : null,
-      ),
-    ];
-  }
-
   if (id === 'leakSealing') {
+    const currentArmor = getLeakArmor(level);
+    const nextArmor = nextLevel !== null ? getLeakArmor(nextLevel) : null;
     return [
       line(
-        labels.leakSealingReduction,
-        `−${getLeakSealingReductionPercent(level)}%`,
-        nextLevel !== null ? `−${getLeakSealingReductionPercent(nextLevel)}%` : null,
+        labels.leakArmor,
+        String(currentArmor),
+        nextArmor !== null ? String(nextArmor) : null,
       ),
     ];
   }

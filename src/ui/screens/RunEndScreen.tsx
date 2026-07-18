@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { REGULAR_WAVE_COUNT } from '../../game/waveConfig';
+import { BOSS_KILL_THRESHOLD } from '../../game/horde';
 import { useGameStore } from '../../store/useGameStore';
 import { canRecompile } from '../../store/prestigeLogic';
 import { markTutorialSignal } from '../../tutorial/tutorialSignals';
@@ -21,7 +21,8 @@ export function RunEndScreen() {
   const runOutcome = useGameStore((state) => state.runOutcome);
   const activeCycle = useGameStore((state) => state.activeCycle);
   const cyclesCleared = useGameStore((state) => state.cyclesCleared);
-  const waveIndex = useGameStore((state) => state.waveIndex);
+  const runKills = useGameStore((state) => state.runKills);
+  const runPhase = useGameStore((state) => state.runPhase);
   const selectedCycle = useGameStore((state) => state.selectedCycle);
   const { launchHubToArena, launchArenaToHub, isTransitioning } = useScreenTransition();
 
@@ -35,13 +36,13 @@ export function RunEndScreen() {
   const subtitle = isVictory
     ? strings.runEnd.victorySubtitle
     : strings.runEnd.meltdownSubtitle;
-  const isBossWave = waveIndex > REGULAR_WAVE_COUNT;
-  const waveLine = isBossWave
+  const isBossPhase = runPhase === 'boss' || runOutcome === 'victory_boss';
+  const killLine = isBossPhase
     ? strings.ui.cycleBossFormat.replace('{cycle}', String(activeCycle))
-    : strings.ui.cycleWaveFormat
+    : strings.ui.cycleKillFormat
         .replace('{cycle}', String(activeCycle))
-        .replace('{wave}', String(Math.min(waveIndex, REGULAR_WAVE_COUNT)))
-        .replace('{max}', String(REGULAR_WAVE_COUNT));
+        .replace('{kills}', String(runKills))
+        .replace('{max}', String(BOSS_KILL_THRESHOLD));
   const displayShards = useCountUp(lastRunShards, 600);
   const displayAnchors = useCountUp(lastRunAnchorFragments, 600);
   const showRewards = lastRunShards > 0 || lastRunAnchorFragments > 0;
@@ -58,7 +59,7 @@ export function RunEndScreen() {
     }
     const index = pickMeltdownArchVariantIndex();
     setMeltdownArchText(strings.runEnd.meltdownArchVariants[index]);
-  }, [runOutcome, lastRunShards, waveIndex, strings.runEnd.meltdownArchVariants]);
+  }, [runOutcome, lastRunShards, runKills, strings.runEnd.meltdownArchVariants]);
 
   useEffect(() => {
     if (runOutcome !== 'victory_boss') {
@@ -117,7 +118,7 @@ export function RunEndScreen() {
         <p
           className="so-animate-reveal-step-1 text-[13px] tracking-[0.34em] text-white/30 uppercase"
         >
-          {waveLine}
+          {killLine}
         </p>
 
         <h2

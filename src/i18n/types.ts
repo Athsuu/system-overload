@@ -74,6 +74,8 @@ export interface TooltipStatLabels {
   shardYieldBonus: string;
   victoryShardBonus: string;
   victoryShardTotal: string;
+  spawnRateBonus: string;
+  spawnMaxAlive: string;
   shardPickupRadius: string;
   shardPickupReachBonus: string;
   purgeCadence: string;
@@ -92,9 +94,9 @@ export interface TooltipStatLabels {
   overclockDuration: string;
   overclockCooldown: string;
   fluxDriveSpeed: string;
-  breachDissipationPerSec: string;
   leakSealingReduction: string;
-  leakPenaltyExample: string;
+  leakArmor: string;
+  hitHeatNetExample: string;
   purgeAmplifierBonus: string;
 }
 
@@ -124,8 +126,6 @@ export interface UiStrings {
   mouse: string;
   bossIncoming: string;
   boss: string;
-  wave: string;
-  waveClear: string;
   overclock: string;
   levelFormat: string;
   levelFormatUncapped: string;
@@ -134,7 +134,7 @@ export interface UiStrings {
   gotIt: string;
   moduleTree: string;
   cycleLabel: string;
-  cycleWaveFormat: string;
+  cycleKillFormat: string;
   cycleBossFormat: string;
 }
 
@@ -222,7 +222,7 @@ export interface GameStrings {
     confirmYes: string;
     confirmNo: string;
     statBreach: string;
-    statWave: string;
+    statKills: string;
     statCycle: string;
     statShards: string;
     escHint: string;

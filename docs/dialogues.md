@@ -52,10 +52,10 @@ Prérequis commun : étape tutoriel `welcome` dismissée (`requiresArchMet: true
 
 | ID catalogue | Clé i18n | Texte EN | Texte FR | Déclencheur | Fréquence / persistance |
 |--------------|----------|----------|----------|-------------|-------------------------|
-| `first_run` | `archAmbient.firstRun` | Quarantine thread active. Purge what breaks through. | Thread de quarantaine actif. Purge ce qui franchit la barrière. | `PLAYING` · `runsStarted >= 1` · vague 1 · pas intermission | 1× par **run** (`persistScope: run`) |
-| `wave_midpoint` | `archAmbient.waveMidpoint` | Midpoint confirmed. The Archive isn't stable yet. Keep purging. | Mi-parcours confirmé. L'Archive n'est pas encore stable. Continue la purge. | `PLAYING` · `waveIndex === 5` · pas intermission | 1× par **run** |
+| `first_run` | `archAmbient.firstRun` | Quarantine thread active. Purge what breaks through. | Thread de quarantaine actif. Purge ce qui franchit la barrière. | `PLAYING` · `runsStarted >= 1` · phase horde · kills &lt; 5 | 1× par **run** (`persistScope: run`) |
+| `kill_midpoint` | `archAmbient.waveMidpoint` | Midpoint confirmed. The Archive isn't stable yet. Keep purging. | Mi-parcours confirmé. L'Archive n'est pas encore stable. Continue la purge. | `PLAYING` · `runKills >= 37` (mi-parcours / 75) · phase horde | 1× par **run** |
 | `overload_critical` | `archAmbient.overloadCritical` | Thread pressure critical. I'm losing the channel. | Pression du thread critique. Je perds le canal. | `PLAYING` · Overload ≥ 80 % (relatif au cap Meltdown) | 1× par **run** |
-| `boss_incoming` | `archAmbient.bossIncoming` | That's the Breach Anchor, the rupture point. End it. | C'est l'Ancre de Brèche, le point de rupture. Finis-la. | `PLAYING` · `waveIndex >= 11` ou phase boss | 1× par **run** |
+| `boss_incoming` | `archAmbient.bossIncoming` | That's the Breach Anchor, the rupture point. End it. | C'est l'Ancre de Brèche, le point de rupture. Finis-la. | `PLAYING` · `runPhase === 'boss'` (Breach Anchor à 75 kills) | 1× par **run** |
 | `flux_drive_ready` | `archAmbient.fluxDrive` | Flux Drive online. Double speed, double risk. Your call. | Flux Drive en ligne. Double vitesse, double risque. À toi de voir. | Hub **MENU** · module **Flux Drive** acheté · **Cycle 1** sélectionné · carte **au-dessus de CYCLE / START RUN** | 1× par **profil** (`persistScope: profile`) |
 
 **Label run** : `arch.runRelayLabel` (EN : `ARCH // RELAY`), affiché au-dessus du ping in-run, pas dans le corps du dialogue.
@@ -69,7 +69,7 @@ Composant : `RunEndScreen.tsx` · condition : `runOutcome === 'victory_boss'`.
 | Rôle | Clé i18n | Texte EN | Texte FR | Déclencheur |
 |------|----------|----------|----------|-------------|
 | Titre système | `runEnd.victoryTitle` | Breach Contained | Brèche contenue | Victoire boss |
-| Sous-titre système | `runEnd.victorySubtitle` | Threat contained. Node-0 holds. | Menace contenue. Node-0 tient. | + vague affichée (`ui.wave`) |
+| Sous-titre système | `runEnd.victorySubtitle` | Threat contained. Node-0 holds. | Menace contenue. Node-0 tient. | + kills affichés (`ui.cycleKillFormat`) |
 | Système (shards) | `currency.shardsEarnedSuffix` + `currency.transferredToVault` | +N Hex Shards · Earned this run | +N Éclats hex · Gagnés cette run | Toujours |
 
 ### Pool ARCH (rotation, 1 variante aléatoire par victoire boss)
@@ -130,7 +130,7 @@ Composant : `RunEndScreen.tsx` · condition : `prestigeUnlockedThisRun` (premiè
 | Date | Dialogue ajouté | Contexte | Version narrative.md liée |
 |------|-----------------|----------|---------------------------|
 | 2026-07-08 | Création du fichier, inventaire complet tutoriel, ambient, run end | Référence agent / PO | v0.7 |
-| 2026-07-08 | `archAmbient.waveMidpoint` | Ping run vague 5 | v0.7 |
+| 2026-07-08 | `archAmbient.waveMidpoint` | Ping run mi-parcours kills (~37/75) | v0.7 |
 | 2026-07-08 | Retrait `runEnd.meltdownArch` (…thread lost…) | Écran Meltdown, ARCH silencieux | v0.7 |
 | 2026-07-08 | Intégration pool 3 variantes `runEnd.meltdownArchVariants` (rotation cycle complet, les 2 autres avant réapparition) | Écran Meltdown, renforcement d'urgence ARCH | v0.7 |
 | 2026-07-08 | Unification terminologique **Hex Shards**, fusion tuto `run_shards` + `vault` (ID conservé : `run_shards`) ; retrait de « Run Shards » / « Available Shards » des textes joueur | Économie méta v4 · HUD · hub · run end | v0.7 |

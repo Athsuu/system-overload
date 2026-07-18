@@ -23,15 +23,17 @@ La carotte du prestige n’est **pas** une grille de +% anonymes. C’est une **
 
 | | Build actuel | Cible restante |
 |--|--------------|----------------|
-| Contenu | 5 Fondamentaux + **Purge explosive** (unlock + branche Rayon/Dégâts/Chaîne) | Plus de compétences ; Overclock / Flux Drive en prestige |
-| Carotte | Stats + 1 compétence gameplay | Plus de compétences / déblocages |
+| Contenu | 5 Fondamentaux + **Purge explosive**, **Overclock**, **Flux Drive** (compétences SF) | Plus de compétences ; branches légères optionnelles |
+| Carotte | Stats + compétences gameplay | Plus de compétences / déblocages |
 | UI | Onglets Fondamentaux / Compétences + **mini-arbre** d’améliorations après unlock | Feel hex polish ; plus de catégories |
-| Overclock / Flux Drive | Modules shards (arbre) | Unlock prestige (migration) |
+| Overclock / Flux Drive | **Unlocks prestige (SF)** — hors arbre shards | Branches légères si budget |
 | Profondeur | Compteur UI, **pas** de multi combat auto | Inchangé — pas de multi Profondeur fort |
 
 ## Trois couches (Fragments de Graine)
 
 Devise unique prestige : **Fragments de Graine (SF)**. Unlock + branche de la compétence = SF. L’arbre shards reste la progression de run « classique », pas le peaufinage de la compétence prestige.
+
+**Coûts SF** : même discipline que l’arbre — **`pricing-psychology.mdc`** avant toute grille proposée.
 
 ### 1. Fondamentaux (socle)
 
@@ -103,7 +105,7 @@ Noms / textes : rester dans le lexique Node-0 / ARCH / terminal ; pas Heart/Cœu
 | **Purge explosive** | Unlock + branche (rayon / dégâts / chaîne) | **1 livré** |
 | Soft start 1er Recompile | Unlock 2 SF + Residual Memory +200 | **1 livré** |
 | UI catégories + mini-arbre branche | Affichage | **1 livré** (onglets + fork) |
-| **Overclock** + **Flux Drive** | Unlock permanent (+ branche légère si budget) | **1.5** — migration hors arbre shards |
+| **Overclock** + **Flux Drive** | Unlock permanent (+ branche légère si budget) | **1.5 livré** — compétences SF |
 | **Autopilote** zones déjà clear | Unlock + branche | **2+** |
 | Plus de compétences / exclusivités A/B / UI hex complète | Contenu + affichage | **2+** |
 
@@ -111,7 +113,7 @@ Noms / textes : rester dans le lexique Node-0 / ARCH / terminal ; pas Heart/Cœu
 
 - [x] Modèle données : `fundamental` | `skillUnlock` | `skillBranchNode` (parent = compétence)
 - [x] Purge explosive = unlock max 1 + **3** nœuds de branche (Rayon, Dégâts, Chaîne)
-- [ ] Overclock + Flux Drive = unlocks prestige ; retrait achat shards arbre (placements, i18n, tutoriels, lexique §14) — **mission suivante**
+- [x] Overclock + Flux Drive = unlocks prestige ; retrait achat shards arbre (placements, i18n, tutoriels, lexique §14)
 - [x] Soft comfort : 1er Recompile peut acheter ≥ 1 compétence (unlock 2 SF ; Residual Memory +200)
 - [x] UI minimale : onglets + **mini-arbre** d’améliorations dès que la compétence est achetée
 - [x] i18n FR + EN + `docs/lexique-jeu.md` + effets runtime (`moduleEffects` / combat)

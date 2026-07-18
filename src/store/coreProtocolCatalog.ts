@@ -16,7 +16,7 @@ export interface CoreProtocolDefinition {
   description: string;
 }
 
-/** Hex Shards granted on Recompile per Residual Memory rank. */
+/** Hex Shards granted per Residual Memory rank (à l'achat + départ après Recompile). */
 export const RESIDUAL_MEMORY_SHARDS_PER_LEVEL = 200;
 
 /** Purge hit damage multiplier bonus per Boot Reinforcement rank (%, applied to total purgeHitDamage). */
@@ -165,6 +165,34 @@ export const CORE_PROTOCOL_CATALOG: CoreProtocolDefinition[] = [
     },
     get description() {
       return getGameStrings().seedProtocols.protocols.explosivePurgeChain.description;
+    },
+  },
+  {
+    id: 'overclock',
+    kind: 'skillUnlock',
+    maxLevel: 1,
+    parentId: null,
+    costBase: 3,
+    costGrowth: 1,
+    get name() {
+      return getGameStrings().seedProtocols.protocols.overclock.name;
+    },
+    get description() {
+      return getGameStrings().seedProtocols.protocols.overclock.description;
+    },
+  },
+  {
+    id: 'fluxDrive',
+    kind: 'skillUnlock',
+    maxLevel: 1,
+    parentId: 'overclock',
+    costBase: 5,
+    costGrowth: 1,
+    get name() {
+      return getGameStrings().seedProtocols.protocols.fluxDrive.name;
+    },
+    get description() {
+      return getGameStrings().seedProtocols.protocols.fluxDrive.description;
     },
   },
 ];

@@ -1,24 +1,18 @@
 import { isDevInvincible } from '../dev/devFlags';
 import { playRunEventSfx } from '../audio/sfxApi';
 import { useGameStore } from '../store/useGameStore';
-import { applyLeakBurstMultiplier, LEAK_BURST_WINDOW_MS } from './leakPenalty';
-import { getAnchorMultiplier } from './anchorSupercharge';
-import { getBreachDissipationPerSec } from './moduleEffects';
 import {
   getEffectivePassiveHeatPerSec,
-  getLeakProgressPenalty,
+  getHitHeatPenalty,
+  type HitHeatTarget,
   isMeltdownReached,
   type RunConfig,
 } from './runConfig';
+import { recordOverloadDelta } from './runOverloadTelemetry';
 
-export type OverloadSource = 'impact' | 'time';
+export type OverloadSource = 'hit' | 'time';
 
-let recentImpactTimes: number[] = [];
 let meltdownTriggeredThisRun = false;
-
-export function resetLeakBurstTracker(): void {
-  recentImpactTimes = [];
-}
 
 export function resetMeltdownGuard(): void {
   meltdownTriggeredThisRun = false;
@@ -42,9 +36,10 @@ function tryTriggerMeltdown(): void {
   }
 }
 
-export function addOverload(delta: number, _source: OverloadSource): void {
+export function addOverload(delta: number, source: OverloadSource): void {
   if (delta <= 0) return;
   if (isDevInvincible()) return;
+  recordOverloadDelta(delta, source);
   useGameStore.getState().addBreachProgress(delta);
   tryTriggerMeltdown();
 }
@@ -55,27 +50,9 @@ export function applyTimeOverload(
   overclockHeatMult = 1,
 ): void {
   addOverload(getEffectivePassiveHeatPerSec(config) * deltaSeconds * overclockHeatMult, 'time');
-
-  const store = useGameStore.getState();
-  const dissipationPerSec = getBreachDissipationPerSec(
-    store.upgrades.breachDissipation,
-    getAnchorMultiplier(store.anchoredNodes, 'breachDissipation'),
-  );
-  if (dissipationPerSec <= 0) return;
-
-  const relief = dissipationPerSec * deltaSeconds;
-  if (relief <= 0) return;
-  store.addBreachProgress(-relief);
 }
 
-export function applyImpactOverload(config: RunConfig, waveIndex: number): void {
-  const now = performance.now();
-  recentImpactTimes = recentImpactTimes.filter((t) => now - t < LEAK_BURST_WINDOW_MS);
-  const burstIndex = recentImpactTimes.length;
-  recentImpactTimes.push(now);
-
-  const basePenalty = getLeakProgressPenalty(config, waveIndex);
-  const penalty = applyLeakBurstMultiplier(basePenalty, burstIndex);
-
-  addOverload(penalty, 'impact');
+/** Riposte Surcharge au hit purge — une application par ennemi touché (AOE incluse). */
+export function applyHitOverload(target: HitHeatTarget): void {
+  addOverload(getHitHeatPenalty(target), 'hit');
 }

@@ -193,27 +193,6 @@ function GlyphPaths({ glyph }: { glyph: ModuleGlyphId }) {
           />
         </>
       );
-    case 'dissipate':
-      return (
-        <>
-          <path
-            d="M12 4 V20 M8 8 H16 M8 16 H16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeOpacity={0.85}
-          />
-          <path
-            d="M9 12 H15"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.25}
-            strokeLinecap="round"
-            opacity={0.55}
-          />
-        </>
-      );
     case 'seal':
       return (
         <>

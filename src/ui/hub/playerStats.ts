@@ -1,22 +1,24 @@
 import { formatHexRadius } from '../../game/purgeHexDisplay';
 import {
-  computePurgeAoeProfile,
   getBreachCap,
   getEffectivePassiveHeatPerSec,
+  getEnemyMaxHp,
+  getHitHeatPenalty,
   getKillBreachRelief,
+  getRawHitHeatForEnemy,
   getRunConfig,
   getExpectedShardReward,
   resolvePurgeSplashDamage,
+  resolveRelevantCycle,
 } from '../../game/runConfig';
 import {
-  computeVictoryShardBonus,
-  getBreachDissipationPerSec,
-  getLeakSealingReductionPercent,
+  computePurgeAoeProfile,
+  computeShardSalvageKillBonus,
+  getLeakArmor,
   getPurgeAmplifierDamageFlat,
 } from '../../game/moduleEffects';
 import {
-  BOSS_VICTORY_SHARD_BONUS,
-  SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL,
+  VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL,
 } from '../../store/upgradeCatalog';
 import { getGameStrings } from '../../i18n';
 import type { UpgradeLevels } from '../../store/upgradeCatalog';
@@ -99,27 +101,34 @@ function getUnlockedPlayerStatLines(
   const lines: PlayerStatLine[] = [];
 
   if (upgrades.shardSalvage > 0) {
-    const bonusPercent = SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL * upgrades.shardSalvage;
+    const killBonus = computeShardSalvageKillBonus(upgrades);
     lines.push({
       id: 'shardSalvage',
       tab: 'economy',
-      label: labels.shardYieldBonus,
-      value: `+${bonusPercent}%`,
+      label: labels.shardBonusPerKill,
+      value: `+${killBonus}`,
     });
     lines.push({
       id: 'shardPayoutExample',
       tab: 'economy',
-      label: labels.shardBonusPerKill,
+      label: labels.shardYieldBonus,
       value: getExpectedShardReward(config, 5).toFixed(2),
     });
   }
 
   if (upgrades.victoryShardBonus > 0) {
+    const spawnBonus = VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL * upgrades.victoryShardBonus;
     lines.push({
-      id: 'victoryShardBonus',
+      id: 'victoryShardBonusSpawn',
       tab: 'economy',
-      label: labels.victoryShardTotal,
-      value: String(BOSS_VICTORY_SHARD_BONUS + computeVictoryShardBonus(upgrades)),
+      label: labels.spawnRateBonus,
+      value: `+${spawnBonus}%`,
+    });
+    lines.push({
+      id: 'victoryShardBonusAlive',
+      tab: 'economy',
+      label: labels.spawnMaxAlive,
+      value: String(config.hordeMaxAlive),
     });
   }
 
@@ -143,7 +152,7 @@ function getUnlockedPlayerStatLines(
   }
 
   if (upgrades.killBreachRelief > 0) {
-    const breachRelief = getKillBreachRelief(upgrades, 1);
+    const breachRelief = getKillBreachRelief(upgrades);
     const reliefLabel = breachRelief.toFixed(2).replace(/\.?0+$/, '');
     lines.push({
       id: 'breachReliefPerKill',
@@ -162,21 +171,27 @@ function getUnlockedPlayerStatLines(
     });
   }
 
-  if (upgrades.breachDissipation > 0) {
-    lines.push({
-      id: 'breachDissipation',
-      tab: 'overload',
-      label: labels.breachDissipationPerSec,
-      value: `−${getBreachDissipationPerSec(upgrades.breachDissipation).toFixed(2)}`,
-    });
-  }
-
   if (upgrades.leakSealing > 0) {
+    const cycle = resolveRelevantCycle();
+    const config = getRunConfig(upgrades);
+    const trashHp = getEnemyMaxHp(config, false, cycle);
+    const bossHp = getEnemyMaxHp(config, true, cycle);
+    const fmt = (maxHp: number) => {
+      const raw = getRawHitHeatForEnemy(maxHp, cycle);
+      const net = getHitHeatPenalty({ maxHp, cycle });
+      return `${raw.toFixed(1)} → ${net.toFixed(1)}`;
+    };
     lines.push({
       id: 'leakSealing',
       tab: 'overload',
-      label: labels.leakSealingReduction,
-      value: `−${getLeakSealingReductionPercent(upgrades.leakSealing)}%`,
+      label: labels.leakArmor,
+      value: String(getLeakArmor(upgrades.leakSealing)),
+    });
+    lines.push({
+      id: 'hitHeatNet',
+      tab: 'overload',
+      label: labels.hitHeatNetExample,
+      value: `${fmt(trashHp)} / ${fmt(bossHp)}`,
     });
   }
 
@@ -204,8 +219,8 @@ const STAT_DISPLAY_ORDER: readonly string[] = [
   'latencySlow',
   'passiveBreachPerSec',
   'breachReliefPerKill',
-  'breachDissipation',
   'leakSealing',
+  'hitHeatNet',
   'meltdownThreshold',
   'shardSalvage',
   'shardPayoutExample',

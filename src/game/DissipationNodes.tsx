@@ -3,7 +3,7 @@ import { Container, Graphics } from 'pixi.js';
 import { useCallback, useLayoutEffect, useRef, type MutableRefObject, type RefObject } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { getScreenBounds } from './constants';
-import { isDevInvincible, isDevShowEnemyDebugOverlay } from '../dev/devFlags';
+import { isDevShowEnemyDebugOverlay } from '../dev/devFlags';
 import { drawCorruptedProcess, tickCorruptProcessAnim } from './corruptedProcessVisual';
 import { drawEnemyHpBar, EnemyDebugOverlay } from './enemyDebugOverlay';
 import { tickEnemyMovement } from './enemyMovement';
@@ -14,8 +14,6 @@ import {
   tickChromaticAberration,
   type ChromaticAberrationState,
 } from './juice/chromaticAberration';
-import { applyImpactOverload } from './overload';
-import { getRunConfig } from './runConfig';
 import { scaleDeltaMs, scaleDeltaSeconds } from './runTimeScale';
 import type { DissipationNode } from './types';
 
@@ -66,13 +64,10 @@ export function DissipationNodes({
 
       if (isPlaying && app?.renderer && useGameStore.getState().gameState === 'PLAYING') {
         const bounds = getScreenBounds(app.screen.width, app.screen.height);
-        const config = getRunConfig(useGameStore.getState().upgrades);
         const deltaMs = scaleDeltaMs(ticker.deltaMS);
 
         tickEnemyMovement(nodes, bounds, scaleDeltaSeconds(ticker.deltaMS / 1000), (node) => {
-          if (isDevInvincible()) return;
-          applyImpactOverload(config, node.waveIndex);
-          pushFlowEscapeFlash(effectsRef.current ?? [], node.x, node.y, node.waveIndex);
+          pushFlowEscapeFlash(effectsRef.current ?? [], node.x, node.y, node.enemyLevel);
         });
         tickCorruptProcessAnim(nodes, deltaMs);
 

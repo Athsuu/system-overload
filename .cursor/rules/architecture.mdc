@@ -26,13 +26,13 @@ alwaysApply: false
 
 | Zone | Dossier | Rôle |
 |------|---------|------|
-| Arène | `src/game/` | Purge, ennemis, vagues — 60 FPS PixiJS |
+| Arène | `src/game/` | Purge, ennemis, horde — 60 FPS PixiJS |
 | Interfaces | `src/ui/` | Menus, HUD, module tree — React + Tailwind |
 | Progression | `src/store/` | Shards, breach, upgrades, sauvegarde — Zustand |
 | Thème | `src/theme/` | Tokens visuels |
 | Tutoriels | `src/tutorial/` | Catalogue, spotlight, persistance |
 | Audio | `src/audio/` | Sons, mix |
-| Dev | `src/dev/` | Menu debug (dev only) |
+| Dev | `src/dev/` | Menu debug (dev only) — Robot playtest, suivi équilibrage |
 | Entrée | `src/App.tsx` | Assemblage écrans |
 
 **Fichiers clés** : `src/game/constants.ts`, `src/game/moduleEffects.ts`, `src/store/useGameStore.ts`, `src/store/upgradeCatalog.ts`, `src/store/moduleTree.ts`, `src/tutorial/tutorialCatalog.ts`.
@@ -45,7 +45,7 @@ alwaysApply: false
 - **Existant à plat** → ne **pas** déplacer en masse ; déplacer **uniquement** quand on touche cette zone **dans la même tâche**.
 - **Interdit** : refactor d'architecture « pour ranger » sans demande PO explicite.
 
-Sous-dossiers en place : `game/loot/`, `game/overclock/`, `game/juice/`, `dev/devUi/`, `dev/moduleTreeEditor/`, `ui/transitions/`, `ui/screens/`, `ui/hud/`, `ui/hub/`, `ui/settings/`, `ui/shared/`, `ui/module-tree/`, `ui/arch/`.
+Sous-dossiers en place : `game/loot/`, `game/overclock/`, `game/juice/`, `game/horde/`, `dev/devUi/`, `dev/moduleTreeEditor/`, `dev/balanceTracker/`, `ui/transitions/`, `ui/screens/`, `ui/hud/`, `ui/hub/`, `ui/settings/`, `ui/shared/`, `ui/module-tree/`, `ui/arch/`.
 
 ## Sous-dossiers UI (créés)
 
@@ -68,8 +68,8 @@ src/game/
   loot/          (existant)
   overclock/     (existant)
   juice/         (existant)
+  horde/         HordeEngine, hordeConfig, killCounter (spawn continu + boss @ 75 kills)
   enemies/       movement, combat, scaling, visuals
-  waves/         WaveEngine, waveConfig, encounter
   run/           runConfig, cycleScaling, runElapsed
 ```
 
@@ -84,6 +84,23 @@ src/game/
 - **Effets gameplay** : `src/game/moduleEffects.ts` (`MODULE_EFFECT_REGISTRY` + `compute*`)
 
 Nouveau module jouable → **`docs/lexique-jeu.md` §14** dans la même tâche. Inventaire : `MODULE_ADDITION_PIPELINE` dans `moduleEffects.ts`. Ne pas toucher `useGameStore` par module.
+
+### Catalogue coûts (`upgradeCatalog.ts`) — bloc autonome obligatoire
+
+Chaque `UpgradeId` a **son** pavé de constantes (jamais de `COST_BASE` / `COST_GROWTH` partagés entre modules) :
+
+```
+// --- upgradeId (Nom FR) ---
+export const X_MAX_LEVEL = …
+export const X_<EFFET>_… = …          // flat / % / tableau
+export const X_COST_BASE = …          // SI courbe
+export const X_COST_GROWTH = …        // SI courbe
+export const COST_X = buildShardCostCurve(...)  // OU liste [a, b, c]
+```
+
+- **Partagé OK** : la formule `buildShardCostCurve` uniquement.
+- **Interdit** : une constante de coût live liée à deux modules (ex. ancien `PURGE_SUPPORT_COST_*`).
+- Doublon de chiffres volontaire si deux modules démarrent avec la même courbe — pour pouvoir diverger au tuning.
 
 ### Tooltips module (obligatoire)
 

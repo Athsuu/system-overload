@@ -5,6 +5,7 @@ export type UpgradeCurrency = 'shards' | 'anchor';
 /**
  * Nouveau module module tree : suivre MODULE_ADDITION_PIPELINE dans src/game/moduleEffects.ts
  * et la checklist docs/lexique-jeu.md §14.
+ * Chaque module = bloc autonome (MAX + effet + COST_*) — jamais de coût partagé entre UpgradeId.
  */
 export type UpgradeId =
   | 'node0Boot'
@@ -22,7 +23,6 @@ export type UpgradeId =
   | 'meltdownThreshold'
   | 'overclock'
   | 'fluxDrive'
-  | 'breachDissipation'
   | 'leakSealing'
   | 'purgeAmplifier';
 
@@ -47,7 +47,6 @@ export interface UpgradeLevels {
   meltdownThreshold: number;
   overclock: number;
   fluxDrive: number;
-  breachDissipation: number;
   leakSealing: number;
   purgeAmplifier: number;
 }
@@ -66,55 +65,109 @@ export interface UpgradeDefinition {
   currency: UpgradeCurrency;
 }
 
+export interface UpgradeCatalogEntry {
+  id: UpgradeId;
+  maxLevel: number;
+  costByLevel: readonly number[];
+  currency: UpgradeCurrency;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function buildShardCostCurve(base: number, growth: number, levels: number): readonly number[] {
+  return Array.from({ length: levels }, (_, index) => Math.ceil(base * growth ** index));
+}
+
+// ---------------------------------------------------------------------------
+// Constantes globales (hors module)
+// ---------------------------------------------------------------------------
+
 /** Boss victory — Anchor Fragment on first cycle clear only (see endRun). */
 export const ANCHOR_FRAGMENTS_PER_BOSS = 1;
 
 /** Flat shard bonus on boss victory (in addition to run kills). */
 export const BOSS_VICTORY_SHARD_BONUS = 25;
 
+/** Hardware Supercharge — coût en Anchor Fragments pour surcharger n'importe quel module éligible. */
+export const ANCHOR_SUPERCHARGE_COST = 1;
+
+/**
+ * Riposte thermique au hit — fraction des PV max de la cible.
+ * Trash C1≈1,4 · C4≈5,6 · C11≈15,4 · C20≈28 (avant Blindage).
+ * Boss = même règle (×6 PV → ×6 riposte). Calibré pour du Blindage futur (plusieurs modules).
+ */
+export const HIT_HEAT_PER_MAX_HP = 0.07;
+
+// ---------------------------------------------------------------------------
+// Modules — Core / économie
+// ---------------------------------------------------------------------------
+
 /** Node-0 Boot : baseline gratuit — niveau 1 dès le départ, jamais achetable (pas de coût). */
 export const NODE0_BOOT_BASELINE_LEVEL = 1;
 
-/** Multiplicateur de rendement d'éclats : +25 % additif par rang (max +125 % au rang 5). */
-export const SHARD_SALVAGE_YIELD_PERCENT_PER_LEVEL = 25;
-export const SHARD_SALVAGE_MAX_LEVEL = 5;
-export const SHARD_SALVAGE_COST_BASE = 5;
-export const SHARD_SALVAGE_COST_GROWTH = 1.12;
+// --- shardSalvage (Récupération d'éclats) ---
+/** +1 Éclat hex garanti par kill (flat, non multiplié par Extraction). Ticket d'engagement — 1 rang. */
+export const SHARD_SALVAGE_FLAT_SHARDS_PER_KILL = 1;
+export const SHARD_SALVAGE_MAX_LEVEL = 1;
+export const COST_SHARD_SALVAGE = [25] as const;
 
+// --- shardMagnet (Aimant d'éclats) ---
 export const SHARD_MAGNET_MAX_LEVEL = 3;
 /** Rayon de collecte (px) aux rangs 0–3 de l'Aimant d'éclats. */
 export const SHARD_MAGNET_COLLECT_RADIUS_BY_LEVEL = [20, 44, 68, 92] as const;
 /** Rayon d'attraction magnétique (px) aux rangs 0–3 — 0 = pas d'aspiration au départ. */
 export const SHARD_MAGNET_MAGNET_RADIUS_BY_LEVEL = [0, 72, 128, 200] as const;
-export const COST_SHARD_MAGNET = [130, 220, 350] as const;
+/** QoL run 1 (playtest ~5 éclats) — total 39. */
+export const COST_SHARD_MAGNET = [5, 12, 22] as const;
 
+// --- victoryShardBonus (Flux de menace — id legacy) ---
+/**
+ * Id technique legacy `victoryShardBonus` (ex-Prime victoire).
+ * Effet actuel : Flux de menace — +50 % spawn rate & maxAlive / rang (max 3).
+ * Ne pas confondre avec le bonus d’éclats de victoire boss (`BOSS_VICTORY_SHARD_BONUS`).
+ */
 export const VICTORY_SHARD_BONUS_MAX_LEVEL = 3;
-/** Éclats bonus à Breach Contained aux rangs 1 / 2 / 3 (s'ajoute au flat boss). */
-export const VICTORY_SHARD_BONUS_FLAT_BY_LEVEL = [8, 16, 24] as const;
-export const COST_VICTORY_SHARD_BONUS = [100, 180, 280] as const;
+/** +50 % spawn rate & maxAlive / rang (ex-Prime victoire → Flux de menace). */
+export const VICTORY_SHARD_BONUS_SPAWN_PERCENT_PER_LEVEL = 50;
+export const COST_VICTORY_SHARD_BONUS = [35, 50, 75] as const;
 
+// ---------------------------------------------------------------------------
+// Modules — Purge / dégâts
+// ---------------------------------------------------------------------------
+
+// --- purgeStrike (Frappe de purge) ---
 /** Frappe de purge — flat uniquement ; les % viennent du prestige (Boot Reinforcement, Recompile). */
-export const PURGE_STRIKE_DAMAGE_PER_LEVEL = 5;
+export const PURGE_STRIKE_DAMAGE_PER_LEVEL = 3;
 export const PURGE_STRIKE_MAX_LEVEL = 10;
-export const PURGE_STRIKE_COST_GROWTH = 1.18;
-export const PURGE_STRIKE_COST_BASE = 5;
+/** Grille polish (pricing-psychology) — même budget total que piliers thermiques ; total 255. */
+export const COST_PURGE_STRIKE = [10, 12, 15, 18, 20, 25, 30, 35, 40, 50] as const;
 
-function buildShardCostCurve(base: number, growth: number, levels: number): readonly number[] {
-  return Array.from({ length: levels }, (_, index) => Math.ceil(base * growth ** index));
-}
-
-export const COST_SHARD_SALVAGE = buildShardCostCurve(
-  SHARD_SALVAGE_COST_BASE,
-  SHARD_SALVAGE_COST_GROWTH,
-  SHARD_SALVAGE_MAX_LEVEL,
+// --- purgeCadence (Cadence de purge) ---11
+export const PURGE_CADENCE_MAX_LEVEL = 10;
+export const PURGE_CADENCE_PERCENT_PER_LEVEL = 2.5;
+export const PURGE_CADENCE_INTERVAL_MS_PER_LEVEL = 25;
+export const PURGE_CADENCE_COST_BASE = 10;
+export const PURGE_CADENCE_COST_GROWTH = 1.22;
+export const COST_PURGE_CADENCE = buildShardCostCurve(
+  PURGE_CADENCE_COST_BASE,
+  PURGE_CADENCE_COST_GROWTH,
+  PURGE_CADENCE_MAX_LEVEL,
 );
 
-export const COST_PURGE_STRIKE = buildShardCostCurve(
-  PURGE_STRIKE_COST_BASE,
-  PURGE_STRIKE_COST_GROWTH,
-  PURGE_STRIKE_MAX_LEVEL,
+// --- purgeReach (Portée de purge) ---
+export const PURGE_REACH_MAX_LEVEL = 10;
+export const PURGE_REACH_AOE_PERCENT_PER_LEVEL = 2.5;
+export const PURGE_REACH_COST_BASE = 10;
+export const PURGE_REACH_COST_GROWTH = 1.22;
+export const COST_PURGE_REACH = buildShardCostCurve(
+  PURGE_REACH_COST_BASE,
+  PURGE_REACH_COST_GROWTH,
+  PURGE_REACH_MAX_LEVEL,
 );
 
+// --- purgeSplash (Éclat de purge) ---
 export const PURGE_SPLASH_MAX_LEVEL = 3;
 /** Extension du rayon d'éclaboussure au-delà de la zone principale (%) — +40 % vs courbe précédente. */
 export const PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL = [70, 105, 140] as const;
@@ -122,32 +175,7 @@ export const PURGE_SPLASH_RADIUS_BONUS_PERCENT_BY_LEVEL = [70, 105, 140] as cons
 export const PURGE_SPLASH_DAMAGE_PERCENT_BY_LEVEL = [40, 70, 100] as const;
 export const COST_PURGE_SPLASH = [150, 250, 400] as const;
 
-export const COST_LATENCY_INJECTION = [140, 240, 380] as const;
-export const LATENCY_INJECTION_MAX_LEVEL = 3;
-
-export const PURGE_CADENCE_MAX_LEVEL = 10;
-export const PURGE_CADENCE_PERCENT_PER_LEVEL = 2.5;
-export const PURGE_CADENCE_INTERVAL_MS_PER_LEVEL = 25;
-
-export const PURGE_REACH_MAX_LEVEL = 10;
-export const PURGE_REACH_AOE_PERCENT_PER_LEVEL = 2.5;
-
-/** Shared cost curve for Purge Cadence & Purge Reach (base 10, ×1.22). */
-export const PURGE_SUPPORT_COST_BASE = 10;
-export const PURGE_SUPPORT_COST_GROWTH = 1.22;
-
-export const COST_PURGE_CADENCE = buildShardCostCurve(
-  PURGE_SUPPORT_COST_BASE,
-  PURGE_SUPPORT_COST_GROWTH,
-  PURGE_CADENCE_MAX_LEVEL,
-);
-
-export const COST_PURGE_REACH = buildShardCostCurve(
-  PURGE_SUPPORT_COST_BASE,
-  PURGE_SUPPORT_COST_GROWTH,
-  PURGE_REACH_MAX_LEVEL,
-);
-
+// --- purgeCrit (Critique de purge) ---
 /** Critique de purge — +2 % chance / rang (s’ajoute à la base 8 %), multi ×2 inchangé. */
 export const PURGE_CRIT_MAX_LEVEL = 5;
 export const PURGE_CRIT_CHANCE_PERCENT_PER_LEVEL = 2;
@@ -159,66 +187,69 @@ export const COST_PURGE_CRIT = buildShardCostCurve(
   PURGE_CRIT_MAX_LEVEL,
 );
 
+// --- purgeAmplifier (Amplificateur de purge) ---
+export const PURGE_AMPLIFIER_MAX_LEVEL = 5;
+/** +7 dégâts purge flat / rang (max +35 au rang 5, tous cycles) — capstone branche dégâts. */
+export const PURGE_AMPLIFIER_DAMAGE_PER_LEVEL = 7;
+/** L1 atteignable mi-progression ; total 500 (premium ~1,7× vs Frappe au point de dégât). */
+export const COST_PURGE_AMPLIFIER = [50, 75, 100, 125, 150] as const;
+
+// --- latencyInjection (Injection de latence) ---
+export const LATENCY_INJECTION_MAX_LEVEL = 3;
+export const COST_LATENCY_INJECTION = [140, 240, 380] as const;
+
+// ---------------------------------------------------------------------------
+// Modules — Thermique / Breach
+// ---------------------------------------------------------------------------
+
+// --- threadCoolant (Coolant de thread) ---
 export const THREAD_COOLANT_MAX_LEVEL = 10;
-/** Package A — réduction douce : base 2,8 − 0,08/rang → ~2,0/s au max (plancher 1,8). */
-export const THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL = 0.08;
-export const THREAD_COOLANT_COST_BASE = 10;
-export const THREAD_COOLANT_COST_GROWTH = 1.2;
+/** Package A — réduction : base 2,8 − 0,10/rang → plancher 1,8/s au rang 10. */
+export const THREAD_COOLANT_PASSIVE_REDUCTION_PER_LEVEL = 0.1;
+/** Grille polish (pricing-psychology) — même famille que Seuil ; total 255. */
+export const COST_THREAD_COOLANT = [10, 12, 15, 18, 20, 25, 30, 35, 40, 50] as const;
 
-export const COST_THREAD_COOLANT = buildShardCostCurve(
-  THREAD_COOLANT_COST_BASE,
-  THREAD_COOLANT_COST_GROWTH,
-  THREAD_COOLANT_MAX_LEVEL,
-);
-
-/** Package A — moins de rangs ; −0,25 % Breach / kill / rang → −1,25 % au max. */
+// --- killBreachRelief (Kill Vent) ---
+/** Package A — moins de rangs ; −0,3 % Breach / kill / rang → −1,5 % au max. */
 export const KILL_BREACH_RELIEF_MAX_LEVEL = 5;
-export const KILL_BREACH_RELIEF_PER_LEVEL = 0.5;
-export const KILL_BREACH_RELIEF_COST_BASE = 10;
-export const KILL_BREACH_RELIEF_COST_GROWTH = 1.18;
+export const KILL_BREACH_RELIEF_PER_LEVEL = 0.3;
+/** Plus cher au début (valeur forte) ; total 255 — aligné budget Coolant/Seuil. */
+export const COST_KILL_BREACH_RELIEF = [25, 35, 50, 65, 80] as const;
 
-export const COST_KILL_BREACH_RELIEF = buildShardCostCurve(
-  KILL_BREACH_RELIEF_COST_BASE,
-  KILL_BREACH_RELIEF_COST_GROWTH,
-  KILL_BREACH_RELIEF_MAX_LEVEL,
-);
-
+// --- meltdownThreshold (Seuil de fusion) ---
 /** Cap Breach : +8 % additif par rang → 180 % au rang 10. */
 export const MELTDOWN_THRESHOLD_CAP_PERCENT_PER_LEVEL = 8;
 export const MELTDOWN_THRESHOLD_MAX_LEVEL = 10;
-export const MELTDOWN_THRESHOLD_COST_BASE = 5;
-export const MELTDOWN_THRESHOLD_COST_GROWTH = 1.16;
+/** Même famille visuelle que Coolant ; total 255. */
+export const COST_MELTDOWN_THRESHOLD = [10, 12, 15, 18, 20, 25, 30, 35, 40, 50] as const;
 
-export const COST_MELTDOWN_THRESHOLD = buildShardCostCurve(
-  MELTDOWN_THRESHOLD_COST_BASE,
-  MELTDOWN_THRESHOLD_COST_GROWTH,
-  MELTDOWN_THRESHOLD_MAX_LEVEL,
-);
+// --- leakSealing (Blindage de quarantaine) ---
+export const LEAK_SEALING_MAX_LEVEL = 5;
+/** Blindage / rang — score de mitigation (pas des points soustraits 1:1 du brut). */
+export const LEAK_ARMOR_PER_LEVEL = 3;
+/**
+ * Constante de mitigation : net = brut × (SOFTEN / (SOFTEN + blindage)).
+ * L2 (6) ≈ −37 % · L5 (15) ≈ −60 % — jamais 0 tant que brut > 0.
+ */
+export const LEAK_ARMOR_SOFTEN = 10;
+/** L1 = ticket d’engagement ; montée lisible ; total 650 (ex-750 trop punitif). */
+export const COST_LEAK_SEALING = [75, 100, 125, 150, 200] as const;
 
+// ---------------------------------------------------------------------------
+// Modules — Unlocks
+// ---------------------------------------------------------------------------
+
+// --- overclock / fluxDrive (prestige — voir coreProtocolCatalog) ---
 export const OVERCLOCK_MAX_LEVEL = 1;
-export const COST_OVERCLOCK = [200] as const;
-
 export const FLUX_DRIVE_MAX_LEVEL = 1;
-export const COST_FLUX_DRIVE = [280] as const;
 /** Flux Drive time scale once installed and toggled on — matches LORE.fluxDrive ("double la vitesse"). */
 export const FLUX_DRIVE_TIME_SCALE = 2;
 /** Hardware Supercharge sur Flux Drive : ×3 au lieu du ×2 générique (évite un ×4 déséquilibré). */
 export const FLUX_DRIVE_TIME_SCALE_ANCHORED = 3;
 
-export const BREACH_DISSIPATION_MAX_LEVEL = 3;
-/** Drain Breach passif / s aux rangs 1 / 2 / 3 (tous cycles). */
-export const BREACH_DISSIPATION_PER_SEC_BY_LEVEL = [0.1, 0.2, 0.3] as const;
-export const COST_BREACH_DISSIPATION = [200, 320, 500] as const;
-
-export const LEAK_SEALING_MAX_LEVEL = 3;
-/** Réduction pénalité de fuite (%) aux rangs 1 / 2 / 3. */
-export const LEAK_SEALING_PENALTY_REDUCTION_PERCENT_BY_LEVEL = [10, 20, 30] as const;
-export const COST_LEAK_SEALING = [180, 300, 480] as const;
-
-export const PURGE_AMPLIFIER_MAX_LEVEL = 3;
-/** Bonus flat dégâts purge aux rangs 1 / 2 / 3 (tous cycles). */
-export const PURGE_AMPLIFIER_DAMAGE_FLAT_BY_LEVEL = [10, 20, 30] as const;
-export const COST_PURGE_AMPLIFIER = [200, 320, 500] as const;
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
 
 export const DEFAULT_UPGRADES: UpgradeLevels = {
   node0Boot: 1,
@@ -236,17 +267,9 @@ export const DEFAULT_UPGRADES: UpgradeLevels = {
   meltdownThreshold: 0,
   overclock: 0,
   fluxDrive: 0,
-  breachDissipation: 0,
   leakSealing: 0,
   purgeAmplifier: 0,
 };
-
-export interface UpgradeCatalogEntry {
-  id: UpgradeId;
-  maxLevel: number;
-  costByLevel: readonly number[];
-  currency: UpgradeCurrency;
-}
 
 export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
   {
@@ -328,24 +351,6 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     currency: 'shards',
   },
   {
-    id: 'overclock',
-    maxLevel: OVERCLOCK_MAX_LEVEL,
-    costByLevel: COST_OVERCLOCK,
-    currency: 'shards',
-  },
-  {
-    id: 'fluxDrive',
-    maxLevel: FLUX_DRIVE_MAX_LEVEL,
-    costByLevel: COST_FLUX_DRIVE,
-    currency: 'shards',
-  },
-  {
-    id: 'breachDissipation',
-    maxLevel: BREACH_DISSIPATION_MAX_LEVEL,
-    costByLevel: COST_BREACH_DISSIPATION,
-    currency: 'shards',
-  },
-  {
     id: 'leakSealing',
     maxLevel: LEAK_SEALING_MAX_LEVEL,
     costByLevel: COST_LEAK_SEALING,
@@ -358,6 +363,10 @@ export const UPGRADE_CATALOG: UpgradeCatalogEntry[] = [
     currency: 'shards',
   },
 ];
+
+// ---------------------------------------------------------------------------
+// API
+// ---------------------------------------------------------------------------
 
 function getCatalogEntry(id: UpgradeId): UpgradeCatalogEntry | undefined {
   return UPGRADE_CATALOG.find((item) => item.id === id);
@@ -424,6 +433,19 @@ export function sanitizeUpgradeLevels(raw: Partial<UpgradeLevels> | undefined): 
     }
   }
 
+  // Migration : ancien module threatFeed → victoryShardBonus (désormais spawn rate).
+  const legacyThreatFeed = (raw as { threatFeed?: unknown }).threatFeed;
+  if (typeof legacyThreatFeed === 'number' && Number.isFinite(legacyThreatFeed) && legacyThreatFeed > 0) {
+    upgrades.victoryShardBonus = clampUpgradeLevel(
+      'victoryShardBonus',
+      Math.max(upgrades.victoryShardBonus, Math.floor(legacyThreatFeed)),
+    );
+  }
+
+  // overclock / fluxDrive : niveaux shards retirés — unlock via Protocoles de la Graine.
+  upgrades.overclock = 0;
+  upgrades.fluxDrive = 0;
+
   return upgrades;
 }
 
@@ -434,22 +456,15 @@ export function isUpgradeMaxed(
   return getUpgradeLevel({ ...DEFAULT_UPGRADES, [definition.id]: level }, definition.id) >= definition.maxLevel;
 }
 
-/** Hardware Supercharge — coût en Anchor Fragments pour surcharger n'importe quel module éligible. */
-export const ANCHOR_SUPERCHARGE_COST = 1;
-
-/** Éligible au Hardware Supercharge : tout module acheté en Éclats hex, y compris Overclock et Flux Drive. */
+/** Éligible au Hardware Supercharge : modules shards possédés + outils prestige ancrables. */
 export function isAnchorSuperchargeEligible(id: UpgradeId): boolean {
+  if (id === 'overclock' || id === 'fluxDrive') return true;
   const entry = getCatalogEntry(id);
   return entry?.currency === 'shards';
 }
 
-export function isOverclockUnlocked(upgrades: UpgradeLevels): boolean {
-  return upgrades.overclock >= 1;
-}
-
-export function isFluxDriveUnlocked(upgrades: UpgradeLevels): boolean {
-  return upgrades.fluxDrive >= 1;
-}
+export { isFluxDriveUnlocked, isOverclockUnlocked } from './prestigeUnlocks';
+export { isModuleOwnedForAnchor, isPrestigeAnchorToolId } from './prestigeUnlocks';
 
 /**
  * Données catalogue + i18n.

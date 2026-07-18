@@ -1,9 +1,10 @@
+import { BOSS_KILL_THRESHOLD } from '../game/horde';
 import { useGameStore, type GameState } from '../store/useGameStore';
 import {
+  devForceBossSpawn,
   devForceEndBreach,
   devForceVictoryBoss,
-  devGetMaxWaveIndex,
-  devJumpToWave,
+  devJumpToKills,
   devSetBreachProgress,
   devSetGameState,
 } from './devActions';
@@ -22,30 +23,38 @@ const GAME_STATE_HINT: Partial<Record<GameState, string>> = {
   GAME_OVER: 'Game over',
 };
 
+const KILL_JUMPS = [0, 25, 37, 50, 75];
+
 export function DevNavStateTab() {
   const gameState = useGameStore((state) => state.gameState);
-  const waveIndex = useGameStore((state) => state.waveIndex);
-  const maxWaveIndex = devGetMaxWaveIndex();
+  const runKills = useGameStore((state) => state.runKills);
+  const runPhase = useGameStore((state) => state.runPhase);
 
   return (
     <div className="space-y-4">
       <DevSection
-        title="Vagues"
-        description="Saute à une vague en run (lance une run si besoin). Vide ennemis et loot au saut."
+        title="Horde / kills"
+        description={`Boss à ${BOSS_KILL_THRESHOLD} kills. Force boss stoppe le spawn horde.`}
       >
         <div className="flex flex-wrap gap-1.5">
-          {Array.from({ length: maxWaveIndex }, (_, index) => {
-            const wave = index + 1;
-            const isBoss = wave === maxWaveIndex;
-            const isCurrent = waveIndex === wave && (gameState === 'PLAYING' || gameState === 'PAUSED');
+          {KILL_JUMPS.map((kills) => {
+            const isCurrent =
+              runKills === kills && (gameState === 'PLAYING' || gameState === 'PAUSED');
             return (
-              <DevButton key={wave} onClick={() => devJumpToWave(wave)}>
-                {isBoss ? `Boss (${wave})` : `Vague ${wave}`}
+              <DevButton key={kills} onClick={() => devJumpToKills(kills)}>
+                {kills} kills
                 {isCurrent ? ' ✓' : ''}
               </DevButton>
             );
           })}
+          <DevButton onClick={() => devForceBossSpawn()}>
+            Force boss
+            {runPhase === 'boss' ? ' ✓' : ''}
+          </DevButton>
         </div>
+        <p className="mt-2 text-[12px] text-white/35">
+          Kills : {runKills}/{BOSS_KILL_THRESHOLD} · Phase : {runPhase}
+        </p>
       </DevSection>
 
       <DevSection title="Breach">

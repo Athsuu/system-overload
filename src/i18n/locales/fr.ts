@@ -70,7 +70,7 @@ const LORE = {
   },
   enemies: {
     boss:
-      'L\'Ancre de Brèche est un processus corrompu massif, la rupture finale de la vague. Détruis-la pour terminer la run en victoire.',
+      'L\'Ancre de Brèche est un processus corrompu massif, le point de rupture à 75 kills. Détruis-la pour terminer la run en victoire.',
   },
 };
 
@@ -158,7 +158,7 @@ export const FR_STRINGS: GameStrings = {
     confirmYes: 'Oui',
     confirmNo: 'Non',
     statBreach: 'Brèche',
-    statWave: 'Vague',
+    statKills: 'Kills',
     statCycle: 'Cycle',
     statShards: 'Éclats hex',
     escHint: 'Échap · Reprendre',
@@ -223,15 +223,15 @@ export const FR_STRINGS: GameStrings = {
     },
     shardSalvage: {
       name: 'Récupération d\'éclats',
-      description: 'Extrait plus d\'Éclats hex de chaque kill : chaque % au-delà d\'un multiple entier est une chance d\'en dropper un de plus',
+      description: 'Extrait 1 Éclat hex supplémentaire à chaque kill purgé. Premier module économique après l\'aimant',
     },
     victoryShardBonus: {
-      name: 'Prime victoire',
-      description: 'Gagne des Éclats hex bonus quand tu contiens l\'Ancre de brèche',
+      name: 'Flux de menace',
+      description: 'Augmente le spawn et le plafond d\'ennemis vivants (+50 % / rang). Plus de chaos, plus d\'éclats, plus de risque',
     },
     shardMagnet: {
       name: 'Aimant d\'éclats',
-      description: 'Attire les éclats au sol vers ta zone de purge, de plus loin. Rayons de collecte en hex',
+      description: 'Attire les éclats au sol vers ta zone de purge, de plus loin. Confort de collecte dès le début de la quarantaine',
     },
     purgeStrike: {
       name: 'Frappe de purge',
@@ -277,17 +277,15 @@ export const FR_STRINGS: GameStrings = {
       name: 'Flux Drive',
       description: 'Débloque le toggle Flux Drive : double la vitesse de simulation en quarantaine',
     },
-    breachDissipation: {
-      name: 'Dissipation Breach',
-      description: 'Évacue la pression Breach avec le temps pendant la run. Actif à chaque cycle',
-    },
     leakSealing: {
-      name: 'Joint d\'étanchéité',
-      description: 'Réduit les pics Breach quand un processus corrompu traverse la zone. Actif à chaque cycle',
+      name: 'Blindage de quarantaine',
+      description:
+        'Amortit la riposte Surcharge à chaque hit de purge (+3 blindage / rang, max 15). Plus le processus a de PV, plus la riposte est forte ; chaque ennemi touché riposte (zone, splash, explosion)',
     },
     purgeAmplifier: {
       name: 'Amplificateur de purge',
-      description: 'Renforce les dégâts de purge contre tous les processus corrompus. Actif à chaque cycle',
+      description:
+        'Renforce les dégâts de purge contre tous les processus corrompus (+7 / rang, max +35). Actif à chaque cycle',
     },
   },
   branches: {
@@ -300,8 +298,10 @@ export const FR_STRINGS: GameStrings = {
     purgeDamageBonus: 'Bonus dégâts purge',
     shardBonusPerKill: 'Éclats hex / kill',
     shardYieldBonus: 'Bonus rendement éclats',
-    victoryShardBonus: 'Prime victoire',
+    victoryShardBonus: 'Bonus spawn',
     victoryShardTotal: 'Total victoire boss',
+    spawnRateBonus: 'Bonus cadence de spawn',
+    spawnMaxAlive: 'Ennemis vivants max',
     shardPickupRadius: 'Rayon de collecte',
     shardPickupReachBonus: 'Rayon d\'attraction',
     purgeCadence: 'Cadence de purge',
@@ -320,9 +320,9 @@ export const FR_STRINGS: GameStrings = {
     overclockDuration: 'Durée Overclock',
     overclockCooldown: 'Cooldown Overclock',
     fluxDriveSpeed: 'Vitesse simulation',
-    breachDissipationPerSec: 'Drain Breach / s',
-    leakSealingReduction: 'Réduction pénalité fuite',
-    leakPenaltyExample: 'Pénalité fuite (ex. vague)',
+    leakSealingReduction: 'Blindage',
+    leakArmor: 'Blindage',
+    hitHeatNetExample: 'Riposte / hit (trash / boss)',
     purgeAmplifierBonus: 'Bonus dégâts purge',
   },
   playerStats: {
@@ -364,7 +364,7 @@ export const FR_STRINGS: GameStrings = {
     protocols: {
       residualMemory: {
         name: 'Mémoire résiduelle',
-        description: 'Bonus d\'Éclats hex au départ après chaque Recompilation (+200 par rang, illimité)',
+        description: 'Bonus d\'Éclats hex à l\'achat et au départ après chaque Recompilation (+200 par rang, illimité)',
       },
       bootReinforcement: {
         name: 'Renfort d\'amorçage',
@@ -398,6 +398,16 @@ export const FR_STRINGS: GameStrings = {
         name: 'Chaîne explosive',
         description: 'Les kills provoqués par une explosion peuvent eux aussi exploser (+1 profondeur par rang, max 3)',
       },
+      overclock: {
+        name: 'Overclock',
+        description:
+          'Débloque le bouton Overclock : boost de purge temporaire, au prix d\'une Surcharge plus rapide. Permanent après Recompile.',
+      },
+      fluxDrive: {
+        name: 'Flux Drive',
+        description:
+          'Débloque le toggle Flux Drive : double la vitesse de simulation en quarantaine. Nécessite Overclock. Permanent après Recompile.',
+      },
     },
   },
   transitions: {
@@ -429,8 +439,6 @@ export const FR_STRINGS: GameStrings = {
     mouse: 'Souris',
     bossIncoming: 'Boss imminent',
     boss: 'BOSS',
-    wave: 'Vague',
-    waveClear: 'Vague terminée',
     overclock: 'Overclock',
     levelFormat: 'Niveau {current} / {max}',
     levelFormatUncapped: 'Niveau {n}',
@@ -439,7 +447,7 @@ export const FR_STRINGS: GameStrings = {
     gotIt: 'Compris',
     moduleTree: 'Arbre de modules',
     cycleLabel: 'Cycle {n}',
-    cycleWaveFormat: 'Cycle {cycle} · Vague {wave}/{max}',
+    cycleKillFormat: 'Cycle {cycle} · {kills}/{max}',
     cycleBossFormat: 'Cycle {cycle} · BOSS',
   },
 };

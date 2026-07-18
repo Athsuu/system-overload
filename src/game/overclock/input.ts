@@ -1,5 +1,5 @@
 import type { MutableRefObject } from 'react';
-import { isOverclockUnlocked } from '../../store/upgradeCatalog';
+import { isOverclockUnlocked } from '../../store/prestigeUnlocks';
 import { useGameStore } from '../../store/useGameStore';
 import { isNodeAnchorActive } from '../anchorSupercharge';
 import { getOverclockDurationMs, tryActivateOverclock, type OverclockState } from './state';
@@ -19,9 +19,9 @@ export function consumeOverclockActivationRequest(
   if (!overclockInputRef.activateRequested) return;
   overclockInputRef.activateRequested = false;
 
-  const { gameState, upgrades, anchoredNodes } = useGameStore.getState();
+  const { gameState, coreProtocols, anchoredNodes } = useGameStore.getState();
   if (gameState !== 'PLAYING') return;
-  if (!isOverclockUnlocked(upgrades)) return;
+  if (!isOverclockUnlocked(coreProtocols)) return;
 
   const anchorActive = isNodeAnchorActive(anchoredNodes, 'overclock');
   if (tryActivateOverclock(overclockRef.current, getOverclockDurationMs(anchorActive))) {

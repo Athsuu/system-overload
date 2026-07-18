@@ -6,7 +6,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useGameStore } from '../store/useGameStore';
 import { useRunTutorialSpotlightActive } from '../tutorial/useRunTutorialSpotlightActive';
 import { createOverclockState, requestOverclockActivation, syncOverclockDisplay, type OverclockState } from './overclock';
-import { isOverclockUnlocked } from '../store/upgradeCatalog';
+import { isOverclockUnlocked } from '../store/prestigeUnlocks';
 import { DissipationNodes } from './DissipationNodes';
 import { EffectEngine } from './EffectEngine';
 import type { GameEffect } from './effects';
@@ -23,9 +23,15 @@ import {
   trackClientPointer,
 } from './purgeInput';
 import { RunTimerEngine } from './RunTimerEngine';
-import { resetLeakBurstTracker, resetMeltdownGuard } from './overload';
+import { resetMeltdownGuard } from './overload';
 import { scaleDeltaMs } from './runTimeScale';
-import { resetWaveRuntime, WaveEngine } from './WaveEngine';
+import {
+  createHordeRuntime,
+  HordeEngine,
+  resetHordeAliveCount,
+  resetHordeRuntime,
+  resetRunKills,
+} from './horde';
 import { getScreenBounds } from './constants';
 import { isDevMenuEnabled } from '../dev/isDevMenuEnabled';
 import {
@@ -53,14 +59,7 @@ export function GameArena() {
   const screenShakeRef = useRef(createScreenShake());
   const chromaticAberrationRef = useRef(createChromaticAberrationState());
   const arenaContainerRef = useRef<Container | null>(null);
-  const waveRuntimeRef = useRef({
-    state: 'active' as const,
-    waveIndex: 1,
-    spawnGroupIndex: 0,
-    spawnedInGroup: 0,
-    intermissionMs: 0,
-    spawnAccumulatorMs: 0,
-  });
+  const hordeRuntimeRef = useRef(createHordeRuntime());
   const prevGameStateRef = useRef(gameState);
 
   useEffect(() => {
@@ -84,14 +83,14 @@ export function GameArena() {
       syncOverclockDisplay(overclockRef.current);
       screenShakeRef.current = createScreenShake();
       chromaticAberrationRef.current = createChromaticAberrationState();
-      resetWaveRuntime(waveRuntimeRef);
-      resetLeakBurstTracker();
+      resetHordeRuntime(hordeRuntimeRef);
+      resetHordeAliveCount();
+      resetRunKills();
       resetMeltdownGuard();
       if (isDevMenuEnabled()) {
         devTryActivateAutoplayOnRunStart(app.screen.width, app.screen.height);
       }
-      useGameStore.getState().setWaveIndex(1);
-      useGameStore.getState().setWavePhase('spawning');
+      useGameStore.getState().setRunPhase('horde');
     }
 
     if (gameState !== 'PLAYING') {
@@ -174,7 +173,7 @@ export function GameArena() {
       const onKeyDown = (event: KeyboardEvent) => {
         if (event.code !== 'Space' || useGameStore.getState().gameState !== 'PLAYING') return;
         if (tutorialRunSpotlightActive) return;
-        if (!isOverclockUnlocked(useGameStore.getState().upgrades)) return;
+        if (!isOverclockUnlocked(useGameStore.getState().coreProtocols)) return;
         event.preventDefault();
         requestOverclockActivation();
       };
@@ -268,12 +267,12 @@ export function GameArena() {
       <BadgeFlyParticleEngine isPlaying={isRunLive} particlesRef={badgeParticlesRef} />
       <EffectEngine isPlaying={isRunLive} effectsRef={effectsRef} />
       <RunTimerEngine isPlaying={isRunLive} overclockRef={overclockRef} screenShakeRef={screenShakeRef} />
-      <WaveEngine
+      <HordeEngine
         isPlaying={isRunLive}
         nodesRef={nodesRef}
         effectsRef={effectsRef}
         pickupsRef={pickupsRef}
-        waveRuntimeRef={waveRuntimeRef}
+        hordeRuntimeRef={hordeRuntimeRef}
       />
       <DissipationNodes
         nodesRef={nodesRef}

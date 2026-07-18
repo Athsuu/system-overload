@@ -12,7 +12,10 @@ export function syncDevAutoplayGuard(
   if (!snap.active && !snap.pendingStart) return;
 
   if (gameState === 'RUN_END') {
-    stopDevAutoplay({ reason: 'run_end', outcome: runOutcome });
+    stopDevAutoplay({
+      reason: 'run_end',
+      outcome: runOutcome,
+    });
     return;
   }
 

@@ -4,7 +4,7 @@ export interface GameEffect {
   kind: GameEffectKind;
   x: number;
   y: number;
-  waveIndex: number;
+  enemyLevel: number;
   isBossEncounter: boolean;
   elapsedMs: number;
   durationMs: number;
@@ -21,25 +21,40 @@ export const BOSS_DEATH_DURATION_MS = 400;
 export const SPAWN_FLASH_DURATION_MS = 200;
 export const FLOW_ESCAPE_FLASH_MS = 180;
 
+/** Soft cap FX éphémères — évite l’explosion de particules sous horde dense. */
+const MAX_ACTIVE_EFFECTS = 80;
+
+function trimEffectsIfNeeded(effects: GameEffect[]): void {
+  while (effects.length >= MAX_ACTIVE_EFFECTS) {
+    effects.shift();
+  }
+}
+
 function createEffect(
   partial: Omit<GameEffect, 'rotation'> & { rotation?: number },
 ): GameEffect {
   return { rotation: 0, ...partial };
 }
 
+function pushEffect(effects: GameEffect[], effect: GameEffect): void {
+  trimEffectsIfNeeded(effects);
+  effects.push(effect);
+}
+
 export function pushPurgeHit(
   effects: GameEffect[],
   x: number,
   y: number,
-  waveIndex: number,
+  enemyLevel: number,
   isBossEncounter: boolean,
 ): void {
-  effects.push(
+  pushEffect(
+    effects,
     createEffect({
       kind: 'purgeHit',
       x,
       y,
-      waveIndex,
+      enemyLevel,
       isBossEncounter,
       elapsedMs: 0,
       durationMs: PURGE_HIT_DURATION_MS,
@@ -52,15 +67,16 @@ export function pushDeathEffect(
   effects: GameEffect[],
   x: number,
   y: number,
-  waveIndex: number,
+  enemyLevel: number,
   isBossEncounter: boolean,
 ): void {
-  effects.push(
+  pushEffect(
+    effects,
     createEffect({
       kind: 'death',
       x,
       y,
-      waveIndex,
+      enemyLevel,
       isBossEncounter,
       elapsedMs: 0,
       durationMs: isBossEncounter ? BOSS_DEATH_DURATION_MS : DEATH_DURATION_MS,
@@ -72,15 +88,16 @@ export function pushSpawnFlash(
   effects: GameEffect[],
   x: number,
   y: number,
-  waveIndex: number,
+  enemyLevel: number,
   isBossEncounter: boolean,
 ): void {
-  effects.push(
+  pushEffect(
+    effects,
     createEffect({
       kind: 'spawn',
       x,
       y,
-      waveIndex,
+      enemyLevel,
       isBossEncounter,
       elapsedMs: 0,
       durationMs: SPAWN_FLASH_DURATION_MS,
@@ -92,14 +109,15 @@ export function pushFlowEscapeFlash(
   effects: GameEffect[],
   x: number,
   y: number,
-  waveIndex: number,
+  enemyLevel: number,
 ): void {
-  effects.push(
+  pushEffect(
+    effects,
     createEffect({
       kind: 'flowEscape',
       x,
       y,
-      waveIndex,
+      enemyLevel,
       isBossEncounter: false,
       elapsedMs: 0,
       durationMs: FLOW_ESCAPE_FLASH_MS,
@@ -115,12 +133,13 @@ export function pushSplashShockwave(
   outerRadius: number,
   durationMs: number,
 ): void {
-  effects.push(
+  pushEffect(
+    effects,
     createEffect({
       kind: 'splashShockwave',
       x,
       y,
-      waveIndex: 0,
+      enemyLevel: 0,
       isBossEncounter: false,
       elapsedMs: 0,
       durationMs,

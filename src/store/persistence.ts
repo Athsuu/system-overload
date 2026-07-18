@@ -5,7 +5,11 @@ import {
   sanitizeCyclesCleared,
   clampCycleIndex,
 } from './cycleTypes';
-import { sanitizeBestWaveByCycle } from './waveProgress';
+import {
+  migrateBestWaveToKills,
+  sanitizeBestKillsByCycle,
+  type BestKillsByCycle,
+} from './killProgress';
 import {
   DEFAULT_UPGRADES,
   UPGRADE_CATALOG,
@@ -33,14 +37,16 @@ export interface SaveData {
   cyclesCleared: number[];
   cyclesSinceLastAnchor: number;
   anchoredNodes: AnchoredNodes;
-  /** Meilleure vague atteinte par cycle — persisté pour équilibrage / snapshot dev. */
-  bestWaveByCycle: Record<number, number>;
+  /** Meilleur score de kills par cycle — persisté pour équilibrage / snapshot dev. */
+  bestKillsByCycle: BestKillsByCycle;
   economyV2?: boolean;
   moduleTreeV3?: boolean;
   economyV4?: boolean;
   moduleTreeV4?: boolean;
   /** Migration scaling ennemi continu + retrait modules elite. */
   enemyScalingV1?: boolean;
+  /** Migration Overclock / Flux Drive → Protocoles de la Graine. */
+  prestigeToolsV1?: boolean;
 }
 
 interface LegacySaveData {
@@ -58,6 +64,8 @@ interface LegacySaveData {
   cyclesCleared?: unknown;
   cyclesSinceLastAnchor?: number;
   anchoredNodes?: Partial<Record<string, boolean>>;
+  bestKillsByCycle?: unknown;
+  /** @deprecated migrated to bestKillsByCycle */
   bestWaveByCycle?: unknown;
   economyV2?: boolean;
   moduleTreeV3?: boolean;
@@ -68,6 +76,7 @@ interface LegacySaveData {
   /** @deprecated legacy key — migrated to moduleTreeV4 */
   skillTreeV4?: boolean;
   enemyScalingV1?: boolean;
+  prestigeToolsV1?: boolean;
 }
 
 function sanitizeAnchoredNodes(raw: LegacySaveData['anchoredNodes']): AnchoredNodes {
@@ -78,6 +87,13 @@ function sanitizeAnchoredNodes(raw: LegacySaveData['anchoredNodes']): AnchoredNo
     const value = raw[definition.id];
     if (typeof value === 'boolean') {
       anchoredNodes[definition.id as UpgradeId] = value;
+    }
+  }
+
+  for (const id of ['overclock', 'fluxDrive'] as const) {
+    const value = raw[id];
+    if (typeof value === 'boolean') {
+      anchoredNodes[id] = value;
     }
   }
 
@@ -188,6 +204,33 @@ function migrateRemovedEliteModules(
   };
 }
 
+function migratePrestigeToolsV1(
+  upgrades: UpgradeLevels,
+  coreProtocols: CoreProtocolLevels,
+  parsed: LegacySaveData,
+): { upgrades: UpgradeLevels; coreProtocols: CoreProtocolLevels; needsMigration: boolean } {
+  if (parsed.prestigeToolsV1) {
+    return { upgrades, coreProtocols, needsMigration: false };
+  }
+
+  let nextUpgrades = { ...upgrades };
+  let nextProtocols = { ...coreProtocols };
+  let migrated = false;
+
+  if (nextUpgrades.overclock >= 1) {
+    nextProtocols.overclock = Math.max(nextProtocols.overclock, 1);
+    nextUpgrades.overclock = 0;
+    migrated = true;
+  }
+  if (nextUpgrades.fluxDrive >= 1) {
+    nextProtocols.fluxDrive = Math.max(nextProtocols.fluxDrive, 1);
+    nextUpgrades.fluxDrive = 0;
+    migrated = true;
+  }
+
+  return { upgrades: nextUpgrades, coreProtocols: nextProtocols, needsMigration: migrated };
+}
+
 export function loadSave(): SaveData | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
@@ -236,7 +279,10 @@ export function loadSave(): SaveData | null {
         ? Math.max(0, Math.floor(parsed.cyclesSinceLastAnchor))
         : 0;
     const anchoredNodes = sanitizeAnchoredNodes(parsed.anchoredNodes);
-    const bestWaveByCycle = sanitizeBestWaveByCycle(parsed.bestWaveByCycle);
+    const bestKillsByCycle =
+      parsed.bestKillsByCycle !== undefined
+        ? sanitizeBestKillsByCycle(parsed.bestKillsByCycle)
+        : migrateBestWaveToKills(parsed.bestWaveByCycle);
 
     const recompileDepth = Math.max(
       0,
@@ -246,7 +292,10 @@ export function loadSave(): SaveData | null {
       typeof parsed.seedFragments === 'number'
         ? Math.max(0, parsed.seedFragments)
         : DEFAULT_PRESTIGE.seedFragments;
-    const coreProtocols = sanitizeCoreProtocols(parsed.coreProtocols);
+    const coreProtocolsBefore = sanitizeCoreProtocols(parsed.coreProtocols);
+    const prestigeToolsMigration = migratePrestigeToolsV1(upgrades, coreProtocolsBefore, parsed);
+    upgrades = prestigeToolsMigration.upgrades;
+    const coreProtocols = prestigeToolsMigration.coreProtocols;
 
     const saveData: SaveData = {
       bankShards,
@@ -262,12 +311,13 @@ export function loadSave(): SaveData | null {
       cyclesCleared,
       cyclesSinceLastAnchor,
       anchoredNodes,
-      bestWaveByCycle,
+      bestKillsByCycle,
       economyV2: true,
       moduleTreeV3: true,
       economyV4: true,
       moduleTreeV4: true,
       enemyScalingV1: true,
+      prestigeToolsV1: true,
     };
 
     if (
@@ -276,6 +326,7 @@ export function loadSave(): SaveData | null {
       needsV4Migration ||
       needsKeyRename ||
       eliteMigration.needsMigration ||
+      prestigeToolsMigration.needsMigration ||
       upgradesBeforeBaseline !== upgrades
     ) {
       saveGame(saveData);
@@ -297,6 +348,7 @@ export function saveGame(data: SaveData): void {
       economyV4: true,
       moduleTreeV4: true,
       enemyScalingV1: true,
+      prestigeToolsV1: true,
     }),
   );
 }

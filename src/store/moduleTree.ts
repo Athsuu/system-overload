@@ -12,7 +12,7 @@ export type BranchId = 'degats' | 'thermique';
 export type ModuleIconBranch = BranchId | 'flux';
 
 /** Per-node glyph on the module tree (branch defaults + dedicated marks). */
-export type ModuleGlyphId = ModuleIconBranch | 'shard' | 'magnet' | 'cadence' | 'crit' | 'reach' | 'splash' | 'victory' | 'dissipate' | 'seal' | 'amplify';
+export type ModuleGlyphId = ModuleIconBranch | 'shard' | 'magnet' | 'cadence' | 'crit' | 'reach' | 'splash' | 'victory' | 'seal' | 'amplify';
 
 export type TreeNodeId = UpgradeId;
 export type TreeParentId = 'root' | TreeNodeId;
@@ -83,7 +83,7 @@ export function getModuleIconBranchMeta(): Record<ModuleIconBranch, { label: str
   };
 }
 
-const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
+const UPGRADE_BRANCH: Partial<Record<UpgradeId, BranchId>> = {
   node0Boot: 'thermique',
   shardSalvage: 'thermique',
   victoryShardBonus: 'thermique',
@@ -97,16 +97,12 @@ const UPGRADE_BRANCH: Record<UpgradeId, BranchId> = {
   threadCoolant: 'thermique',
   killBreachRelief: 'thermique',
   meltdownThreshold: 'thermique',
-  overclock: 'degats',
-  fluxDrive: 'thermique',
-  breachDissipation: 'thermique',
   leakSealing: 'thermique',
   purgeAmplifier: 'degats',
 };
 
 const MODULE_ICON_BRANCH: Partial<Record<UpgradeId, ModuleIconBranch>> = {
   node0Boot: 'flux',
-  fluxDrive: 'flux',
 };
 
 export function getModuleIconBranch(id: UpgradeId, branch: BranchId): ModuleIconBranch {
@@ -120,10 +116,8 @@ export function getModuleGlyphId(id: UpgradeId, branch: BranchId): ModuleGlyphId
   if (id === 'purgeReach') return 'reach';
   if (id === 'purgeSplash') return 'splash';
   if (id === 'shardSalvage') return 'shard';
-  if (id === 'victoryShardBonus') return 'victory';
+  if (id === 'victoryShardBonus') return 'amplify';
   if (id === 'shardMagnet') return 'magnet';
-  if (id === 'fluxDrive') return 'flux';
-  if (id === 'breachDissipation') return 'dissipate';
   if (id === 'leakSealing') return 'seal';
   if (id === 'purgeAmplifier') return 'amplify';
   return getModuleIconBranch(id, branch);
@@ -153,7 +147,7 @@ export interface ModuleNodeDef extends ModuleNodeLayout {
   description: string;
 }
 
-/** Radial module tree — layout global export 2026-07-15. */
+/** Radial module tree — layout global export 2026-07-17. */
 export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
   {
     id: 'node0Boot',
@@ -171,34 +165,10 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     requires: requireLevel('node0Boot', 1),
   },
   {
-    id: 'meltdownThreshold',
-    kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: positionFromAxial(0, -2),
-    branch: 'thermique',
-    requires: requireLevel('node0Boot', 1),
-  },
-  {
-    id: 'shardSalvage',
+    id: 'shardMagnet',
     kind: 'upgrade',
     parentId: 'node0Boot',
     position: positionFromAxial(2, -1),
-    branch: 'thermique',
-    requires: requireLevel('node0Boot', 1),
-  },
-  {
-    id: 'overclock',
-    kind: 'upgrade',
-    parentId: 'node0Boot',
-    position: positionFromAxial(-2, 1),
-    branch: 'degats',
-    requires: requireLevel('node0Boot', 1),
-  },
-  {
-    id: 'fluxDrive',
-    kind: 'upgrade',
-    parentId: 'overclock',
-    position: positionFromAxial(-2, 2),
     branch: 'thermique',
     requires: requireLevel('node0Boot', 1),
   },
@@ -235,38 +205,6 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     requires: requireLevel('purgeReach', 1),
   },
   {
-    id: 'threadCoolant',
-    kind: 'upgrade',
-    parentId: 'meltdownThreshold',
-    position: positionFromAxial(-2, -2),
-    branch: 'thermique',
-    requires: requireLevel('meltdownThreshold', 1),
-  },
-  {
-    id: 'killBreachRelief',
-    kind: 'upgrade',
-    parentId: 'meltdownThreshold',
-    position: positionFromAxial(2, -4),
-    branch: 'thermique',
-    requires: requireLevel('meltdownThreshold', 1),
-  },
-  {
-    id: 'breachDissipation',
-    kind: 'upgrade',
-    parentId: 'meltdownThreshold',
-    position: positionFromAxial(-1, -3),
-    branch: 'thermique',
-    requires: requireLevel('meltdownThreshold', 1),
-  },
-  {
-    id: 'leakSealing',
-    kind: 'upgrade',
-    parentId: 'meltdownThreshold',
-    position: positionFromAxial(1, -4),
-    branch: 'thermique',
-    requires: requireLevel('meltdownThreshold', 1),
-  },
-  {
     id: 'purgeAmplifier',
     kind: 'upgrade',
     parentId: 'purgeCadence',
@@ -283,20 +221,52 @@ export const MODULE_TREE_GRAPH: ModuleTreeGraphNode[] = [
     requires: requireLevel('purgeAmplifier', 1),
   },
   {
-    id: 'victoryShardBonus',
+    id: 'shardSalvage',
     kind: 'upgrade',
-    parentId: 'shardSalvage',
-    position: positionFromAxial(4, -1),
-    branch: 'thermique',
-    requires: requireLevel('shardSalvage', 1),
-  },
-  {
-    id: 'shardMagnet',
-    kind: 'upgrade',
-    parentId: 'shardSalvage',
+    parentId: 'shardMagnet',
     position: positionFromAxial(4, -3),
     branch: 'thermique',
-    requires: requireLevel('shardSalvage', 1),
+    requires: requireLevel('shardMagnet', 1),
+  },
+  {
+    id: 'victoryShardBonus',
+    kind: 'upgrade',
+    parentId: 'shardMagnet',
+    position: positionFromAxial(4, -1),
+    branch: 'thermique',
+    requires: requireLevel('shardMagnet', 1),
+  },
+  {
+    id: 'threadCoolant',
+    kind: 'upgrade',
+    parentId: 'node0Boot',
+    position: positionFromAxial(0, -2),
+    branch: 'thermique',
+    requires: requireLevel('node0Boot', 1),
+  },
+  {
+    id: 'leakSealing',
+    kind: 'upgrade',
+    parentId: 'threadCoolant',
+    position: positionFromAxial(0, -4),
+    branch: 'thermique',
+    requires: requireLevel('threadCoolant', 1),
+  },
+  {
+    id: 'meltdownThreshold',
+    kind: 'upgrade',
+    parentId: 'threadCoolant',
+    position: positionFromAxial(2, -4),
+    branch: 'thermique',
+    requires: requireLevel('threadCoolant', 1),
+  },
+  {
+    id: 'killBreachRelief',
+    kind: 'upgrade',
+    parentId: 'threadCoolant',
+    position: positionFromAxial(-2, -2),
+    branch: 'thermique',
+    requires: requireLevel('threadCoolant', 1),
   },
 ];
 
@@ -305,7 +275,7 @@ export const MODULE_TREE_NODES: ModuleNodeLayout[] = MODULE_TREE_GRAPH.map((node
   if (!definition) throw new Error(`Missing catalog entry: ${node.id}`);
   return {
     ...definition,
-    branch: UPGRADE_BRANCH[node.id],
+    branch: node.branch,
     requires: node.requires,
     parentId: node.parentId,
     position: node.position,
@@ -365,5 +335,9 @@ export function getParentRequirementLabel(requirements: UpgradeRequirement[] | u
 }
 
 export function getUpgradeBranch(id: UpgradeId): BranchId {
-  return UPGRADE_BRANCH[id];
+  const branch = UPGRADE_BRANCH[id];
+  if (!branch) {
+    throw new Error(`[moduleTree] No branch for upgrade id: ${id}`);
+  }
+  return branch;
 }

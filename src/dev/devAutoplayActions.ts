@@ -9,6 +9,7 @@ import {
 } from './devAutoplay';
 import { isDevInRun } from './devAutoplayRunState';
 import { forceStopDevAutoplayRun } from './devAutoplayGuard';
+import { applyRobotSessionToGame } from './robotSession';
 
 function prepareHubForRun(): void {
   const { gameState } = useGameStore.getState();
@@ -41,6 +42,9 @@ export async function devStartAutoplayRun(): Promise<boolean> {
   if (snap.pendingStart && (isDevInRun(gameState) || useTransitionStore.getState().isBlocking)) {
     return true;
   }
+
+  // Skill + cycle débloqué ; modules = build joueur inchangé.
+  applyRobotSessionToGame();
 
   const store = useGameStore.getState();
   requestDevAutoplayStart();

@@ -1,5 +1,3 @@
-export const REGULAR_WAVES_PER_CYCLE = 10;
-
 export interface CycleProgress {
   highestCycleUnlocked: number;
   selectedCycle: number;

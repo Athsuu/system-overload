@@ -7,7 +7,9 @@ export type CoreProtocolId =
   | 'explosivePurge'
   | 'explosivePurgeRadius'
   | 'explosivePurgeDamage'
-  | 'explosivePurgeChain';
+  | 'explosivePurgeChain'
+  | 'overclock'
+  | 'fluxDrive';
 
 export type CoreProtocolKind = 'fundamental' | 'skillUnlock' | 'skillBranchNode';
 
@@ -21,6 +23,8 @@ export interface CoreProtocolLevels {
   explosivePurgeRadius: number;
   explosivePurgeDamage: number;
   explosivePurgeChain: number;
+  overclock: number;
+  fluxDrive: number;
 }
 
 export interface PrestigeState {
@@ -43,6 +47,8 @@ export const DEFAULT_CORE_PROTOCOLS: CoreProtocolLevels = {
   explosivePurgeRadius: 0,
   explosivePurgeDamage: 0,
   explosivePurgeChain: 0,
+  overclock: 0,
+  fluxDrive: 0,
 };
 
 export const DEFAULT_PRESTIGE: PrestigeState = {

@@ -19,6 +19,8 @@ import {
   listSkillUnlockIds,
 } from '../hub/seedProtocolLayout';
 import { SkillBranchTree } from '../hub/SkillBranchTree';
+import { PrestigeAnchorControls } from '../hub/PrestigeAnchorControls';
+import { isPrestigeAnchorToolId } from '../../store/prestigeUnlocks';
 import { getCoreProtocolTierVisual, SEED_PROTOCOL_VISUAL } from '../hub/seedProtocolTheme';
 
 type SeedProtocolsTab = 'fundamentals' | 'skills';
@@ -141,6 +143,9 @@ function MonolithTierCard({
           >
             {purchaseLabel}
           </button>
+          {isPrestigeAnchorToolId(id) ? (
+            <PrestigeAnchorControls protocolId={id} owned={level >= 1} />
+          ) : null}
         </div>
       )}
     </div>

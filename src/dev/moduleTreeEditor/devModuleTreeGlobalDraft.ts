@@ -78,9 +78,16 @@ function loadGlobalFromStorage(): DevModuleTreeGlobalEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed
+    const loaded = parsed
       .map(normalizeStoredEntry)
       .filter((entry): entry is DevModuleTreeGlobalEntry => entry !== null);
+    const cleaned = loaded.filter(
+      (entry) => entry.id !== 'placeholder_02' && entry.id !== 'placeholder_03',
+    );
+    if (cleaned.length !== loaded.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
     return [];
   }

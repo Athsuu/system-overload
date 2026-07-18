@@ -70,7 +70,7 @@ const LORE = {
   },
   enemies: {
     boss:
-      'The Breach Anchor is a massive corrupted process, the final rupture of the wave. Destroy it to end the run in victory.',
+      'The Breach Anchor is a massive corrupted process, the rupture point at 75 kills. Destroy it to end the run in victory.',
   },
 };
 
@@ -158,7 +158,7 @@ export const EN_STRINGS: GameStrings = {
     confirmYes: 'Yes',
     confirmNo: 'No',
     statBreach: 'Breach',
-    statWave: 'Wave',
+    statKills: 'Kills',
     statCycle: 'Cycle',
     statShards: 'Hex Shards',
     escHint: 'Esc · Resume',
@@ -223,15 +223,15 @@ export const EN_STRINGS: GameStrings = {
     },
     shardSalvage: {
       name: 'Shard Salvage',
-      description: 'Pulls more Hex Shards from each kill: any % past a whole multiple is a chance to drop one extra',
+      description: 'Extract 1 extra Hex Shard from every purged kill. First economy module after the magnet',
     },
     victoryShardBonus: {
-      name: 'Victory Bonus',
-      description: 'Earn bonus Hex Shards when you contain the Breach Anchor',
+      name: 'Threat Feed',
+      description: 'Raise spawn rate and max living enemies (+50 % per rank). More chaos, more shards, more risk',
     },
     shardMagnet: {
       name: 'Shard Magnet',
-      description: 'Draw dropped shards toward your purge zone from farther away. Collection radii in hex',
+      description: 'Draw dropped shards toward your purge zone from farther away. Early quarantine comfort — collection radii in hex',
     },
     purgeStrike: {
       name: 'Purge Strike',
@@ -277,17 +277,15 @@ export const EN_STRINGS: GameStrings = {
       name: 'Flux Drive',
       description: 'Unlocks the Flux Drive toggle: doubles simulation speed inside quarantine',
     },
-    breachDissipation: {
-      name: 'Breach Dissipation',
-      description: 'Bleed off Breach pressure over time during a run. Works in every cycle',
-    },
     leakSealing: {
-      name: 'Leak Seal',
-      description: 'Reduce Breach spikes when corrupted processes slip through. Works in every cycle',
+      name: 'Quarantine Plating',
+      description:
+        'Softens the Overload backlash on each purge hit (+3 plating / rank, max 15). Higher max HP hits back harder; every enemy struck retaliates (main zone, splash, explosion)',
     },
     purgeAmplifier: {
       name: 'Purge Amplifier',
-      description: 'Boost purge hit damage against all corrupted processes. Works in every cycle',
+      description:
+        'Boosts purge hit damage against all corrupted processes (+7 / rank, max +35). Works in every cycle',
     },
   },
   branches: {
@@ -300,8 +298,10 @@ export const EN_STRINGS: GameStrings = {
     purgeDamageBonus: 'Purge damage bonus',
     shardBonusPerKill: 'Hex Shards / kill',
     shardYieldBonus: 'Shard yield bonus',
-    victoryShardBonus: 'Victory bonus',
+    victoryShardBonus: 'Spawn bonus',
     victoryShardTotal: 'Victory payout total',
+    spawnRateBonus: 'Spawn rate bonus',
+    spawnMaxAlive: 'Max living enemies',
     shardPickupRadius: 'Shard pickup radius',
     shardPickupReachBonus: 'Shard attraction radius',
     purgeCadence: 'Purge cadence',
@@ -320,9 +320,9 @@ export const EN_STRINGS: GameStrings = {
     overclockDuration: 'Overclock duration',
     overclockCooldown: 'Overclock cooldown',
     fluxDriveSpeed: 'Simulation speed',
-    breachDissipationPerSec: 'Breach drain / sec',
-    leakSealingReduction: 'Leak penalty reduction',
-    leakPenaltyExample: 'Leak penalty (example wave)',
+    leakSealingReduction: 'Plating',
+    leakArmor: 'Plating',
+    hitHeatNetExample: 'Hit backlash (trash / boss)',
     purgeAmplifierBonus: 'Purge damage bonus',
   },
   playerStats: {
@@ -364,7 +364,7 @@ export const EN_STRINGS: GameStrings = {
     protocols: {
       residualMemory: {
         name: 'Residual Memory',
-        description: 'Start each new cycle with bonus Hex Shards after a Recompile (+200 per rank, uncapped)',
+        description: 'Gain Hex Shards on purchase and at the start after each Recompile (+200 per rank, uncapped)',
       },
       bootReinforcement: {
         name: 'Boot Reinforcement',
@@ -398,6 +398,16 @@ export const EN_STRINGS: GameStrings = {
         name: 'Explosive Chain',
         description: 'Kills caused by an explosion can explode too (+1 chain depth per rank, max 3)',
       },
+      overclock: {
+        name: 'Overclock',
+        description:
+          'Unlocks the Overclock button: temporary purge boost at the cost of faster Overload. Permanent after Recompile.',
+      },
+      fluxDrive: {
+        name: 'Flux Drive',
+        description:
+          'Unlocks the Flux Drive toggle: double simulation speed in quarantine. Requires Overclock. Permanent after Recompile.',
+      },
     },
   },
   transitions: {
@@ -429,8 +439,6 @@ export const EN_STRINGS: GameStrings = {
     mouse: 'Mouse',
     bossIncoming: 'Boss Incoming',
     boss: 'BOSS',
-    wave: 'Wave',
-    waveClear: 'Wave Clear',
     overclock: 'Overclock',
     levelFormat: 'Level {current} / {max}',
     levelFormatUncapped: 'Level {n}',
@@ -439,7 +447,7 @@ export const EN_STRINGS: GameStrings = {
     gotIt: 'Got it',
     moduleTree: 'Module Tree',
     cycleLabel: 'Cycle {n}',
-    cycleWaveFormat: 'Cycle {cycle} · Wave {wave}/{max}',
+    cycleKillFormat: 'Cycle {cycle} · {kills}/{max}',
     cycleBossFormat: 'Cycle {cycle} · BOSS',
   },
 };

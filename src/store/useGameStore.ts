@@ -6,12 +6,14 @@ import {
   getCoreProtocolCost,
   getCoreProtocolDefinition,
   getCoreProtocolState,
+  RESIDUAL_MEMORY_SHARDS_PER_LEVEL,
 } from './coreProtocolCatalog';
 import {
   canRecompile,
   computeResidualMemoryStartingShards,
   computeSeedFragmentsGain,
 } from './prestigeLogic';
+import { isFluxDriveUnlocked, isModuleOwnedForAnchor } from './prestigeUnlocks';
 import { skipTutorialsAfterRecompile } from './playerReset';
 import {
   ANCHOR_SUPERCHARGE_COST,
@@ -28,7 +30,6 @@ import {
   type UpgradeLevels,
 } from './upgradeCatalog';
 import { ANCHOR_CYCLES_PER_FRAGMENT } from '../game/anchorSupercharge';
-import { computeVictoryShardBonus } from '../game/moduleEffects';
 import {
   clampCycleIndex,
   DEFAULT_CYCLE_PROGRESS,
@@ -38,12 +39,14 @@ import { getBreachCap } from '../game/runConfig';
 import { resetRunElapsedMs } from '../game/runElapsed';
 import { getModuleNode } from './moduleTree';
 import {
-  DEFAULT_BEST_WAVE_BY_CYCLE,
-  mergeBestWaveRecord,
-  type BestWaveByCycle,
-} from './waveProgress';
+  DEFAULT_BEST_KILLS_BY_CYCLE,
+  mergeBestKillsRecord,
+  type BestKillsByCycle,
+} from './killProgress';
 import { markTutorialSignal } from '../tutorial/tutorialSignals';
 import { clearRunArchAmbientHeard } from '../tutorial/archAmbientPersistence';
+import { resetRunKills } from '../game/horde/killCounter';
+import { resetRunOverloadTelemetry } from '../game/runOverloadTelemetry';
 
 export type GameState =
   | 'MAIN_MENU'
@@ -55,7 +58,7 @@ export type GameState =
   | 'SEED_PROTOCOLS'
   | 'GAME_OVER';
 export type RunOutcome = 'victory_boss' | 'defeat_breach';
-export type WavePhase = 'idle' | 'spawning' | 'combat' | 'intermission' | 'boss';
+export type RunPhase = 'idle' | 'horde' | 'boss';
 
 interface GameStore {
   gameState: GameState;
@@ -77,13 +80,12 @@ interface GameStore {
   cyclesCleared: number[];
   cyclesSinceLastAnchor: number;
   anchoredNodes: AnchoredNodes;
-  bestWaveByCycle: BestWaveByCycle;
+  bestKillsByCycle: BestKillsByCycle;
   activeCycle: number;
   runOutcome: RunOutcome | null;
   prestigeUnlockedThisRun: boolean;
-  waveIndex: number;
-  wavePhase: WavePhase;
-  showWaveClear: boolean;
+  runKills: number;
+  runPhase: RunPhase;
   fluxDriveEnabled: boolean;
   seedProtocolsReturnState: Extract<GameState, 'MENU' | 'UPGRADING'>;
   setGameState: (state: GameState) => void;
@@ -105,9 +107,8 @@ interface GameStore {
   startRun: (cycle?: number) => void;
   setSelectedCycle: (cycle: number) => void;
   toggleFluxDriveEnabled: () => void;
-  setWaveIndex: (waveIndex: number) => void;
-  setWavePhase: (phase: WavePhase) => void;
-  setShowWaveClear: (show: boolean) => void;
+  setRunKills: (kills: number) => void;
+  setRunPhase: (phase: RunPhase) => void;
   persistProgressSnapshot: () => void;
   returnToMainMenu: () => void;
 }
@@ -126,7 +127,7 @@ function buildSaveSnapshot(state: {
   cyclesCleared: number[];
   cyclesSinceLastAnchor: number;
   anchoredNodes: AnchoredNodes;
-  bestWaveByCycle: BestWaveByCycle;
+  bestKillsByCycle: BestKillsByCycle;
 }): SaveData {
   return {
     bankShards: state.bankShards,
@@ -142,7 +143,7 @@ function buildSaveSnapshot(state: {
     cyclesCleared: state.cyclesCleared,
     cyclesSinceLastAnchor: state.cyclesSinceLastAnchor,
     anchoredNodes: state.anchoredNodes,
-    bestWaveByCycle: state.bestWaveByCycle,
+    bestKillsByCycle: state.bestKillsByCycle,
   };
 }
 
@@ -172,19 +173,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
   cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
   cyclesSinceLastAnchor: 0,
   anchoredNodes: {},
-  bestWaveByCycle: { ...DEFAULT_BEST_WAVE_BY_CYCLE },
+  bestKillsByCycle: { ...DEFAULT_BEST_KILLS_BY_CYCLE },
   activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
   runOutcome: null,
   prestigeUnlockedThisRun: false,
   seedProtocolsReturnState: 'MENU',
-  waveIndex: 0,
-  wavePhase: 'idle',
-  showWaveClear: false,
+  runKills: 0,
+  runPhase: 'idle',
   fluxDriveEnabled: persistedSettings.fluxDriveEnabled,
   setGameState: (gameState) => set({ gameState }),
   pauseRun: () => {
     if (get().gameState !== 'PLAYING') return;
-    set({ gameState: 'PAUSED' });
+    set((state) => {
+      const bestKillsByCycle = mergeBestKillsRecord(
+        state.bestKillsByCycle,
+        state.activeCycle,
+        state.runKills,
+      );
+      const next = { ...state, gameState: 'PAUSED' as const, bestKillsByCycle };
+      persistProgress(next);
+      return { gameState: 'PAUSED' as const, bestKillsByCycle };
+    });
   },
   resumeRun: () => {
     if (get().gameState !== 'PAUSED') return;
@@ -193,7 +202,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   togglePause: () => {
     const state = get();
     if (state.gameState === 'PLAYING') {
-      set({ gameState: 'PAUSED' });
+      get().pauseRun();
       return;
     }
     if (state.gameState === 'PAUSED') {
@@ -202,17 +211,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   abortRun: () =>
     set((state) => {
-      persistProgress(state);
+      const bestKillsByCycle = mergeBestKillsRecord(
+        state.bestKillsByCycle,
+        state.activeCycle,
+        state.runKills,
+      );
+      persistProgress({ ...state, bestKillsByCycle });
       return {
         gameState: 'UPGRADING',
         breachProgress: 0,
         runShards: 0,
         runOutcome: null,
-        waveIndex: 0,
-        wavePhase: 'idle',
-        showWaveClear: false,
+        runKills: 0,
+        runPhase: 'idle',
         anchorFragmentEarnedThisRun: false,
         activeCycle: state.selectedCycle,
+        bestKillsByCycle,
       };
     }),
   addBreachProgress: (delta) =>
@@ -234,10 +248,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endRun: (outcome) =>
     set((state) => {
-      const victoryBonus =
-        outcome === 'victory_boss'
-          ? BOSS_VICTORY_SHARD_BONUS + computeVictoryShardBonus(state.upgrades, state.anchoredNodes)
-          : 0;
+      const victoryBonus = outcome === 'victory_boss' ? BOSS_VICTORY_SHARD_BONUS : 0;
       const bankShards = state.bankShards + victoryBonus;
       const lastRunShards = state.runShards + victoryBonus;
 
@@ -263,10 +274,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       const selectedCycle = Math.min(state.selectedCycle, highestCycleUnlocked);
-      const bestWaveByCycle = mergeBestWaveRecord(
-        state.bestWaveByCycle,
+      const bestKillsByCycle = mergeBestKillsRecord(
+        state.bestKillsByCycle,
         state.activeCycle,
-        state.waveIndex,
+        state.runKills,
       );
 
       const next = {
@@ -277,7 +288,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         cyclesSinceLastAnchor,
         highestCycleUnlocked,
         selectedCycle,
-        bestWaveByCycle,
+        bestKillsByCycle,
       };
       persistProgress(next);
 
@@ -288,7 +299,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         cyclesSinceLastAnchor,
         highestCycleUnlocked,
         selectedCycle,
-        bestWaveByCycle,
+        bestKillsByCycle,
         runShards: 0,
         lastRunShards,
         lastRunAnchorFragments: anchorGain,
@@ -345,7 +356,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   purchaseAnchorSupercharge: (id) => {
     const state = get();
     if (!isAnchorSuperchargeEligible(id)) return false;
-    if (state.upgrades[id] < 1) return false;
+    if (!isModuleOwnedForAnchor(id, state.upgrades, state.coreProtocols)) return false;
     if (state.anchoredNodes[id] !== undefined) return false;
     if (state.bankAnchorFragments < ANCHOR_SUPERCHARGE_COST) return false;
 
@@ -373,8 +384,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const cost = getCoreProtocolCost(definition, level);
     const seedFragments = state.seedFragments - cost;
     const coreProtocols = { ...state.coreProtocols, [id]: level + 1 };
-    persistProgress({ ...state, seedFragments, coreProtocols });
-    set({ seedFragments, coreProtocols });
+    // Mémoire résiduelle : +200 tout de suite (sinon l’achat post-Recompile n’aide qu’au suivant).
+    const bankShards =
+      id === 'residualMemory'
+        ? state.bankShards + RESIDUAL_MEMORY_SHARDS_PER_LEVEL
+        : state.bankShards;
+    persistProgress({ ...state, seedFragments, coreProtocols, bankShards });
+    set({ seedFragments, coreProtocols, bankShards });
     return true;
   },
   recompile: () => {
@@ -441,6 +457,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startRun: (cycle) => {
     clearRunArchAmbientHeard();
     resetRunElapsedMs();
+    resetRunKills();
+    resetRunOverloadTelemetry();
     const state = get();
     const requested = cycle ?? state.selectedCycle;
     const activeCycle = clampCycleIndex(Math.min(requested, state.highestCycleUnlocked));
@@ -455,42 +473,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
       anchorFragmentEarnedThisRun: false,
       activeCycle,
       selectedCycle,
-      waveIndex: 1,
-      wavePhase: 'spawning',
-      showWaveClear: false,
+      runKills: 0,
+      runPhase: 'horde',
     });
   },
   toggleFluxDriveEnabled: () => {
     const state = get();
-    if (state.upgrades.fluxDrive < 1) return;
+    if (!isFluxDriveUnlocked(state.coreProtocols)) return;
     const fluxDriveEnabled = !state.fluxDriveEnabled;
     saveFluxDriveEnabled(fluxDriveEnabled);
     markTutorialSignal('fluxDriveToggled');
     set({ fluxDriveEnabled });
   },
-  setWaveIndex: (waveIndex) =>
-    set((state) => {
-      const bestWaveByCycle = mergeBestWaveRecord(
-        state.bestWaveByCycle,
-        state.activeCycle,
-        waveIndex,
-      );
-      if (bestWaveByCycle === state.bestWaveByCycle) {
-        return { waveIndex };
-      }
-
-      const next = { ...state, waveIndex, bestWaveByCycle };
-      persistProgress(next);
-      return { waveIndex, bestWaveByCycle };
-    }),
-  setWavePhase: (wavePhase) => set({ wavePhase }),
-  setShowWaveClear: (showWaveClear) => set({ showWaveClear }),
+  setRunKills: (kills) =>
+    set({ runKills: Math.max(0, Math.floor(kills)) }),
+  setRunPhase: (runPhase) => set({ runPhase }),
   persistProgressSnapshot: () => {
-    persistProgress(get());
+    const state = get();
+    const bestKillsByCycle = mergeBestKillsRecord(
+      state.bestKillsByCycle,
+      state.activeCycle,
+      state.runKills,
+    );
+    if (bestKillsByCycle !== state.bestKillsByCycle) {
+      set({ bestKillsByCycle });
+      persistProgress({ ...state, bestKillsByCycle });
+      return;
+    }
+    persistProgress(state);
   },
   returnToMainMenu: () => {
     const state = get();
-    persistProgress(state);
+    const bestKillsByCycle = mergeBestKillsRecord(
+      state.bestKillsByCycle,
+      state.activeCycle,
+      state.runKills,
+    );
+    persistProgress({ ...state, bestKillsByCycle });
     set({
       gameState: 'MAIN_MENU',
       breachProgress: 0,
@@ -500,10 +519,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       runOutcome: null,
       prestigeUnlockedThisRun: false,
       anchorFragmentEarnedThisRun: false,
-      waveIndex: 0,
-      wavePhase: 'idle',
-      showWaveClear: false,
+      runKills: 0,
+      runPhase: 'idle',
       activeCycle: state.selectedCycle,
+      bestKillsByCycle,
     });
   },
 }));
@@ -530,13 +549,12 @@ export function resetToFreshPlayer(): void {
     cyclesCleared: [...DEFAULT_CYCLE_PROGRESS.cyclesCleared],
     cyclesSinceLastAnchor: 0,
     anchoredNodes: {},
-    bestWaveByCycle: { ...DEFAULT_BEST_WAVE_BY_CYCLE },
+    bestKillsByCycle: { ...DEFAULT_BEST_KILLS_BY_CYCLE },
     activeCycle: DEFAULT_CYCLE_PROGRESS.selectedCycle,
     runOutcome: null,
     prestigeUnlockedThisRun: false,
-    waveIndex: 0,
-    wavePhase: 'idle',
-    showWaveClear: false,
+    runKills: 0,
+    runPhase: 'idle',
     fluxDriveEnabled: settings.fluxDriveEnabled,
   });
   useGameStore.getState().persistProgressSnapshot();

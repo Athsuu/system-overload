@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { getBreachPercent } from '../../game/runConfig';
 import { formatRunElapsedMs, runElapsedMsRef } from '../../game/runElapsed';
 import { overclockDisplayRef, requestOverclockActivation } from '../../game/overclock';
-import { REGULAR_WAVE_COUNT } from '../../game/waveConfig';
+import { BOSS_KILL_THRESHOLD } from '../../game/horde';
 import { useGameStrings } from '../../i18n/useGameStrings';
 import { useGameStore } from '../../store/useGameStore';
-import { isFluxDriveUnlocked, isOverclockUnlocked } from '../../store/upgradeCatalog';
+import { isFluxDriveUnlocked, isOverclockUnlocked } from '../../store/prestigeUnlocks';
 import { BREACH_URGENT_THRESHOLD, DARK_HEX } from '../../theme/darkHexTerminal';
 import { useRunTutorialSpotlightActive } from '../../tutorial/useRunTutorialSpotlightActive';
 import { OverclockButton } from './OverclockButton';
@@ -13,12 +13,12 @@ import { ArchRunDialogue } from '../arch/ArchRunDialogue';
 
 function FluxDriveToggle() {
   const gameState = useGameStore((state) => state.gameState);
-  const upgrades = useGameStore((state) => state.upgrades);
+  const coreProtocols = useGameStore((state) => state.coreProtocols);
   const fluxDriveEnabled = useGameStore((state) => state.fluxDriveEnabled);
   const toggleFluxDriveEnabled = useGameStore((state) => state.toggleFluxDriveEnabled);
   const strings = useGameStrings();
 
-  if (!isFluxDriveUnlocked(upgrades) || gameState !== 'PLAYING') return null;
+  if (!isFluxDriveUnlocked(coreProtocols) || gameState !== 'PLAYING') return null;
 
   return (
     <div
@@ -48,12 +48,11 @@ function FluxDriveToggle() {
   );
 }
 
-function WaveCounter() {
+function KillCounter() {
   const gameState = useGameStore((state) => state.gameState);
   const activeCycle = useGameStore((state) => state.activeCycle);
-  const waveIndex = useGameStore((state) => state.waveIndex);
-  const wavePhase = useGameStore((state) => state.wavePhase);
-  const showWaveClear = useGameStore((state) => state.showWaveClear);
+  const runKills = useGameStore((state) => state.runKills);
+  const runPhase = useGameStore((state) => state.runPhase);
   const strings = useGameStrings();
   const [elapsedLabel, setElapsedLabel] = useState('00:00');
 
@@ -72,33 +71,22 @@ function WaveCounter() {
     return () => cancelAnimationFrame(frameId);
   }, [gameState]);
 
-  const isBoss = wavePhase === 'boss' || waveIndex > REGULAR_WAVE_COUNT;
-  const currentWave = Math.min(waveIndex, REGULAR_WAVE_COUNT);
+  const isBoss = runPhase === 'boss';
   const label = isBoss
     ? strings.ui.cycleBossFormat.replace('{cycle}', String(activeCycle))
-    : strings.ui.cycleWaveFormat
+    : strings.ui.cycleKillFormat
         .replace('{cycle}', String(activeCycle))
-        .replace('{wave}', String(currentWave))
-        .replace('{max}', String(REGULAR_WAVE_COUNT));
+        .replace('{kills}', String(runKills))
+        .replace('{max}', String(BOSS_KILL_THRESHOLD));
 
   const statusClass = 'text-sm tracking-[0.3em] uppercase';
-  const statusColor = isBoss && !showWaveClear ? DARK_HEX.breach : DARK_HEX.goldMuted;
+  const statusColor = isBoss ? DARK_HEX.breach : DARK_HEX.goldMuted;
 
   return (
     <div className="pointer-events-none absolute top-6 left-1/2 z-20 -translate-x-1/2 text-center">
-      {showWaveClear ? (
-        <p
-          key="wave-clear"
-          className="so-animate-wave-clear text-xs tracking-[0.35em] uppercase"
-          style={{ color: DARK_HEX.gold, textShadow: `0 0 20px ${DARK_HEX.breachGlow}44` }}
-        >
-          {strings.ui.waveClear}
-        </p>
-      ) : (
-        <p className={statusClass} style={{ color: statusColor }}>
-          {isBoss ? strings.ui.bossIncoming : label}
-        </p>
-      )}
+      <p className={statusClass} style={{ color: statusColor }}>
+        {isBoss ? strings.ui.bossIncoming : label}
+      </p>
       <p className={`mt-1 ${statusClass}`} style={{ color: DARK_HEX.goldMuted }}>
         {elapsedLabel}
       </p>
@@ -108,8 +96,8 @@ function WaveCounter() {
 
 function OverclockIndicator() {
   const gameState = useGameStore((state) => state.gameState);
-  const upgrades = useGameStore((state) => state.upgrades);
-  const overclockUnlocked = isOverclockUnlocked(upgrades);
+  const coreProtocols = useGameStore((state) => state.coreProtocols);
+  const overclockUnlocked = isOverclockUnlocked(coreProtocols);
   const runSpotlightActive = useRunTutorialSpotlightActive();
   const strings = useGameStrings();
   const [display, setDisplay] = useState(overclockDisplayRef);
@@ -207,7 +195,7 @@ export function HUD() {
   return (
     <>
       <FluxDriveToggle />
-      <WaveCounter />
+      <KillCounter />
       <OverclockIndicator />
       <ArchRunDialogue />
       <OverloadBar />

@@ -1,0 +1,38 @@
+---
+description: Suivi équilibrage dev — journal auto fin de run, sync obligatoire
+globs: src/dev/balanceTracker/**/*,src/dev/DevBalanceTrackerPanel.tsx,src/dev/formatOwnedModules.ts,src/game/runOverloadTelemetry.ts,src/game/overload.ts,src/dev/useBalanceTrackerGuard.ts
+alwaysApply: false
+---
+
+# Suivi équilibrage (menu Debug)
+
+Outil Dev : **Menu → Debug → Suivi équilibrage** (`src/dev/balanceTracker/`).
+
+Start/Stop manuel ; tant que ON, **chaque `RUN_END`** ajoute une ligne au journal (localStorage + rapport markdown).
+
+## Champs loggés par run
+
+- Shards run (`lastRunShards`) + cumul session
+- Modules possédés (niveau > 0) + **delta** vs run précédente (`+Module Ln`, `Module Ln→Lm`)
+- Surcharge brute : passive (`OverloadSource` `time`) vs hit (`hit`) — source dominante + %
+
+## Quand mettre à jour (même mission)
+
+Toute mission qui change :
+
+- Calcul shards / run (`lastRunShards`, bonus boss, économie modules)
+- Surcharge passive (`applyTimeOverload`, `passiveHeatPerSec`, cycle heat)
+- Riposte hit (`applyHitOverload`, `getHitHeatPenalty`, Blindage)
+- Noms ou liste modules (`upgradeCatalog`, `formatOwnedModules`)
+
+Fichiers liés :
+
+- `src/game/runOverloadTelemetry.ts` — compteurs run (reset `startRun`)
+- `src/game/overload.ts` — `recordOverloadDelta` à chaque `addOverload`
+- `src/dev/formatOwnedModules.ts` — noms FR + fingerprint build
+- `src/dev/balanceTracker/recorder.ts` — append à `RUN_END`
+
+## Interdit
+
+- Importer `src/dev/` depuis `src/game/`
+- Écrire localStorage pendant la run (uniquement à append / Start-Stop)

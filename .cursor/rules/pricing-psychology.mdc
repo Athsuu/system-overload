@@ -1,0 +1,42 @@
+---
+description: Psychologie des prix (shards / SF) — nombres agréables à voir AVANT toute proposition de coût
+globs: src/store/upgradeCatalog.ts,src/store/moduleTree.ts,src/store/prestige*.ts,src/store/coreProtocol*.ts,src/game/moduleEffects.ts,docs/lexique-jeu.md
+alwaysApply: false
+---
+
+# Psychologie des prix (Hex Shards & Fragments de Graine)
+
+**Obligatoire** : avant de **proposer**, **simuler** ou **écrire** un coût (module tree, prestige, rangs), appliquer cette logique. Un prix « juste en maths » qui est **moche à lire** est un prix **invalide** jusqu’à polish.
+
+Devise hub = **entiers** (pas de .99 retail). Objectif : nombres **fluides**, seuils maîtrisés, montée **prévisible**.
+
+## Checklist avant toute grille de prix
+
+1. **Équilibre** — valeur / force / timing (simu ou raisonnement).
+2. **Polish nombres** — arrondir et aligner (cette règle). Ne jamais livrer la sortie brute `ceil(base × growth^n)` sans relecture visuelle.
+3. **Présenter au PO** — grille finale (rangs + totaux), pas seulement la formule.
+
+## Règles de nombres (joueur)
+
+| Règle | Faire | Éviter |
+|-------|--------|--------|
+| **Ronds / fluides** | 5, 10, 12, 15, 20, 25, 50, 75, 100, 125, 150, 200… | 43, 52, 73, 97, 103 (sorties de formule « moches ») |
+| **Chiffre de gauche** | Franchir 100 / 200 / 500 **exprès** ou rester clairement d’un côté | Coller 99↔100, 199↔200 sans intention |
+| **1er rang** | Clairement achetable (ancrage positif) | Ticket d’entrée qui bloque la découverte |
+| **Croissance** | ×**1,15–1,25** typique hub ; ×**1,07–1,15** si idle-doux | ×1,30+ sauf ticket rare (ex. Blindage L1) |
+| **Familles** | Piliers / modules du **même rôle** = même « look » de grille | Deux passifs proches avec grilles totalement discordantes |
+| **Seuils entre rangs** | Rangs voisins du **même côté** d’un gros seuil si possible | 95→105 qui « saute » le seuil plus durement que 100→120 |
+
+## Anti-patterns
+
+- Prix charm (.99) — hors ton Dark Hex / monnaies entières.
+- Escalier punitif lisible (50 / 100 / 150 / 200 / 250) **sans** justification de valeur.
+- Justifier un prix moche par « c’est la formule » — la formule est un **outil**, le polish final est **manuel**.
+
+## Sources (rappel agent)
+
+Left-digit (Thomas & Morwitz 2005) · prix ronds « feel right » (Wadhwa & Zhang 2015) · seuils & upgrades (Kim et al. 2022) · prospect theory / référence · pratiques idle growth ~1.07–1.15.
+
+## Lien game design
+
+Économie / modules : **`game-design.mdc`** · prestige SF : **`prestige-philosophy.mdc`**. Cette règle prime sur la **forme** des nombres ; l’équilibrage force reste une décision PO.

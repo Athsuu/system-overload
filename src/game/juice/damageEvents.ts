@@ -1,7 +1,7 @@
 export interface DamageAppliedEvent {
   x: number;
   y: number;
-  waveIndex: number;
+  enemyLevel: number;
   isBossEncounter: boolean;
   damage: number;
   isCritical: boolean;
